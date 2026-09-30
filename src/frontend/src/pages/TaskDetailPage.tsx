@@ -8,6 +8,7 @@ import { PRIORITY_LABELS, STATUS_LABELS } from '../features/tasks/labels'
 import { StatusToggleButton } from '../features/tasks/StatusToggleButton'
 import { TaskNotFound } from '../features/tasks/TaskNotFound'
 import { useTask } from '../features/tasks/useTask'
+import { TaskTagsEditor } from '../features/tags/TaskTagsEditor'
 import { usePageTitle } from '../hooks/usePageTitle'
 
 export default function TaskDetailPage() {
@@ -85,6 +86,8 @@ function TaskDetail({ taskId }: { taskId: string }) {
           {task.dueDate ? formatDue(task, user!.timeZone) : 'Keine Fälligkeit'}
           {task.overdue && ' – Überfällig'}
         </dd>
+        <dt>Tags</dt>
+        <dd>{task.tags.length > 0 ? task.tags.map((t) => t.name).join(', ') : 'Keine'}</dd>
         <dt>Beschreibung</dt>
         <dd className="description">{task.description ?? 'Keine Beschreibung'}</dd>
         <dt>Erstellt von</dt>
@@ -118,6 +121,7 @@ function TaskDetail({ taskId }: { taskId: string }) {
         </button>
         <Link to="/">Zurück zur Aufgabenliste</Link>
       </div>
+      <TaskTagsEditor taskId={task.id} currentTags={task.tags} onChanged={(tags) => replace({ ...task, tags })} />
       {dialogOpen && (
         <DeleteTaskDialog
           task={task}

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Pagination } from '../components/Pagination'
 import { useAuth } from '../features/auth/AuthContext'
+import { useAllTags } from '../features/tags/useTagList'
 import { pluralTasks } from '../features/tasks/labels'
 import { TaskListItem } from '../features/tasks/TaskListItem'
 import { useTaskList } from '../features/tasks/useTaskList'
@@ -12,13 +13,21 @@ export default function TaskListPage() {
   const { user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const pageParam = Number.parseInt(searchParams.get('seite') ?? '1', 10)
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam - 1 : 0
-  const { state, reload, replaceItem } = useTaskList(page)
+  const tagId = searchParams.get('tag') ?? undefined
+  const tags = useAllTags()
+  const { state, reload, replaceItem } = useTaskList(page, tagId)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const loadedOnce = useRef(false)
   const notice = (location.state as { notice?: string } | null)?.notice
+
+  function onFilterChange(newTagId: string) {
+    const next = new URLSearchParams()
+    if (newTagId) next.set('tag', newTagId)
+    setSearchParams(next)
+  }
 
   useEffect(() => {
     if (state.kind === 'loaded') {
@@ -29,9 +38,10 @@ export default function TaskListPage() {
 
   useEffect(() => {
     if (state.kind === 'loaded' && state.page.items.length === 0 && page > 0 && state.page.totalPages > 0) {
-      navigate(`/?seite=${state.page.totalPages}`, { replace: true })
+      const query = tagId ? `?seite=${state.page.totalPages}&tag=${encodeURIComponent(tagId)}` : `?seite=${state.page.totalPages}`
+      navigate(`/${query}`, { replace: true })
     }
-  }, [state, page, navigate])
+  }, [state, page, tagId, navigate])
 
   return (
     <>
@@ -47,6 +57,19 @@ export default function TaskListPage() {
           Neue Aufgabe anlegen
         </Link>
       </p>
+      {tags.length > 0 && (
+        <div className="field">
+          <label htmlFor="tag-filter">Nach Tag filtern</label>
+          <select id="tag-filter" value={tagId ?? ''} onChange={(e) => onFilterChange(e.target.value)}>
+            <option value="">Alle Aufgaben</option>
+            {tags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {state.kind === 'loading' && <p role="status">Aufgaben werden geladen …</p>}
       {state.kind === 'error' && (
         <div role="alert">
@@ -56,7 +79,12 @@ export default function TaskListPage() {
           </button>
         </div>
       )}
-      {state.kind === 'loaded' && state.page.totalElements === 0 && (
+      {state.kind === 'loaded' && state.page.totalElements === 0 && tagId && (
+        <p>
+          Keine Aufgaben mit diesem Tag. <button type="button" className="link-button" onClick={() => onFilterChange('')}>Filter zurücksetzen</button>
+        </p>
+      )}
+      {state.kind === 'loaded' && state.page.totalElements === 0 && !tagId && (
         <p>
           Du hast noch keine Aufgaben. <Link to="/aufgaben/neu">Erste Aufgabe anlegen</Link>
         </p>
@@ -82,7 +110,7 @@ export default function TaskListPage() {
             page={state.page.page}
             totalPages={state.page.totalPages}
             label="Seiten der Aufgabenliste"
-            toHref={(p) => `/?seite=${p + 1}`}
+            toHref={(p) => (tagId ? `/?seite=${p + 1}&tag=${encodeURIComponent(tagId)}` : `/?seite=${p + 1}`)}
           />
         </>
       )}

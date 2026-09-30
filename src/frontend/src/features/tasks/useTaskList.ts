@@ -7,13 +7,13 @@ type ListState =
   | { kind: 'loaded'; page: Page<Task> }
   | { kind: 'error'; message: string }
 
-export function useTaskList(page: number) {
+export function useTaskList(page: number, tagId?: string) {
   const [state, setState] = useState<ListState>({ kind: 'loading' })
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let active = true
-    listTasks(page)
+    listTasks(page, undefined, tagId)
       .then((result) => {
         if (active) setState({ kind: 'loaded', page: result })
       })
@@ -23,7 +23,7 @@ export function useTaskList(page: number) {
     return () => {
       active = false
     }
-  }, [page, reloadToken])
+  }, [page, tagId, reloadToken])
 
   // Setzt sofort auf "loading" (Event-Handler, nicht im Effekt) und löst über reloadToken den Refetch aus.
   const reload = useCallback(() => {

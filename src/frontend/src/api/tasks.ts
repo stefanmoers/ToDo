@@ -1,5 +1,6 @@
 import { api } from './client'
 import { DEFAULT_PAGE_SIZE, type Page } from './pagination'
+import type { TagSummary } from './tagSummary'
 
 export type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE'
 export type TaskPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
@@ -29,6 +30,8 @@ export interface Task {
   updatedAt: string
   completedAt?: string
   version: number
+  /** Immer vorhanden (leeres Array ohne Zuordnung); ändert nicht die Version (US-043). */
+  tags: TagSummary[]
 }
 
 export interface TaskInput {
@@ -47,8 +50,8 @@ export interface TaskUpdate extends TaskInput {
   version: number
 }
 
-export const listTasks = (page: number, size = DEFAULT_PAGE_SIZE) =>
-  api<Page<Task>>('GET', `/api/v1/tasks?page=${page}&size=${size}`)
+export const listTasks = (page: number, size = DEFAULT_PAGE_SIZE, tagId?: string) =>
+  api<Page<Task>>('GET', `/api/v1/tasks?page=${page}&size=${size}${tagId ? `&tagId=${encodeURIComponent(tagId)}` : ''}`)
 
 export const getTask = (id: string) => api<Task>('GET', `/api/v1/tasks/${encodeURIComponent(id)}`)
 
@@ -65,3 +68,7 @@ export const completeTask = (id: string, version: number) =>
 
 export const reopenTask = (id: string, version: number) =>
   api<Task>('POST', `/api/v1/tasks/${encodeURIComponent(id)}/reopen`, { version })
+
+/** Ersetzt die Tag-Zuordnung vollständig; ändert nicht die Version der Aufgabe (US-043). */
+export const setTaskTags = (id: string, tagIds: string[]) =>
+  api<TagSummary[]>('PUT', `/api/v1/tasks/${encodeURIComponent(id)}/tags`, { tagIds })

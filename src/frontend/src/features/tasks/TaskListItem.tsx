@@ -31,6 +31,7 @@ export function TaskListItem({
             <span aria-hidden="true">⚠ </span>Überfällig
           </span>
         )}
+        {task.tags.length > 0 && <> · Tags: {task.tags.map((t) => t.name).join(', ')}</>}
       </p>
       <StatusToggleButton task={task} onChanged={onChanged} onConflict={onConflict} onGone={onGone} />
     </li>

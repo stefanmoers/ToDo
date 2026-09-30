@@ -10,6 +10,7 @@ import ProjectDetailPage from './pages/ProjectDetailPage'
 import ProjectEditPage from './pages/ProjectEditPage'
 import ProjectListPage from './pages/ProjectListPage'
 import RegisterPage from './pages/RegisterPage'
+import TagsPage from './pages/TagsPage'
 import TaskCreatePage from './pages/TaskCreatePage'
 import TaskDetailPage from './pages/TaskDetailPage'
 import TaskEditPage from './pages/TaskEditPage'
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="projekte/neu" element={<ProjectCreatePage />} />
             <Route path="projekte/:projectId" element={<ProjectDetailPage />} />
             <Route path="projekte/:projectId/bearbeiten" element={<ProjectEditPage />} />
+            <Route path="tags" element={<TagsPage />} />
             <Route path="profil" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
