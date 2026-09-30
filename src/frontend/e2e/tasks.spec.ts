@@ -6,6 +6,7 @@ test('vollständiger Lebenszyklus: anlegen, ansehen, bearbeiten, erledigen, wied
   await expect(page.getByText('Du hast noch keine Aufgaben.')).toBeVisible()
 
   await createTaskViaUi(page, 'Steuererklärung')
+  await page.getByRole('link', { name: 'Bearbeiten' }).click()
   await page.getByLabel('Beschreibung').fill('Belege sortieren')
   await page.getByLabel('Priorität').selectOption('HIGH')
   await page.getByLabel('Fälligkeitsdatum').fill('2026-12-24')
@@ -80,7 +81,8 @@ test('zwei Konten sehen nur ihre eigenen Aufgaben', async ({ page, browser }) =>
   await second.goto(taskUrl)
   await expect(second.getByRole('heading', { level: 1, name: 'Aufgabe nicht gefunden' })).toBeVisible()
 
-  const directApi = await second.request.get(taskUrl.replace(/^https?:\/\/[^/]+/, ''))
+  const taskId = taskUrl.split('/').pop()
+  const directApi = await second.request.get(`/api/v1/tasks/${taskId}`)
   expect(directApi.status()).toBe(404)
   await other.close()
 })
@@ -142,7 +144,7 @@ test('Paginierung: 26 Aufgaben werden auf zwei Seiten aufgeteilt', async ({ page
     await createTaskViaApi(page, { title: `Aufgabe ${i}` })
   }
   await page.goto('/')
-  await expect(page.getByRole('listitem').filter({ hasText: 'Aufgabe' })).toHaveCount(25)
+  await expect(page.locator('.task-list li')).toHaveCount(25)
   await page.getByRole('link', { name: 'Nächste Seite' }).click()
   await expect(page).toHaveURL(/seite=2/)
   await expect(page.getByRole('heading', { level: 2 })).toBeFocused()

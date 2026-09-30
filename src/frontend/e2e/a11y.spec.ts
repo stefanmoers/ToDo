@@ -148,6 +148,7 @@ test('Reflow: Aufgaben-Seiten bei 320 px ohne horizontales Scrollen', async ({ p
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
     expect(overflow, path).toBe(false)
   }
+  await page.goto('/')
   await page.getByRole('link', { name: longTitle }).click()
   const overflowDetail = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
   expect(overflowDetail).toBe(false)
