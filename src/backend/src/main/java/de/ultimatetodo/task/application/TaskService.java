@@ -2,16 +2,20 @@ package de.ultimatetodo.task.application;
 
 import de.ultimatetodo.common.ApiError.FieldError;
 import de.ultimatetodo.common.ApiException;
+import de.ultimatetodo.common.Paging;
 import de.ultimatetodo.project.application.ProjectAccess;
 import de.ultimatetodo.tag.application.TagAccess;
 import de.ultimatetodo.tag.application.TagSummary;
 import de.ultimatetodo.task.domain.Task;
+import de.ultimatetodo.task.domain.TaskPriority;
 import de.ultimatetodo.task.domain.TaskStatus;
 import de.ultimatetodo.task.domain.TaskTag;
 import de.ultimatetodo.task.persistence.TaskRepository;
+import de.ultimatetodo.task.persistence.TaskSpecifications;
 import de.ultimatetodo.task.persistence.TaskTagRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,30 +28,36 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-043, US-120, US-121 M1-Teil). */
+/** Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-043, US-050 bis US-052, US-110, US-120, US-121 M1-Teil). */
 @Service
 public class TaskService {
 
 	private static final String CONFLICT_MESSAGE = "Die Aufgabe wurde zwischenzeitlich geändert. Bitte lade sie neu.";
 	private static final String TAGS_INVALID_MESSAGE = "Diese Tags existieren nicht oder gehören dir nicht.";
+	private static final Set<TaskStatus> NOT_DONE = Set.of(TaskStatus.OPEN, TaskStatus.IN_PROGRESS);
+	private static final Set<TaskPriority> HIGH_OR_URGENT = Set.of(TaskPriority.HIGH, TaskPriority.URGENT);
 
 	private final TaskRepository tasks;
 	private final TaskTagRepository taskTags;
 	private final TaskDraftValidator validator;
+	private final TaskListQueryValidator listQueryValidator;
 	private final ProjectAccess projectAccess;
 	private final TagAccess tagAccess;
 	private final Clock clock;
 
 	public TaskService(TaskRepository tasks, TaskTagRepository taskTags, TaskDraftValidator validator,
-			ProjectAccess projectAccess, TagAccess tagAccess, Clock clock) {
+			TaskListQueryValidator listQueryValidator, ProjectAccess projectAccess, TagAccess tagAccess, Clock clock) {
 		this.tasks = tasks;
 		this.taskTags = taskTags;
 		this.validator = validator;
+		this.listQueryValidator = listQueryValidator;
 		this.projectAccess = projectAccess;
 		this.tagAccess = tagAccess;
 		this.clock = clock;
@@ -66,15 +76,61 @@ public class TaskService {
 		return loadAccessible(userId, taskId);
 	}
 
+	/** US-050 (Suche), US-051 (Filter) und US-052 (Sortierung): eine Aufgabenliste mit beliebig kombinierten Kriterien. */
 	@Transactional(readOnly = true)
-	public Page<Task> list(UUID userId, Pageable pageable) {
-		return tasks.findAccessible(userId, ownedProjectIds(userId), pageable);
+	public Page<Task> list(UUID userId, TaskListQuery query) {
+		TaskListQueryValidator.Result parsed = listQueryValidator.validate(query);
+		Pageable pageable = Paging.of(query.page(), query.size(), Sort.unsorted());
+		TaskListFilter filter = new TaskListFilter(query.q(), parsed.statuses(), parsed.priorities(),
+				toSet(query.projectId()), toSet(query.tagId()), Boolean.TRUE.equals(query.overdue()), query.dueDateFrom(),
+				query.dueDateTo());
+		Specification<Task> spec = buildFilterSpecification(userId, filter)
+			.and(TaskSpecifications.orderedBy(parsed.sortField(), parsed.ascending()));
+		return tasks.findAll(spec, pageable);
 	}
 
-	/** US-043: „Tags sind filterbar“. */
+	/** US-110: fünf Zähler mit denselben Rechte- und Zeitregeln wie die Listen, für die persönliche Übersicht. */
 	@Transactional(readOnly = true)
-	public Page<Task> listByTag(UUID userId, UUID tagId, Pageable pageable) {
-		return tasks.findAccessibleByTag(userId, ownedProjectIds(userId), tagId, pageable);
+	public TaskSummaryCounts summary(UUID userId, LocalDate today) {
+		Specification<Task> accessible = TaskSpecifications.accessibleTo(userId, ownedProjectIds(userId));
+		long open = tasks.count(accessible.and(TaskSpecifications.hasStatus(NOT_DONE)));
+		long dueToday = tasks
+			.count(accessible.and(TaskSpecifications.hasStatus(NOT_DONE)).and(TaskSpecifications.dueDateBetween(today, today)));
+		long overdue = tasks.count(accessible.and(TaskSpecifications.isOverdue(now())));
+		long done = tasks.count(accessible.and(TaskSpecifications.hasStatus(Set.of(TaskStatus.DONE))));
+		long highPriorityOpen = tasks
+			.count(accessible.and(TaskSpecifications.hasStatus(NOT_DONE)).and(TaskSpecifications.hasPriority(HIGH_OR_URGENT)));
+		return new TaskSummaryCounts(open, dueToday, overdue, done, highPriorityOpen);
+	}
+
+	/** Kombiniert nur tatsächlich angeforderte Filterausschnitte mit UND; {@code null} bedeutet „keine Einschränkung". */
+	private Specification<Task> buildFilterSpecification(UUID userId, TaskListFilter filter) {
+		List<Specification<Task>> parts = new ArrayList<>();
+		parts.add(TaskSpecifications.accessibleTo(userId, ownedProjectIds(userId)));
+		addIfPresent(parts, TaskSpecifications.hasSearchText(filter.searchText()));
+		addIfPresent(parts, TaskSpecifications.hasStatus(filter.statuses()));
+		addIfPresent(parts, TaskSpecifications.hasPriority(filter.priorities()));
+		addIfPresent(parts, TaskSpecifications.hasProject(filter.projectIds()));
+		addIfPresent(parts, TaskSpecifications.hasTag(filter.tagIds()));
+		if (filter.overdueOnly()) {
+			parts.add(TaskSpecifications.isOverdue(now()));
+		}
+		addIfPresent(parts, TaskSpecifications.dueDateBetween(filter.dueDateFrom(), filter.dueDateTo()));
+		Specification<Task> combined = parts.get(0);
+		for (int i = 1; i < parts.size(); i++) {
+			combined = combined.and(parts.get(i));
+		}
+		return combined;
+	}
+
+	private static void addIfPresent(List<Specification<Task>> parts, Specification<Task> spec) {
+		if (spec != null) {
+			parts.add(spec);
+		}
+	}
+
+	private static Set<UUID> toSet(List<UUID> values) {
+		return values == null ? Set.of() : Set.copyOf(values);
 	}
 
 	/** Ersetzt die bearbeitbaren Felder. 409, wenn {@code expectedVersion} nicht mehr der aktuellen entspricht. */

@@ -1,29 +1,30 @@
 package de.ultimatetodo.task.api;
 
 import de.ultimatetodo.common.PageResponse;
-import de.ultimatetodo.common.Paging;
 import de.ultimatetodo.tag.application.TagSummary;
 import de.ultimatetodo.task.api.TaskDtos.CreateTaskRequest;
 import de.ultimatetodo.task.api.TaskDtos.TaskResponse;
+import de.ultimatetodo.task.api.TaskDtos.TaskSummaryResponse;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskRequest;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskTagsRequest;
 import de.ultimatetodo.task.api.TaskDtos.VersionRequest;
 import de.ultimatetodo.task.application.TaskDraft;
+import de.ultimatetodo.task.application.TaskListQuery;
 import de.ultimatetodo.task.application.TaskService;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.user.application.AppUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,8 +40,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Persönliche Aufgaben (US-030 bis US-037, US-043, US-120). Jeder Zugriff ist auf die eigenen Aufgaben beschränkt
- * ({@link TaskService} filtert serverseitig nach Ersteller/Projekt-Eigentümerschaft).
+ * Persönliche Aufgaben (US-030 bis US-037, US-043, US-050 bis US-052, US-110, US-120). Jeder Zugriff ist auf die
+ * eigenen Aufgaben beschränkt ({@link TaskService} filtert serverseitig nach Ersteller/Projekt-Eigentümerschaft).
  */
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -65,19 +66,35 @@ class TaskController {
 		return ResponseEntity.created(URI.create("/api/v1/tasks/" + task.getId())).body(toResponse(task));
 	}
 
-	@Operation(summary = "Eigene Aufgaben auflisten",
-			description = "Sortierung fest: createdAt absteigend, dann id absteigend (stabil). Mit tagId auf eine "
-					+ "Tag-Zuordnung eingeschränkt (US-043). Weitere Sortier- und Filterfelder folgen mit US-051/052.")
+	@Operation(summary = "Eigene Aufgaben auflisten", description = "Suche (q, Titel/Beschreibung, ohne Beachtung der "
+			+ "Großschreibung), Filter (status, priority, projectId, tagId je mehrfach möglich und mit ODER verknüpft; "
+			+ "unterschiedliche Filterarten mit UND; overdue; dueDateFrom/dueDateTo vergleichen das rohe Fälligkeitsdatum) "
+			+ "und Sortierung (sortBy: createdAt, updatedAt, due, priority, title; sortDirection: asc, desc; Standard "
+			+ "createdAt/desc, stabil nach id; Aufgaben ohne Fälligkeit stehen bei sortBy=due immer zuletzt) gemäß "
+			+ "US-050 bis US-052.")
 	@GetMapping
 	PageResponse<TaskResponse> list(@AuthenticationPrincipal AppUserDetails principal,
 			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
-			@RequestParam(required = false) UUID tagId) {
-		Pageable pageable = Paging.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-		Page<Task> result = tagId == null ? taskService.list(principal.id(), pageable)
-				: taskService.listByTag(principal.id(), tagId, pageable);
+			@RequestParam(required = false) String q, @RequestParam(required = false) List<String> status,
+			@RequestParam(required = false) List<String> priority, @RequestParam(required = false) List<UUID> projectId,
+			@RequestParam(required = false) List<UUID> tagId, @RequestParam(required = false) Boolean overdue,
+			@RequestParam(required = false) LocalDate dueDateFrom, @RequestParam(required = false) LocalDate dueDateTo,
+			@RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection) {
+		TaskListQuery query = new TaskListQuery(q, status, priority, projectId, tagId, overdue, dueDateFrom, dueDateTo,
+				sortBy, sortDirection, page, size);
+		Page<Task> result = taskService.list(principal.id(), query);
 		Map<UUID, List<TagSummary>> tags = taskService.tagsFor(result.map(Task::getId).toList());
 		Instant now = clock.instant();
 		return PageResponse.of(result, t -> TaskResponse.of(t, now, tags.getOrDefault(t.getId(), List.of())));
+	}
+
+	@Operation(summary = "Persönliche Übersicht (US-110)", description = "Fünf Zähler mit denselben Rechte- und "
+			+ "Zeitregeln wie die Listen. `today` ist Pflicht: das Aufgaben-Modul kennt die Kontozeitzone nicht "
+			+ "(Modulgrenze, docs/ARCHITECTURE.md); der Client löst „heute“ in seiner Kontozeitzone auf.")
+	@GetMapping("/summary")
+	TaskSummaryResponse summary(@AuthenticationPrincipal AppUserDetails principal,
+			@Parameter(required = true) @RequestParam LocalDate today) {
+		return TaskSummaryResponse.of(taskService.summary(principal.id(), today));
 	}
 
 	@Operation(summary = "Einzelne Aufgabe ansehen")

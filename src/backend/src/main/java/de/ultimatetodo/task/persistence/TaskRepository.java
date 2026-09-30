@@ -4,9 +4,8 @@ import de.ultimatetodo.task.domain.Task;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,26 +14,16 @@ import org.springframework.data.repository.query.Param;
  * Alle fachlichen Lesezugriffe filtern nach Zugriffsrecht ("accessible"). Das geerbte {@code findById}
  * wird von der Anwendungsschicht bewusst nie verwendet, da es die Ownership-Prüfung umgehen würde.
  * {@code ownedProjectIds} kommt aus {@code project.application.ProjectAccess} (schmale Schnittstelle statt
- * direktem Zugriff auf das Projekt-Modul); Mitgliedschaftsrechte (M2) erweitern nur diese beiden Abfragen.
+ * direktem Zugriff auf das Projekt-Modul); Mitgliedschaftsrechte (M2) erweitern nur diese Prüfung und
+ * {@link TaskSpecifications#accessibleTo}. Die Liste (US-050 bis US-052: Suche, Filter, Sortierung) läuft über
+ * {@code findAll(Specification, Pageable)} aus {@link JpaSpecificationExecutor}, da feste JPQL-Methoden die
+ * beliebig kombinierbaren Filter- und Sortierkriterien nicht mehr abbilden können.
  */
-public interface TaskRepository extends JpaRepository<Task, UUID> {
+public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificationExecutor<Task> {
 
 	@Query("select t from Task t where t.id = :id and (t.creatorId = :userId or t.projectId in :ownedProjectIds)")
 	Optional<Task> findAccessibleById(@Param("id") UUID id, @Param("userId") UUID userId,
 			@Param("ownedProjectIds") Set<UUID> ownedProjectIds);
-
-	@Query(value = "select t from Task t where t.creatorId = :userId or t.projectId in :ownedProjectIds",
-			countQuery = "select count(t) from Task t where t.creatorId = :userId or t.projectId in :ownedProjectIds")
-	Page<Task> findAccessible(@Param("userId") UUID userId, @Param("ownedProjectIds") Set<UUID> ownedProjectIds,
-			Pageable pageable);
-
-	/** US-043: „Tags sind filterbar“ — dieselbe Zugriffsprüfung, zusätzlich auf eine Tag-Zuordnung eingeschränkt. */
-	@Query(value = "select t from Task t where (t.creatorId = :userId or t.projectId in :ownedProjectIds) "
-			+ "and t.id in (select tt.taskId from TaskTag tt where tt.tagId = :tagId)",
-			countQuery = "select count(t) from Task t where (t.creatorId = :userId or t.projectId in :ownedProjectIds) "
-					+ "and t.id in (select tt.taskId from TaskTag tt where tt.tagId = :tagId)")
-	Page<Task> findAccessibleByTag(@Param("userId") UUID userId, @Param("ownedProjectIds") Set<UUID> ownedProjectIds,
-			@Param("tagId") UUID tagId, Pageable pageable);
 
 	/** Für US-042: löst Aufgaben von einem gelöschten Projekt (sie bleiben erhalten, werden aber wieder persönlich). */
 	@Modifying

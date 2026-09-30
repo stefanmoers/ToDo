@@ -1,6 +1,7 @@
 package de.ultimatetodo.task.api;
 
 import de.ultimatetodo.tag.application.TagSummary;
+import de.ultimatetodo.task.application.TaskSummaryCounts;
 import de.ultimatetodo.task.domain.DueDate;
 import de.ultimatetodo.task.domain.Task;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -80,6 +81,18 @@ public final class TaskDtos {
 			String sign = total < 0 ? "-" : "+";
 			int abs = Math.abs(total);
 			return "%s%02d:%02d".formatted(sign, abs / 3600, (abs % 3600) / 60);
+		}
+
+	}
+
+	@Schema(description = "Fünf Zähler der persönlichen Übersicht (US-110); jeder Zähler folgt denselben Rechte- "
+			+ "und Zeitregeln wie die zugehörige Aufgabenliste.")
+	public record TaskSummaryResponse(long openCount, long dueTodayCount, long overdueCount, long doneCount,
+			long highPriorityOpenCount) {
+
+		public static TaskSummaryResponse of(TaskSummaryCounts counts) {
+			return new TaskSummaryResponse(counts.open(), counts.dueToday(), counts.overdue(), counts.done(),
+					counts.highPriorityOpen());
 		}
 
 	}
