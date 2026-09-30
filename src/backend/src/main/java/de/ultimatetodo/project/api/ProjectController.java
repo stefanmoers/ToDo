@@ -12,11 +12,14 @@ import de.ultimatetodo.project.application.ProjectMember;
 import de.ultimatetodo.project.application.ProjectService;
 import de.ultimatetodo.project.domain.Project;
 import de.ultimatetodo.user.application.AppUserDetails;
+import de.ultimatetodo.user.application.UserAccess;
+import de.ultimatetodo.user.application.UserSummary;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,9 +49,11 @@ import org.springframework.web.bind.annotation.RestController;
 class ProjectController {
 
 	private final ProjectService projectService;
+	private final UserAccess userAccess;
 
-	ProjectController(ProjectService projectService) {
+	ProjectController(ProjectService projectService, UserAccess userAccess) {
 		this.projectService = projectService;
+		this.userAccess = userAccess;
 	}
 
 	@Operation(summary = "Projekt anlegen")
@@ -57,22 +62,24 @@ class ProjectController {
 	ResponseEntity<ProjectResponse> create(@AuthenticationPrincipal AppUserDetails principal,
 			@RequestBody CreateProjectRequest request) {
 		Project p = projectService.create(principal.id(), new ProjectDraft(request.name(), request.description()));
-		return ResponseEntity.created(URI.create("/api/v1/projects/" + p.getId())).body(ProjectResponse.of(p));
+		return ResponseEntity.created(URI.create("/api/v1/projects/" + p.getId())).body(toResponse(p));
 	}
 
-	@Operation(summary = "Eigene Projekte auflisten")
+	@Operation(summary = "Eigene und geteilte Projekte auflisten")
 	@GetMapping
 	PageResponse<ProjectResponse> list(@AuthenticationPrincipal AppUserDetails principal,
 			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 		Pageable pageable = Paging.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
 		Page<Project> result = projectService.list(principal.id(), pageable);
-		return PageResponse.of(result, ProjectResponse::of);
+		List<Project> projectList = result.getContent();
+		Map<UUID, UserSummary> owners = userAccess.summarize(projectList.stream().map(Project::getOwnerId).toList());
+		return PageResponse.of(result, p -> toResponse(p, owners));
 	}
 
 	@Operation(summary = "Einzelnes Projekt ansehen")
 	@GetMapping("/{id}")
 	ProjectResponse get(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id) {
-		return ProjectResponse.of(projectService.get(principal.id(), id));
+		return toResponse(projectService.get(principal.id(), id));
 	}
 
 	@Operation(summary = "Projekt bearbeiten", description = "Optimistisches Sperren: 409, wenn version veraltet ist.")
@@ -81,7 +88,7 @@ class ProjectController {
 			@RequestBody UpdateProjectRequest request) {
 		Project p = projectService.update(principal.id(), id, new ProjectDraft(request.name(), request.description()),
 				request.version());
-		return ProjectResponse.of(p);
+		return toResponse(p);
 	}
 
 	@Operation(summary = "Projekt endgültig löschen",
@@ -120,6 +127,15 @@ class ProjectController {
 
 	private MemberResponse toResponse(ProjectMember member) {
 		return MemberResponse.of(member.user(), member.addedAt());
+	}
+
+	private ProjectResponse toResponse(Project p) {
+		return toResponse(p, userAccess.summarize(List.of(p.getOwnerId())));
+	}
+
+	private static ProjectResponse toResponse(Project p, Map<UUID, UserSummary> owners) {
+		UserSummary owner = owners.get(p.getOwnerId());
+		return ProjectResponse.of(p, owner == null ? null : owner.displayName());
 	}
 
 }

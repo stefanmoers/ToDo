@@ -26,12 +26,12 @@ public final class ProjectDtos {
 
 	@Schema(description = "Ein Projekt. Eigentümer und Mitglieder (US-060) haben Zugriff auf seine Aufgaben; "
 			+ "Projekt selbst umbenennen/löschen/Mitglieder verwalten bleibt dem Eigentümer vorbehalten.")
-	public record ProjectResponse(UUID id, String name, String description, UUID ownerId, Instant createdAt,
-			Instant updatedAt, long version) {
+	public record ProjectResponse(UUID id, String name, String description, UUID ownerId, String ownerDisplayName,
+			Instant createdAt, Instant updatedAt, long version) {
 
-		public static ProjectResponse of(Project p) {
-			return new ProjectResponse(p.getId(), p.getName(), p.getDescription(), p.getOwnerId(), p.getCreatedAt(),
-					p.getUpdatedAt(), p.getVersion());
+		public static ProjectResponse of(Project p, String ownerDisplayName) {
+			return new ProjectResponse(p.getId(), p.getName(), p.getDescription(), p.getOwnerId(), ownerDisplayName,
+					p.getCreatedAt(), p.getUpdatedAt(), p.getVersion());
 		}
 
 	}
