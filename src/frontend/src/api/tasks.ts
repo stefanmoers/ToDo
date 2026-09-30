@@ -50,8 +50,49 @@ export interface TaskUpdate extends TaskInput {
   version: number
 }
 
-export const listTasks = (page: number, size = DEFAULT_PAGE_SIZE, tagId?: string) =>
-  api<Page<Task>>('GET', `/api/v1/tasks?page=${page}&size=${size}${tagId ? `&tagId=${encodeURIComponent(tagId)}` : ''}`)
+export type TaskSortField = 'createdAt' | 'updatedAt' | 'due' | 'priority' | 'title'
+export type SortDirection = 'asc' | 'desc'
+
+/** US-050 bis US-052: unterschiedliche Filterarten werden mit UND verknüpft, mehrere Werte je Art mit ODER. */
+export interface TaskListFilters {
+  q?: string
+  status?: TaskStatus[]
+  priority?: TaskPriority[]
+  projectId?: string
+  tagId?: string
+  overdue?: boolean
+  dueDateFrom?: string
+  dueDateTo?: string
+  sortBy?: TaskSortField
+  sortDirection?: SortDirection
+}
+
+export const listTasks = (page: number, size = DEFAULT_PAGE_SIZE, filters: TaskListFilters = {}) => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (filters.q) params.set('q', filters.q)
+  for (const s of filters.status ?? []) params.append('status', s)
+  for (const p of filters.priority ?? []) params.append('priority', p)
+  if (filters.projectId) params.set('projectId', filters.projectId)
+  if (filters.tagId) params.set('tagId', filters.tagId)
+  if (filters.overdue) params.set('overdue', 'true')
+  if (filters.dueDateFrom) params.set('dueDateFrom', filters.dueDateFrom)
+  if (filters.dueDateTo) params.set('dueDateTo', filters.dueDateTo)
+  if (filters.sortBy) params.set('sortBy', filters.sortBy)
+  if (filters.sortDirection) params.set('sortDirection', filters.sortDirection)
+  return api<Page<Task>>('GET', `/api/v1/tasks?${params.toString()}`)
+}
+
+export interface TaskSummary {
+  openCount: number
+  dueTodayCount: number
+  overdueCount: number
+  doneCount: number
+  highPriorityOpenCount: number
+}
+
+/** US-110: today ist Pflicht, da der Server die Kontozeitzone nicht kennt; der Client löst „heute" selbst auf. */
+export const getTaskSummary = (today: string) =>
+  api<TaskSummary>('GET', `/api/v1/tasks/summary?today=${encodeURIComponent(today)}`)
 
 export const getTask = (id: string) => api<Task>('GET', `/api/v1/tasks/${encodeURIComponent(id)}`)
 

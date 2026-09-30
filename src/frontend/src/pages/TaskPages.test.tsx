@@ -25,7 +25,7 @@ describe('Aufgabenliste', () => {
     expect(await screen.findByRole('link', { name: 'Einkaufen' })).toBeInTheDocument()
     expect(screen.getByText(/Status: Erledigt/)).toBeInTheDocument()
     expect(screen.getByText(/Priorität: Hoch/)).toBeInTheDocument()
-    expect(screen.getByText(/Überfällig/)).toBeInTheDocument()
+    expect(screen.getByText(/Überfällig/, { selector: '.badge' })).toBeInTheDocument()
   })
 
   it('zeigt einen Ladefehler mit Wiederholungsmöglichkeit', async () => {
@@ -69,7 +69,7 @@ describe('Aufgabenliste', () => {
     renderAt('/')
     await userEvent.click(await screen.findByRole('link', { name: 'Nächste Seite' }))
     expect(await screen.findByRole('link', { name: 'Zweite Seite' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2 })).toHaveFocus()
+    expect(screen.getByRole('heading', { level: 2, name: /^Aufgaben/ })).toHaveFocus()
   })
 
   it('zeigt Tags einer Aufgabe in der Liste an', async () => {
@@ -106,7 +106,7 @@ describe('Aufgabenliste', () => {
       'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([]) }),
     })
     renderAt(`/?tag=${TAG.id}`)
-    expect(await screen.findByText('Keine Aufgaben mit diesem Tag.')).toBeInTheDocument()
+    expect(await screen.findByText(/Keine Aufgaben für diese Auswahl\./)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Filter zurücksetzen' }))
     expect(await screen.findByText('Du hast noch keine Aufgaben.')).toBeInTheDocument()
   })

@@ -38,6 +38,9 @@ export default function Layout() {
           {user ? (
             <ul>
               <li>
+                <NavLink to="/uebersicht">Übersicht</NavLink>
+              </li>
+              <li>
                 <NavLink to="/" end>
                   Meine Aufgaben
                 </NavLink>

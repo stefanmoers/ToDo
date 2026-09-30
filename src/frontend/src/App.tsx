@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './features/auth/AuthContext'
+import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="registrieren" element={<RegisterPage />} />
           <Route element={<RequireAuth />}>
             <Route index element={<TaskListPage />} />
+            <Route path="uebersicht" element={<DashboardPage />} />
             <Route path="aufgaben/neu" element={<TaskCreatePage />} />
             <Route path="aufgaben/:taskId" element={<TaskDetailPage />} />
             <Route path="aufgaben/:taskId/bearbeiten" element={<TaskEditPage />} />

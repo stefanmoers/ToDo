@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { listTasks, type Task } from '../../api/tasks'
+import { listTasks, type Task, type TaskListFilters } from '../../api/tasks'
 import type { Page } from '../../api/pagination'
 
 type ListState =
@@ -7,13 +7,14 @@ type ListState =
   | { kind: 'loaded'; page: Page<Task> }
   | { kind: 'error'; message: string }
 
-export function useTaskList(page: number, tagId?: string) {
+/** `filters` sollte vom Aufrufer memoisiert werden (z. B. via useMemo), sonst löst jedes Rendern einen Refetch aus. */
+export function useTaskList(page: number, filters: TaskListFilters = {}) {
   const [state, setState] = useState<ListState>({ kind: 'loading' })
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let active = true
-    listTasks(page, undefined, tagId)
+    listTasks(page, undefined, filters)
       .then((result) => {
         if (active) setState({ kind: 'loaded', page: result })
       })
@@ -23,7 +24,7 @@ export function useTaskList(page: number, tagId?: string) {
     return () => {
       active = false
     }
-  }, [page, tagId, reloadToken])
+  }, [page, filters, reloadToken])
 
   // Setzt sofort auf "loading" (Event-Handler, nicht im Effekt) und löst über reloadToken den Refetch aus.
   const reload = useCallback(() => {
