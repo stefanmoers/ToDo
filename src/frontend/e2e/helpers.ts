@@ -19,6 +19,7 @@ export async function registerViaUi(page: Page, email = uniqueEmail(), password 
 
 interface TaskInputForTest {
   title: string
+  projectId?: string | null
   description?: string | null
   priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT'
   dueDate?: string | null

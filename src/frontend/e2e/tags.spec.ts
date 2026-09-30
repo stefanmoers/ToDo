@@ -1,6 +1,16 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
-import { createProjectViaUi, createTagViaApi, createTaskViaApi, createTaskViaUi, PASSWORD, registerViaUi, uniqueEmail } from './helpers'
+import {
+  addMemberViaApi,
+  createProjectViaApi,
+  createProjectViaUi,
+  createTagViaApi,
+  createTaskViaApi,
+  createTaskViaUi,
+  PASSWORD,
+  registerViaUi,
+  uniqueEmail,
+} from './helpers'
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -123,4 +133,48 @@ test('axe: Tag-Editor auf der Aufgabendetailseite', async ({ page }) => {
   await createTaskViaUi(page, 'Aufgabe mit Tag-Editor')
   await expect(page.getByRole('heading', { level: 2, name: 'Tags' })).toBeVisible()
   await scan()
+})
+
+test('gleichnamige Tags aus verschiedenen Projekten sind unterscheidbar (US-181)', async ({ page, browser }) => {
+  await registerViaUi(page, uniqueEmail(), PASSWORD, 'Anna Eigentümerin')
+  const projectA = await createProjectViaApi(page, 'Operation Kaffee')
+  await createTagViaApi(page, 'Backen', projectA)
+  const taskId = await createTaskViaApi(page, { title: 'Kuchen backen', projectId: projectA })
+
+  const memberContext = await browser.newContext()
+  const member = await memberContext.newPage()
+  const memberEmail = await registerViaUi(member, uniqueEmail(), PASSWORD, 'Ben Mitglied')
+  const projectB = await createProjectViaApi(member, 'Operation Kaffee')
+  await createTagViaApi(member, 'Backen', projectB)
+  await addMemberViaApi(page, projectA, memberEmail)
+
+  // Tag-Auswahl an der Aufgabe: zwei „Backen“, unterscheidbar über ihren zugänglichen Namen.
+  await member.goto(`/aufgaben/${taskId}`)
+  await expect(member.getByRole('heading', { level: 1, name: 'Kuchen backen' })).toBeVisible()
+  const foreign = member.getByRole('checkbox', { name: 'Backen · Projekt „Operation Kaffee“ (Anna Eigentümerin)' })
+  const own = member.getByRole('checkbox', { name: 'Backen · Projekt „Operation Kaffee“ (du)' })
+  await expect(foreign).toBeVisible()
+  await expect(own).toBeVisible()
+  const results = await new AxeBuilder({ page: member }).withTags(TAGS).analyze()
+  expect(results.violations).toEqual([])
+
+  // Zuordnen des fremden Tags: nur dieses ist danach gewählt.
+  await foreign.check()
+  await member.getByRole('button', { name: 'Tags speichern' }).click()
+  await expect(member.getByText('Die Tag-Zuordnung wurde gespeichert.')).toBeVisible()
+  await member.reload()
+  await expect(member.getByRole('checkbox', { name: 'Backen · Projekt „Operation Kaffee“ (Anna Eigentümerin)' })).toBeChecked()
+  await expect(member.getByRole('checkbox', { name: 'Backen · Projekt „Operation Kaffee“ (du)' })).not.toBeChecked()
+
+  // Filter der Aufgabenliste: beide Optionen sind beschriftet.
+  await member.goto('/')
+  const filter = member.getByLabel('Nach Tag filtern')
+  await expect(filter.getByRole('option', { name: 'Backen · Projekt „Operation Kaffee“ (Anna Eigentümerin)' })).toHaveCount(1)
+  await expect(filter.getByRole('option', { name: 'Backen · Projekt „Operation Kaffee“ (du)' })).toHaveCount(1)
+
+  // Tag-Verwaltung: die fremde Projektüberschrift nennt den Eigentümer.
+  await member.getByRole('link', { name: 'Tags' }).click()
+  await expect(member.getByRole('heading', { level: 2, name: 'Tags in „Operation Kaffee“ (von Anna Eigentümerin)' })).toBeVisible()
+
+  await memberContext.close()
 })
