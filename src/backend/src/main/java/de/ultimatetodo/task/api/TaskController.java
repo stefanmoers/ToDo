@@ -1,16 +1,25 @@
 package de.ultimatetodo.task.api;
 
+import de.ultimatetodo.common.ApiError.FieldError;
+import de.ultimatetodo.common.ApiException;
 import de.ultimatetodo.common.PageResponse;
 import de.ultimatetodo.tag.application.TagSummary;
+import de.ultimatetodo.task.api.SubtaskDtos.CreateSubtaskRequest;
+import de.ultimatetodo.task.api.SubtaskDtos.MoveSubtaskRequest;
+import de.ultimatetodo.task.api.SubtaskDtos.RenameSubtaskRequest;
+import de.ultimatetodo.task.api.SubtaskDtos.SetSubtaskDoneRequest;
+import de.ultimatetodo.task.api.SubtaskDtos.SubtaskResponse;
 import de.ultimatetodo.task.api.TaskDtos.CreateTaskRequest;
 import de.ultimatetodo.task.api.TaskDtos.TaskResponse;
 import de.ultimatetodo.task.api.TaskDtos.TaskSummaryResponse;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskRequest;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskTagsRequest;
 import de.ultimatetodo.task.api.TaskDtos.VersionRequest;
+import de.ultimatetodo.task.application.SubtaskService;
 import de.ultimatetodo.task.application.TaskDraft;
 import de.ultimatetodo.task.application.TaskListQuery;
 import de.ultimatetodo.task.application.TaskService;
+import de.ultimatetodo.task.domain.Subtask;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.user.application.AppUserDetails;
 import de.ultimatetodo.user.application.UserAccess;
@@ -55,11 +64,13 @@ import org.springframework.web.bind.annotation.RestController;
 class TaskController {
 
 	private final TaskService taskService;
+	private final SubtaskService subtaskService;
 	private final UserAccess userAccess;
 	private final Clock clock;
 
-	TaskController(TaskService taskService, UserAccess userAccess, Clock clock) {
+	TaskController(TaskService taskService, SubtaskService subtaskService, UserAccess userAccess, Clock clock) {
 		this.taskService = taskService;
+		this.subtaskService = subtaskService;
 		this.userAccess = userAccess;
 		this.clock = clock;
 	}
@@ -92,10 +103,13 @@ class TaskController {
 				dueDateTo, sortBy, sortDirection, page, size);
 		Page<Task> result = taskService.list(principal.id(), query);
 		List<Task> taskList = result.getContent();
-		Map<UUID, List<TagSummary>> tags = taskService.tagsFor(taskList.stream().map(Task::getId).toList());
+		List<UUID> taskIds = taskList.stream().map(Task::getId).toList();
+		Map<UUID, List<TagSummary>> tags = taskService.tagsFor(taskIds);
+		Map<UUID, List<Subtask>> subtasks = subtaskService.forTasks(taskIds);
 		Map<UUID, UserSummary> users = resolveUsers(taskList);
 		Instant now = clock.instant();
-		return PageResponse.of(result, t -> TaskResponse.of(t, now, tags.getOrDefault(t.getId(), List.of()), users));
+		return PageResponse.of(result, t -> TaskResponse.of(t, now, tags.getOrDefault(t.getId(), List.of()), users,
+				subtasks.getOrDefault(t.getId(), List.of())));
 	}
 
 	@Operation(summary = "Persönliche Übersicht (US-110)", description = "Fünf Zähler mit denselben Rechte- und "
@@ -152,9 +166,70 @@ class TaskController {
 		return taskService.setTags(principal.id(), id, tagIds);
 	}
 
+	@Operation(summary = "Unteraufgaben auflisten (US-070)", description = "In stabiler Reihenfolge.")
+	@GetMapping("/{id}/subtasks")
+	List<SubtaskResponse> listSubtasks(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id) {
+		return toSubtaskResponses(subtaskService.list(principal.id(), id));
+	}
+
+	@Operation(summary = "Unteraufgabe anlegen (US-070)", description = "Wird ans Ende der Liste angehängt.")
+	@PostMapping("/{id}/subtasks")
+	@ResponseStatus(HttpStatus.CREATED)
+	List<SubtaskResponse> createSubtask(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@RequestBody CreateSubtaskRequest request) {
+		return toSubtaskResponses(subtaskService.create(principal.id(), id, request.title()));
+	}
+
+	@Operation(summary = "Unteraufgabe umbenennen (US-070)")
+	@PutMapping("/{id}/subtasks/{subtaskId}")
+	List<SubtaskResponse> renameSubtask(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@PathVariable UUID subtaskId, @RequestBody RenameSubtaskRequest request) {
+		return toSubtaskResponses(subtaskService.rename(principal.id(), id, subtaskId, request.title()));
+	}
+
+	@Operation(summary = "Erledigt-Zustand einer Unteraufgabe setzen (US-071)", description = "Rückgängig änderbar.")
+	@PutMapping("/{id}/subtasks/{subtaskId}/done")
+	List<SubtaskResponse> setSubtaskDone(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@PathVariable UUID subtaskId, @RequestBody SetSubtaskDoneRequest request) {
+		return toSubtaskResponses(subtaskService.setDone(principal.id(), id, subtaskId, request.done()));
+	}
+
+	@Operation(summary = "Unteraufgabe verschieben (US-070)",
+			description = "Vertauscht die Position mit dem Vorgänger (UP) oder Nachfolger (DOWN); ohne Ziehbewegung bedienbar.")
+	@PostMapping("/{id}/subtasks/{subtaskId}/move")
+	List<SubtaskResponse> moveSubtask(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@PathVariable UUID subtaskId, @RequestBody MoveSubtaskRequest request) {
+		return toSubtaskResponses(subtaskService.move(principal.id(), id, subtaskId, toDirection(request.direction())));
+	}
+
+	private static boolean toDirection(String direction) {
+		if ("UP".equals(direction)) {
+			return true;
+		}
+		if ("DOWN".equals(direction)) {
+			return false;
+		}
+		throw ApiException.validation(
+				List.of(new FieldError("direction", "INVALID", "Bitte wähle UP oder DOWN.")));
+	}
+
+	@Operation(summary = "Unteraufgabe löschen (US-070)")
+	@DeleteMapping("/{id}/subtasks/{subtaskId}")
+	List<SubtaskResponse> deleteSubtask(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@PathVariable UUID subtaskId) {
+		return toSubtaskResponses(subtaskService.delete(principal.id(), id, subtaskId));
+	}
+
+	private static List<SubtaskResponse> toSubtaskResponses(List<Subtask> subtasks) {
+		return subtasks.stream().map(SubtaskResponse::of).toList();
+	}
+
+	// Rechte sind zu diesem Zeitpunkt bereits über taskService.xxx(principal.id(), ...) geprüft; die
+	// Unteraufgaben werden hier ungeprüft über die Aufgaben-ID nachgeladen (kein zweiter, überflüssiger Check).
 	private TaskResponse toResponse(Task task) {
 		List<TagSummary> tags = taskService.tagsFor(List.of(task.getId())).getOrDefault(task.getId(), List.of());
-		return TaskResponse.of(task, clock.instant(), tags, resolveUsers(List.of(task)));
+		List<Subtask> subtasks = subtaskService.forTasks(List.of(task.getId())).getOrDefault(task.getId(), List.of());
+		return TaskResponse.of(task, clock.instant(), tags, resolveUsers(List.of(task)), subtasks);
 	}
 
 	/** Ersteller und Bearbeiter in einer Stapelabfrage auflösen, statt je Aufgabe einzeln (US-062). */

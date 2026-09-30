@@ -1,8 +1,10 @@
 package de.ultimatetodo.task.api;
 
 import de.ultimatetodo.tag.application.TagSummary;
+import de.ultimatetodo.task.api.SubtaskDtos.SubtaskProgress;
 import de.ultimatetodo.task.application.TaskSummaryCounts;
 import de.ultimatetodo.task.domain.DueDate;
+import de.ultimatetodo.task.domain.Subtask;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.user.application.UserSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -70,9 +72,11 @@ public final class TaskDtos {
 			UUID creatorId, String creatorDisplayName,
 			@Schema(description = "Zuständiger Bearbeiter (US-062); ohne Zuweisung fehlt dieses Feld") UUID assigneeId,
 			String assigneeDisplayName, Instant createdAt, Instant updatedAt, Instant completedAt, long version,
-			List<TagSummary> tags) {
+			List<TagSummary> tags,
+			@Schema(description = "Fortschritt der Unteraufgaben (US-071); done=total=0 ohne Unteraufgaben") SubtaskProgress subtasks) {
 
-		public static TaskResponse of(Task t, Instant now, List<TagSummary> tags, Map<UUID, UserSummary> users) {
+		public static TaskResponse of(Task t, Instant now, List<TagSummary> tags, Map<UUID, UserSummary> users,
+				List<Subtask> subtasks) {
 			DueDate due = t.getDue();
 			String dueDate = due == null ? null : due.date().toString();
 			String dueTime = due == null || due.time() == null ? null : due.time().toString();
@@ -81,11 +85,13 @@ public final class TaskDtos {
 			Instant dueAt = due == null ? null : due.exactInstant();
 			UserSummary creator = users.get(t.getCreatorId());
 			UserSummary assignee = t.getAssigneeId() == null ? null : users.get(t.getAssigneeId());
+			SubtaskProgress progress = subtasks.isEmpty() ? SubtaskProgress.NONE
+					: new SubtaskProgress((int) subtasks.stream().filter(Subtask::isDone).count(), subtasks.size());
 			return new TaskResponse(t.getId(), t.getProjectId(), t.getTitle(), t.getDescription(), t.getStatus().name(),
 					t.getPriority().name(), dueDate, dueTime, dueTimeZone, dueOffset, dueAt, t.isOverdue(now),
 					t.getCreatorId(), creator == null ? null : creator.displayName(), t.getAssigneeId(),
 					assignee == null ? null : assignee.displayName(), t.getCreatedAt(), t.getUpdatedAt(),
-					t.getCompletedAt(), t.getVersion(), tags);
+					t.getCompletedAt(), t.getVersion(), tags, progress);
 		}
 
 		private static String formatOffset(ZoneOffset offset) {

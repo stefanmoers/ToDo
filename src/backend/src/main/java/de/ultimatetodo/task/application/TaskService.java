@@ -243,7 +243,9 @@ public class TaskService {
 		return tagAccess.summarize(tagIds);
 	}
 
-	private Task loadAccessible(UUID userId, UUID taskId) {
+	// Paketsichtbar statt privat: SubtaskService (US-070/071) prüft Rechte über dieselbe Hauptaufgaben-Prüfung
+	// (docs/DOMAIN_MODEL.md: "Rechte werden über die Hauptaufgabe geprüft"), ohne sie zu duplizieren.
+	Task loadAccessible(UUID userId, UUID taskId) {
 		return tasks.findAccessibleById(taskId, userId, accessibleProjectIds(userId))
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "TASK_NOT_FOUND", "Die Aufgabe wurde nicht gefunden."));
 	}
