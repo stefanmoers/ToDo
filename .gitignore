@@ -1,0 +1,51 @@
+# Betriebssystem und Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# Java / Maven – Wrapper und Quellcode bleiben versioniert
+**/target/
+*.class
+.classpath
+.project
+.settings/
+
+# Node / Vite / Testberichte – package-lock.json bleibt versioniert
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+**/playwright-report/
+**/test-results/
+*.tsbuildinfo
+
+# Lokale Konfiguration und Geheimnisse
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# Betriebsdaten und lokale Sicherungen
+/data/
+/backups/
+/logs/
+*.log
+*.dump
+
+# Temporäre Arbeitsdateien
+/tmp/
+/work/

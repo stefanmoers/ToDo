@@ -1,0 +1,116 @@
+# Fachliches Datenmodell
+
+[Zur Übersicht](../README.md) · [Backlog](../BACKLOG.md) · [Sicherheitsmodell](SECURITY.md)
+
+**Status:** Planungsmodell. Es gibt noch kein Datenbankschema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
+
+## Begriffe und Beziehungen
+
+Ein **Projekt** bündelt Aufgaben. Eine **Mitgliedschaft** erlaubt Zusammenarbeit. Eine **Unteraufgabe** ist eine einfache Checkliste innerhalb einer Aufgabe, keine weitere vollständige Aufgabe. Eine **Aktivität** dokumentiert eine fachliche Änderung; sie ist kein technisches Serverlog.
+
+```mermaid
+erDiagram
+    USER ||--o{ PROJECT : besitzt
+    USER ||--o{ MEMBERSHIP : hat
+    PROJECT ||--o{ MEMBERSHIP : umfasst
+    USER ||--o{ TASK : erstellt
+    PROJECT o|--o{ TASK : gruppiert
+    USER o|--o{ TASK : bearbeitet
+    TASK ||--o{ SUBTASK : enthaelt
+    TASK ||--o{ COMMENT : hat
+    USER ||--o{ COMMENT : verfasst
+    TASK ||--o{ ACTIVITY : protokolliert
+    TASK ||--o{ TASK_TAG : markiert
+    TAG ||--o{ TASK_TAG : verbindet
+    TASK ||--o{ REMINDER : hat
+    USER ||--o{ REMINDER : erhaelt
+    RECURRENCE_RULE o|--o{ TASK : erzeugt
+    REMINDER ||--o| NOTIFICATION : erzeugt
+```
+
+`o|` bedeutet „kein oder ein“, `o{` bedeutet „keine oder viele“. Technische Hilfstabellen, etwa für Reset-Tokens, sind im Übersichtsdiagramm ausgelassen.
+
+## Datenobjekte
+
+| Objekt | Wesentliche Felder | Wichtige Regel |
+|---|---|---|
+| `User` | ID, Login-E-Mail, Anzeigename, Passwort-Hash, `ACTIVE/INACTIVE`, `USER/ADMIN`, Zeitzone, erstellt/geändert | Login eindeutig; niemals Passwort oder Hash an die API ausgeben |
+| `Project` | ID, Name, Beschreibung, Eigentümer-ID, erstellt/geändert, Version | Genau ein Eigentümer; Eigentum ist keine globale Administratorrolle |
+| `Membership` | Projekt-ID, Benutzer-ID, Aufnahmezeitpunkt | Paar aus Projekt und Benutzer eindeutig; Eigentümer hat unabhängig davon Zugriff |
+| `Task` | ID, Titel, Beschreibung, Status, Priorität, optional Projekt und Bearbeiter, Ersteller, Fälligkeit, erstellt/geändert/erledigt, Version | Ersteller unveränderlich; Rechte über Projekt oder persönliche Eigentümerschaft |
+| `Subtask` | ID, Aufgabe, Titel, erledigt, Reihenfolge | Genau eine Ebene; keine rekursiven Unteraufgaben |
+| `Comment` | ID, Aufgabe, Autor, Inhalt, erstellt/geändert | Gleiche Leseberechtigung wie Aufgabe; Inhalt als Text behandeln |
+| `Tag` / `TaskTag` | ID, Name, persönlicher oder Projekt-Geltungsbereich; Zuordnung | Keine globale Liste, die private Begriffe verrät |
+| `Activity` | ID, Aufgabe, Zeitpunkt, handelnder Benutzer, Art, freigegebene Änderungsdaten | Zusammen mit Fachänderung speichern; nicht durch Benutzer editierbar |
+| `RecurrenceRule` | ID, Rhythmus, Ankerdatum, Zeitzone, aktiv | Eine gemeinsame Regel verbindet mehrere konkrete Aufgabeninstanzen |
+| `Reminder` | ID, Aufgabe, Empfänger, Offset, berechneter Zeitpunkt, Status, Fälligkeitsrevision | Ein Benutzer konfiguriert eigene Erinnerungen; Zustand übersteht Neustarts |
+| `Notification` | ID, Erinnerung, Empfänger, erstellt/gelesen | In-App-Mitteilung; kein garantierter Push bei geschlossenem Browser |
+
+Technische IDs sind undurchsichtige UUIDs. Sie ersetzen keine Rechteprüfung. Zeitstempel werden serverseitig gesetzt. Datenbank-Constraints sichern Pflichtfelder, Eindeutigkeit und Beziehungen zusätzlich zur Anwendungsprüfung.
+
+## Aufgabenstatus und Priorität
+
+Statuswerte: `OPEN` (offen), `IN_PROGRESS` (in Bearbeitung), `DONE` (erledigt). Neue Aufgaben starten mit `OPEN`. Prioritäten: `LOW`, `NORMAL`, `HIGH`, `URGENT`; Standard ist `NORMAL`. Die Sortierung folgt dieser expliziten Rangfolge und nicht dem Alphabet.
+
+Arbeitsannahme: Jeder Wechsel zwischen den drei Statuswerten ist erlaubt. Beim Wechsel nach `DONE` wird `completedAt` gesetzt, beim Verlassen geleert. Ein erneutes Abschließen derselben erledigten Instanz ist wirkungslos und erzeugt weder einen weiteren Abschlusszeitpunkt noch einen zweiten Nachfolger. Vollständig abgehakte Unteraufgaben erledigen die Hauptaufgabe nicht automatisch.
+
+## Rechte, persönliche Aufgaben und Projektlöschung
+
+Arbeitsannahmen für US-022, US-042 und US-060 bis US-062:
+
+- Eine Aufgabe ohne Projekt gehört ihrem Ersteller und ist nur für ihn sichtbar. Als Bearbeiter sind hier nur der Ersteller oder niemand erlaubt.
+- Eine Projektaufgabe ist für Eigentümer und aktuelle Mitglieder lesbar und bearbeitbar. Alle dürfen Aufgaben anlegen, bearbeiten, kommentieren und löschen; Projektverwaltung und Mitgliederverwaltung bleiben beim Eigentümer.
+- Eine Zuweisung allein erteilt kein Zugriffsrecht. Nur aktive, aktuell berechtigte Projektbenutzer dürfen zugewiesen werden.
+- Entfernte Mitglieder verlieren sofort den Zugriff; ihre Zuweisungen in diesem Projekt werden in derselben Transaktion entfernt. Ihre früheren Kommentare und Aktivitäten bleiben erhalten.
+- Beim Löschen eines Projekts bleiben seine Aufgaben bestehen. Sie werden ohne Projekt zu persönlichen Aufgaben ihres jeweiligen Erstellers. Fremde Zuweisungen, Projekt-Tags und Erinnerungen nun unberechtigter Empfänger werden entfernt. Kommentare und Aktivitäten bleiben bei der Aufgabe und werden für frühere Mitglieder unzugänglich.
+- Der Löschdialog erklärt diese Folge ausdrücklich. Auch Aufgaben deaktivierter Ersteller bleiben erhalten; Reaktivierung stellt deren persönlichen Zugriff wieder her.
+- Eine bestehende Aufgabe darf nur ihr Ersteller oder der Eigentümer ihres aktuellen Projekts verschieben. Für das Zielprojekt muss der Handelnde ebenfalls berechtigt sein. Eine neue persönliche Aufgabe kann nur ihr Ersteller einem Projekt zuordnen. Ein Verschieben entfernt unzulässige Zuweisungen, Tags und Erinnerungen und meldet dies vor Bestätigung.
+- Globale Administratoren verwalten Kontostatus und Systemzustand. Sie erhalten keinen automatischen Zugriff auf private Projekte oder Aufgaben.
+
+Beim späteren Ändern dieser Regeln müssen API, UI, Tests und Dokumentation gemeinsam angepasst werden. Die frühere Vorgabe „Projekt löschen löscht Aufgaben nicht“ bleibt dabei verbindlich.
+
+## Eingaben und Grenzen
+
+Arbeitsannahmen, einheitlich in Frontend, Backend, OpenAPI und Datenbank umzusetzen:
+
+| Feld | Regel |
+|---|---|
+| Titel / Unteraufgabentitel | Nach Entfernen äußerer Leerzeichen 1–200 Zeichen |
+| Aufgabenbeschreibung / Projektbeschreibung | Optional, höchstens 10.000 Zeichen |
+| Projektname / Anzeigename | 1–100 Zeichen |
+| Kommentar | 1–5.000 Zeichen; keine reinen Leerzeichen |
+| Tag | 1–50 Zeichen; innerhalb seines Geltungsbereichs ohne Beachtung der Großschreibung eindeutig |
+| Login-E-Mail | Pflichtfeld, höchstens 254 Zeichen; für Anmeldung trimmen und kleinschreiben, per Unique Constraint absichern |
+| Listenabfrage | Standard 25, maximal 100 Einträge pro Seite; stabile Zweitsortierung nach ID |
+
+Beschreibungen und Kommentare sind zunächst reiner Text. Kein HTML, Dateiupload oder Markdown-Rendering erforderlich. Internationale Namen und Umlaute sind erlaubt. Feldlängen zählen Unicode-Codepoints; Byte-Grenzen bei Passwörtern sind davon getrennt zu behandeln.
+
+## Fälligkeit und Zeitzonen
+
+Arbeitsannahmen für US-037, US-053 und US-100:
+
+- Ein Datum ist optional. Eine Uhrzeit benötigt immer ein Datum und eine gespeicherte IANA-Zeitzone, beispielsweise `Europe/Berlin`.
+- Die Kontozeitzone wird bei Registrierung gewählt oder aus dem Browser vorgeschlagen; sie darf nicht stillschweigend aus der Serverzeitzone stammen. Das Ändern des Profils verschiebt bestehende Aufgaben nicht.
+- Ohne Uhrzeit gilt eine Aufgabe bis zum Ende ihres Fälligkeitstags in ihrer gespeicherten Zeitzone als rechtzeitig. Mit Uhrzeit entscheidet der zugehörige Zeitpunkt. `DONE` ist nie überfällig.
+- „Heute“ und „Demnächst“ beziehen sich auf Kalendertage in der Kontozeitzone des Betrachters. Datumsaufgaben behalten ihr Datum; Zeitpunkte werden für die Anzeige umgerechnet. „Demnächst“ zeigt die nächsten sieben Tage ohne heute.
+- Nicht existierende lokale Uhrzeiten bei Sommerzeitwechsel werden abgewiesen. Bei einer doppelt vorkommenden Uhrzeit muss die Oberfläche den gewählten Offset sichtbar machen und eine eindeutige Auswahl ermöglichen.
+- Technische Zeitpunkte wie `createdAt` werden in UTC gespeichert und in ISO-8601-Form übertragen. Ein reines Fälligkeitsdatum bleibt ein Datum, kein erfundener Mitternachtszeitpunkt.
+
+## Wiederholungen und Erinnerungen
+
+Arbeitsannahmen für M3; vor Umsetzung mit Beispielen in Tests festhalten:
+
+- Erste Rhythmen: täglich, wöchentlich, monatlich; weitergehende Regeln wie „alle 14 Tage“ sind spätere Erweiterungen.
+- Wiederholung benötigt ein Fälligkeitsdatum. Beim ersten Abschließen einer Instanz wird genau ein Nachfolger in derselben Transaktion erzeugt. Die Folge wird vom ursprünglichen Anker aus berechnet; überfällige Zwischenvorkommen werden übersprungen, bis die erste künftige Fälligkeit erreicht ist.
+- Monatsrhythmen behalten den ursprünglichen Tag als Anker: 31. Januar → letzter Februartag → 31. März. Bei Zeitlücken durch Sommerzeit wird auf die erste gültige lokale Zeit danach verschoben; bei doppelter Zeit wird der frühere Offset gewählt und angezeigt.
+- Der Nachfolger übernimmt Titel, Beschreibung, gültiges Projekt, gültige Zuweisung, Priorität, gültige Tags und Unteraufgabentitel; Status ist `OPEN`, Unteraufgaben sind offen. Kommentare, Aktivitäten und persönliche Erinnerungen werden nicht kopiert.
+- Die Verbindung zum Nachfolger ist eindeutig. Wiederöffnen und erneutes Abschließen erzeugt keinen weiteren Nachfolger und löscht keine bereits erzeugte Aufgabe.
+- Erinnerungen erfolgen zur Fälligkeit, 10 Minuten, eine Stunde oder einen Tag vorher. Datum ohne Uhrzeit verwendet dafür 09:00 Uhr in der Aufgabenzeitzone; die UI zeigt diese Annahme ausdrücklich.
+- Beim Anlegen liegt der Erinnerungszeitpunkt in der Zukunft. Verschieben der Fälligkeit berechnet offene Erinnerungen neu; bereits verstrichene neue Termine werden als übersprungen markiert und angezeigt.
+- Pro Empfänger, Erinnerung und Fälligkeitsrevision entsteht höchstens eine Mitteilung. Nach Neustart wird ein fälliger offener Reminder einmal nachgeholt, sofern Aufgabe offen und Zugriff vorhanden ist. Abschließen, Löschen und Berechtigungsentzug beenden ausstehende Erinnerungen.
+
+## Konsistenz und Löschen
+
+Optimistisches Sperren bedeutet: Ein Update enthält die zuletzt gelesene Version. Nur wenn sie noch aktuell ist, wird gespeichert. Andernfalls antwortet die API mit `409 Conflict`; der Browser bewahrt den Entwurf und bietet Neuladen an. Versionsprüfung gilt auch für Löschvorgänge. Gleichzeitige Änderungen an Mitgliedschaften und Aufgaben müssen so koordiniert werden, dass keine unzulässigen Zuweisungen zurückbleiben.
+
+Arbeitsannahme: Aufgaben werden zunächst endgültig gelöscht; abhängige Unteraufgaben, Kommentare, Aktivitäten, Tag-Zuordnungen und Erinnerungen verschwinden transaktional. Eine Löschung ist keine Archivfunktion. Das Löschen einer wiederkehrenden Instanz erzeugt keinen Nachfolger. Konten werden in der ersten Version nur deaktiviert; eine vollständige Kontolöschung oder Eigentumsübertragung ist noch kein Feature.
