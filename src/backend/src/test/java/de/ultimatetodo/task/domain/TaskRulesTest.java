@@ -67,7 +67,7 @@ class TaskRulesTest {
 
 	@Test
 	void anlegenSetztOpenUndNormal() {
-		Task t = Task.create(UUID.randomUUID(), null, "Einkaufen", null, TaskPriority.NORMAL, null, T0);
+		Task t = Task.create(UUID.randomUUID(), null, null, "Einkaufen", null, TaskPriority.NORMAL, null, T0);
 		assertThat(t.getStatus()).isEqualTo(TaskStatus.OPEN);
 		assertThat(t.getPriority()).isEqualTo(TaskPriority.NORMAL);
 		assertThat(t.getCompletedAt()).isNull();
@@ -76,7 +76,7 @@ class TaskRulesTest {
 
 	@Test
 	void erledigenSetztZeitpunktUndIstBeimZweitenMalWirkungslos() {
-		Task t = Task.create(UUID.randomUUID(), null, "X", null, TaskPriority.NORMAL, null, T0);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", null, TaskPriority.NORMAL, null, T0);
 		assertThat(t.complete(T1)).isTrue();
 		assertThat(t.getStatus()).isEqualTo(TaskStatus.DONE);
 		assertThat(t.getCompletedAt()).isEqualTo(T1);
@@ -87,7 +87,7 @@ class TaskRulesTest {
 
 	@Test
 	void wiederOeffnenLeertZeitpunktUndIstAufOffenerAufgabeWirkungslos() {
-		Task t = Task.create(UUID.randomUUID(), null, "X", null, TaskPriority.NORMAL, null, T0);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", null, TaskPriority.NORMAL, null, T0);
 		assertThat(t.reopen(T1)).isFalse();
 		t.complete(T1);
 		assertThat(t.reopen(T1.plusSeconds(5))).isTrue();
@@ -97,25 +97,25 @@ class TaskRulesTest {
 
 	@Test
 	void bearbeitenOhneAenderungLiefertFalseUndLaesstUpdatedAtUnveraendert() {
-		Task t = Task.create(UUID.randomUUID(), null, "X", "Beschreibung", TaskPriority.NORMAL, null, T0);
-		boolean changed = t.update(null, "X", "Beschreibung", TaskStatus.OPEN, TaskPriority.NORMAL, null, T1);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", "Beschreibung", TaskPriority.NORMAL, null, T0);
+		boolean changed = t.update(null, null, "X", "Beschreibung", TaskStatus.OPEN, TaskPriority.NORMAL, null, T1);
 		assertThat(changed).isFalse();
 		assertThat(t.getUpdatedAt()).isEqualTo(T0);
 	}
 
 	@Test
 	void bearbeitenAufDoneSetztUndAufAndereEntferntCompletedAt() {
-		Task t = Task.create(UUID.randomUUID(), null, "X", null, TaskPriority.NORMAL, null, T0);
-		t.update(null, "X", null, TaskStatus.DONE, TaskPriority.NORMAL, null, T1);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", null, TaskPriority.NORMAL, null, T0);
+		t.update(null, null, "X", null, TaskStatus.DONE, TaskPriority.NORMAL, null, T1);
 		assertThat(t.getCompletedAt()).isEqualTo(T1);
-		t.update(null, "X", null, TaskStatus.IN_PROGRESS, TaskPriority.NORMAL, null, T1.plusSeconds(1));
+		t.update(null, null, "X", null, TaskStatus.IN_PROGRESS, TaskPriority.NORMAL, null, T1.plusSeconds(1));
 		assertThat(t.getCompletedAt()).isNull();
 	}
 
 	@Test
 	void erledigteAufgabeMitFaelligkeitInDerVergangenheitIstNichtUeberfaellig() {
 		DueDate due = DueDate.resolve(java.time.LocalDate.of(2020, 1, 1), null, ZoneId.of("UTC"), null);
-		Task t = Task.create(UUID.randomUUID(), null, "X", null, TaskPriority.NORMAL, due, T0);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", null, TaskPriority.NORMAL, due, T0);
 		assertThat(t.isOverdue(T1)).isTrue();
 		t.complete(T1);
 		assertThat(t.isOverdue(T1)).isFalse();

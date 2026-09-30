@@ -13,6 +13,8 @@ import de.ultimatetodo.task.application.TaskListQuery;
 import de.ultimatetodo.task.application.TaskService;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.user.application.AppUserDetails;
+import de.ultimatetodo.user.application.UserAccess;
+import de.ultimatetodo.user.application.UserSummary;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,8 +23,10 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -40,20 +44,23 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Persönliche Aufgaben (US-030 bis US-037, US-043, US-050 bis US-052, US-110, US-120). Jeder Zugriff ist auf die
- * eigenen Aufgaben beschränkt ({@link TaskService} filtert serverseitig nach Ersteller/Projekt-Eigentümerschaft).
+ * Persönliche und geteilte Aufgaben (US-030 bis US-037, US-043, US-050 bis US-052, US-062, US-110, US-120).
+ * Jeder Zugriff ist auf zugängliche Aufgaben beschränkt ({@link TaskService} filtert serverseitig nach
+ * Ersteller-, Projekt-Eigentümerschaft oder -Mitgliedschaft).
  */
 @RestController
 @RequestMapping("/api/v1/tasks")
-@Tag(name = "Aufgaben", description = "Persönliche Aufgaben des angemeldeten Benutzers")
+@Tag(name = "Aufgaben", description = "Persönliche und geteilte Aufgaben des angemeldeten Benutzers")
 @SecurityRequirement(name = "session")
 class TaskController {
 
 	private final TaskService taskService;
+	private final UserAccess userAccess;
 	private final Clock clock;
 
-	TaskController(TaskService taskService, Clock clock) {
+	TaskController(TaskService taskService, UserAccess userAccess, Clock clock) {
 		this.taskService = taskService;
+		this.userAccess = userAccess;
 		this.clock = clock;
 	}
 
@@ -66,26 +73,29 @@ class TaskController {
 		return ResponseEntity.created(URI.create("/api/v1/tasks/" + task.getId())).body(toResponse(task));
 	}
 
-	@Operation(summary = "Eigene Aufgaben auflisten", description = "Suche (q, Titel/Beschreibung, ohne Beachtung der "
-			+ "Großschreibung), Filter (status, priority, projectId, tagId je mehrfach möglich und mit ODER verknüpft; "
-			+ "unterschiedliche Filterarten mit UND; overdue; dueDateFrom/dueDateTo vergleichen das rohe Fälligkeitsdatum) "
-			+ "und Sortierung (sortBy: createdAt, updatedAt, due, priority, title; sortDirection: asc, desc; Standard "
-			+ "createdAt/desc, stabil nach id; Aufgaben ohne Fälligkeit stehen bei sortBy=due immer zuletzt) gemäß "
-			+ "US-050 bis US-052.")
+	@Operation(summary = "Eigene und geteilte Aufgaben auflisten", description = "Suche (q, Titel/Beschreibung, ohne "
+			+ "Beachtung der Großschreibung), Filter (status, priority, projectId, tagId, assigneeId je mehrfach "
+			+ "möglich und mit ODER verknüpft; unterschiedliche Filterarten mit UND; overdue; dueDateFrom/dueDateTo "
+			+ "vergleichen das rohe Fälligkeitsdatum) und Sortierung (sortBy: createdAt, updatedAt, due, priority, "
+			+ "title; sortDirection: asc, desc; Standard createdAt/desc, stabil nach id; Aufgaben ohne Fälligkeit "
+			+ "stehen bei sortBy=due immer zuletzt) gemäß US-050 bis US-052.")
 	@GetMapping
 	PageResponse<TaskResponse> list(@AuthenticationPrincipal AppUserDetails principal,
 			@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
 			@RequestParam(required = false) String q, @RequestParam(required = false) List<String> status,
 			@RequestParam(required = false) List<String> priority, @RequestParam(required = false) List<UUID> projectId,
-			@RequestParam(required = false) List<UUID> tagId, @RequestParam(required = false) Boolean overdue,
-			@RequestParam(required = false) LocalDate dueDateFrom, @RequestParam(required = false) LocalDate dueDateTo,
-			@RequestParam(required = false) String sortBy, @RequestParam(required = false) String sortDirection) {
-		TaskListQuery query = new TaskListQuery(q, status, priority, projectId, tagId, overdue, dueDateFrom, dueDateTo,
-				sortBy, sortDirection, page, size);
+			@RequestParam(required = false) List<UUID> tagId, @RequestParam(required = false) List<UUID> assigneeId,
+			@RequestParam(required = false) Boolean overdue, @RequestParam(required = false) LocalDate dueDateFrom,
+			@RequestParam(required = false) LocalDate dueDateTo, @RequestParam(required = false) String sortBy,
+			@RequestParam(required = false) String sortDirection) {
+		TaskListQuery query = new TaskListQuery(q, status, priority, projectId, tagId, assigneeId, overdue, dueDateFrom,
+				dueDateTo, sortBy, sortDirection, page, size);
 		Page<Task> result = taskService.list(principal.id(), query);
-		Map<UUID, List<TagSummary>> tags = taskService.tagsFor(result.map(Task::getId).toList());
+		List<Task> taskList = result.getContent();
+		Map<UUID, List<TagSummary>> tags = taskService.tagsFor(taskList.stream().map(Task::getId).toList());
+		Map<UUID, UserSummary> users = resolveUsers(taskList);
 		Instant now = clock.instant();
-		return PageResponse.of(result, t -> TaskResponse.of(t, now, tags.getOrDefault(t.getId(), List.of())));
+		return PageResponse.of(result, t -> TaskResponse.of(t, now, tags.getOrDefault(t.getId(), List.of()), users));
 	}
 
 	@Operation(summary = "Persönliche Übersicht (US-110)", description = "Fünf Zähler mit denselben Rechte- und "
@@ -144,17 +154,29 @@ class TaskController {
 
 	private TaskResponse toResponse(Task task) {
 		List<TagSummary> tags = taskService.tagsFor(List.of(task.getId())).getOrDefault(task.getId(), List.of());
-		return TaskResponse.of(task, clock.instant(), tags);
+		return TaskResponse.of(task, clock.instant(), tags, resolveUsers(List.of(task)));
+	}
+
+	/** Ersteller und Bearbeiter in einer Stapelabfrage auflösen, statt je Aufgabe einzeln (US-062). */
+	private Map<UUID, UserSummary> resolveUsers(List<Task> taskList) {
+		Set<UUID> ids = new HashSet<>();
+		for (Task t : taskList) {
+			ids.add(t.getCreatorId());
+			if (t.getAssigneeId() != null) {
+				ids.add(t.getAssigneeId());
+			}
+		}
+		return userAccess.summarize(ids);
 	}
 
 	private static TaskDraft toDraft(CreateTaskRequest r) {
-		return new TaskDraft(r.projectId(), r.title(), r.description(), null, r.priority(), r.dueDate(), r.dueTime(),
-				r.dueTimeZone(), r.dueOffset());
+		return new TaskDraft(r.projectId(), r.assigneeId(), r.title(), r.description(), null, r.priority(), r.dueDate(),
+				r.dueTime(), r.dueTimeZone(), r.dueOffset());
 	}
 
 	private static TaskDraft toDraft(UpdateTaskRequest r) {
-		return new TaskDraft(r.projectId(), r.title(), r.description(), r.status(), r.priority(), r.dueDate(),
-				r.dueTime(), r.dueTimeZone(), r.dueOffset());
+		return new TaskDraft(r.projectId(), r.assigneeId(), r.title(), r.description(), r.status(), r.priority(),
+				r.dueDate(), r.dueTime(), r.dueTimeZone(), r.dueOffset());
 	}
 
 }

@@ -14,5 +14,6 @@ import java.util.UUID;
  * ausschließlich der Client, damit das Aufgaben-Modul weiterhin nicht auf das Benutzer-Modul zugreift.
  */
 public record TaskListFilter(String searchText, Set<TaskStatus> statuses, Set<TaskPriority> priorities,
-		Set<UUID> projectIds, Set<UUID> tagIds, boolean overdueOnly, LocalDate dueDateFrom, LocalDate dueDateTo) {
+		Set<UUID> projectIds, Set<UUID> tagIds, Set<UUID> assigneeIds, boolean overdueOnly, LocalDate dueDateFrom,
+		LocalDate dueDateTo) {
 }

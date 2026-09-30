@@ -4,10 +4,12 @@ import de.ultimatetodo.tag.application.TagSummary;
 import de.ultimatetodo.task.application.TaskSummaryCounts;
 import de.ultimatetodo.task.domain.DueDate;
 import de.ultimatetodo.task.domain.Task;
+import de.ultimatetodo.user.application.UserSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -22,6 +24,8 @@ public final class TaskDtos {
 
 	public record CreateTaskRequest(
 			@Schema(description = "Nur ein eigenes Projekt; ohne Angabe ist die Aufgabe persönlich") String projectId,
+			@Schema(description = "Ohne Projekt nur der Ersteller selbst; mit Projekt nur ein aktuelles Mitglied "
+					+ "oder der Eigentümer (US-062)") String assigneeId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 200,
 					example = "Steuererklärung abgeben") String title,
 			@Schema(maxLength = 10000) String description,
@@ -35,6 +39,7 @@ public final class TaskDtos {
 
 	public record UpdateTaskRequest(
 			@Schema(description = "Nur ein eigenes Projekt; null entfernt die Zuordnung") String projectId,
+			@Schema(description = "null entfernt die Zuweisung; siehe CreateTaskRequest.assigneeId") String assigneeId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 200) String title,
 			@Schema(maxLength = 10000) String description,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
@@ -56,24 +61,31 @@ public final class TaskDtos {
 	public record UpdateTaskTagsRequest(List<String> tagIds) {
 	}
 
-	@Schema(description = "Eine Aufgabe. Felder ohne Wert (z. B. keine Beschreibung, keine Fälligkeit, kein Projekt) fehlen in der Antwort.")
+	@Schema(description = "Eine Aufgabe. Felder ohne Wert (z. B. keine Beschreibung, keine Fälligkeit, kein Projekt, "
+			+ "kein Bearbeiter) fehlen in der Antwort.")
 	public record TaskResponse(UUID id, UUID projectId, String title, String description, String status,
 			String priority, String dueDate, String dueTime, String dueTimeZone, String dueOffset,
 			@Schema(description = "Nur bei Uhrzeit: exakter Fälligkeitszeitpunkt in UTC") Instant dueAt,
 			@Schema(description = "true ab dem Fälligkeitszeitpunkt, solange die Aufgabe nicht erledigt ist") boolean overdue,
-			UUID creatorId, Instant createdAt, Instant updatedAt, Instant completedAt, long version,
+			UUID creatorId, String creatorDisplayName,
+			@Schema(description = "Zuständiger Bearbeiter (US-062); ohne Zuweisung fehlt dieses Feld") UUID assigneeId,
+			String assigneeDisplayName, Instant createdAt, Instant updatedAt, Instant completedAt, long version,
 			List<TagSummary> tags) {
 
-		public static TaskResponse of(Task t, Instant now, List<TagSummary> tags) {
+		public static TaskResponse of(Task t, Instant now, List<TagSummary> tags, Map<UUID, UserSummary> users) {
 			DueDate due = t.getDue();
 			String dueDate = due == null ? null : due.date().toString();
 			String dueTime = due == null || due.time() == null ? null : due.time().toString();
 			String dueTimeZone = due == null ? null : due.zone().getId();
 			String dueOffset = due == null || due.time() == null ? null : formatOffset(due.offset());
 			Instant dueAt = due == null ? null : due.exactInstant();
+			UserSummary creator = users.get(t.getCreatorId());
+			UserSummary assignee = t.getAssigneeId() == null ? null : users.get(t.getAssigneeId());
 			return new TaskResponse(t.getId(), t.getProjectId(), t.getTitle(), t.getDescription(), t.getStatus().name(),
 					t.getPriority().name(), dueDate, dueTime, dueTimeZone, dueOffset, dueAt, t.isOverdue(now),
-					t.getCreatorId(), t.getCreatedAt(), t.getUpdatedAt(), t.getCompletedAt(), t.getVersion(), tags);
+					t.getCreatorId(), creator == null ? null : creator.displayName(), t.getAssigneeId(),
+					assignee == null ? null : assignee.displayName(), t.getCreatedAt(), t.getUpdatedAt(),
+					t.getCompletedAt(), t.getVersion(), tags);
 		}
 
 		private static String formatOffset(ZoneOffset offset) {

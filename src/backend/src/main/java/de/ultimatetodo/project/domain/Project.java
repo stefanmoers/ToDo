@@ -10,8 +10,9 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Ein Projekt bündelt Aufgaben (US-040 bis US-042). Vorerst genau ein Eigentümer und keine Mitgliedschaft;
- * Zusammenarbeit folgt erst mit US-060 (M2).
+ * Ein Projekt bündelt Aufgaben (US-040 bis US-042). Genau ein Eigentümer; Mitgliedschaft (US-060/061) wird in
+ * der eigenständigen {@link Membership}-Tabelle gehalten, nicht hier — der Eigentümer selbst hat keine eigene
+ * Mitgliedschaftszeile.
  */
 @Entity
 @Table(name = "project")

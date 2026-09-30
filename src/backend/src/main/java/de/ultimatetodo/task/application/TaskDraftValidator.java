@@ -38,6 +38,16 @@ public class TaskDraftValidator {
 			}
 		}
 
+		UUID assigneeId = null;
+		if (draft.assigneeId() != null && !draft.assigneeId().isBlank()) {
+			try {
+				assigneeId = UUID.fromString(draft.assigneeId());
+			}
+			catch (IllegalArgumentException e) {
+				errors.add(new FieldError("assigneeId", "INVALID", "Dieser Bearbeiter existiert nicht oder ist nicht zuweisbar."));
+			}
+		}
+
 		String title = TaskInput.normalizeTitle(draft.title());
 		if (!TaskInput.isValidTitle(title)) {
 			errors.add(new FieldError("title", "INVALID", "Der Titel muss 1 bis 200 Zeichen lang sein."));
@@ -86,7 +96,7 @@ public class TaskDraftValidator {
 		if (!errors.isEmpty()) {
 			throw ApiException.validation(errors);
 		}
-		return new ValidTaskValues(projectId, title, description, status, priority, due);
+		return new ValidTaskValues(projectId, assigneeId, title, description, status, priority, due);
 	}
 
 	private DueDate validateDue(TaskDraft draft, List<FieldError> errors) {

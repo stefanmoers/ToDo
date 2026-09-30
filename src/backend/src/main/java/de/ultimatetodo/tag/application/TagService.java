@@ -64,7 +64,7 @@ public class TagService implements TagAccess {
 
 	@Transactional(readOnly = true)
 	public List<Tag> list(UUID userId) {
-		return tags.findAccessible(userId, ownedProjectIds(userId));
+		return tags.findAccessible(userId, accessibleProjectIds(userId));
 	}
 
 	@Transactional
@@ -97,7 +97,7 @@ public class TagService implements TagAccess {
 		if (distinct.isEmpty()) {
 			return true;
 		}
-		return tags.countAccessible(distinct, userId, ownedProjectIds(userId)) == distinct.size();
+		return tags.countAccessible(distinct, userId, accessibleProjectIds(userId)) == distinct.size();
 	}
 
 	@Override
@@ -107,12 +107,12 @@ public class TagService implements TagAccess {
 	}
 
 	private Tag loadAccessible(UUID userId, UUID tagId) {
-		return tags.findAccessibleById(tagId, userId, ownedProjectIds(userId))
+		return tags.findAccessibleById(tagId, userId, accessibleProjectIds(userId))
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "TAG_NOT_FOUND", "Der Tag wurde nicht gefunden."));
 	}
 
-	private Set<UUID> ownedProjectIds(UUID userId) {
-		return projectAccess.ownedProjectIds(userId);
+	private Set<UUID> accessibleProjectIds(UUID userId) {
+		return projectAccess.accessibleProjectIds(userId);
 	}
 
 	private Instant now() {

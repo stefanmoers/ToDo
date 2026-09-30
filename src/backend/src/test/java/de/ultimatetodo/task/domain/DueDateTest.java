@@ -32,7 +32,7 @@ class DueDateTest {
 	void ueberfaelligGenauAbDemFaelligkeitszeitpunkt() {
 		DueDate due = DueDate.resolve(LocalDate.of(2026, 7, 15), LocalTime.of(12, 0), BERLIN, ZoneOffset.of("+02:00"));
 		Instant deadline = due.deadline();
-		Task t = Task.create(UUID.randomUUID(), null, "X", null, TaskPriority.NORMAL, due, Instant.EPOCH);
+		Task t = Task.create(UUID.randomUUID(), null, null, "X", null, TaskPriority.NORMAL, due, Instant.EPOCH);
 		assertThat(t.isOverdue(deadline.minusNanos(1))).isFalse();
 		assertThat(t.isOverdue(deadline)).isTrue();
 	}

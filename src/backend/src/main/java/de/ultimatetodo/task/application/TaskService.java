@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,7 +36,10 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-043, US-050 bis US-052, US-110, US-120, US-121 M1-Teil). */
+/**
+ * Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-043, US-050 bis US-052, US-062, US-110, US-120,
+ * US-121 M1-Teil).
+ */
 @Service
 public class TaskService {
 
@@ -66,8 +70,10 @@ public class TaskService {
 	@Transactional
 	public Task create(UUID userId, TaskDraft draft) {
 		ValidTaskValues v = validator.validate(draft, true);
-		requireOwnedProjectIfSet(v.projectId(), userId);
-		Task task = Task.create(userId, v.projectId(), v.title(), v.description(), v.priority(), v.due(), now());
+		requireAccessibleProjectIfSet(v.projectId(), userId);
+		requireValidAssignee(v.projectId(), v.assigneeId(), userId);
+		Task task = Task.create(userId, v.projectId(), v.assigneeId(), v.title(), v.description(), v.priority(), v.due(),
+				now());
 		return tasks.saveAndFlush(task);
 	}
 
@@ -82,8 +88,8 @@ public class TaskService {
 		TaskListQueryValidator.Result parsed = listQueryValidator.validate(query);
 		Pageable pageable = Paging.of(query.page(), query.size(), Sort.unsorted());
 		TaskListFilter filter = new TaskListFilter(query.q(), parsed.statuses(), parsed.priorities(),
-				toSet(query.projectId()), toSet(query.tagId()), Boolean.TRUE.equals(query.overdue()), query.dueDateFrom(),
-				query.dueDateTo());
+				toSet(query.projectId()), toSet(query.tagId()), toSet(query.assigneeId()), Boolean.TRUE.equals(query.overdue()),
+				query.dueDateFrom(), query.dueDateTo());
 		Specification<Task> spec = buildFilterSpecification(userId, filter)
 			.and(TaskSpecifications.orderedBy(parsed.sortField(), parsed.ascending()));
 		return tasks.findAll(spec, pageable);
@@ -92,7 +98,7 @@ public class TaskService {
 	/** US-110: fünf Zähler mit denselben Rechte- und Zeitregeln wie die Listen, für die persönliche Übersicht. */
 	@Transactional(readOnly = true)
 	public TaskSummaryCounts summary(UUID userId, LocalDate today) {
-		Specification<Task> accessible = TaskSpecifications.accessibleTo(userId, ownedProjectIds(userId));
+		Specification<Task> accessible = TaskSpecifications.accessibleTo(userId, accessibleProjectIds(userId));
 		long open = tasks.count(accessible.and(TaskSpecifications.hasStatus(NOT_DONE)));
 		long dueToday = tasks
 			.count(accessible.and(TaskSpecifications.hasStatus(NOT_DONE)).and(TaskSpecifications.dueDateBetween(today, today)));
@@ -106,12 +112,13 @@ public class TaskService {
 	/** Kombiniert nur tatsächlich angeforderte Filterausschnitte mit UND; {@code null} bedeutet „keine Einschränkung". */
 	private Specification<Task> buildFilterSpecification(UUID userId, TaskListFilter filter) {
 		List<Specification<Task>> parts = new ArrayList<>();
-		parts.add(TaskSpecifications.accessibleTo(userId, ownedProjectIds(userId)));
+		parts.add(TaskSpecifications.accessibleTo(userId, accessibleProjectIds(userId)));
 		addIfPresent(parts, TaskSpecifications.hasSearchText(filter.searchText()));
 		addIfPresent(parts, TaskSpecifications.hasStatus(filter.statuses()));
 		addIfPresent(parts, TaskSpecifications.hasPriority(filter.priorities()));
 		addIfPresent(parts, TaskSpecifications.hasProject(filter.projectIds()));
 		addIfPresent(parts, TaskSpecifications.hasTag(filter.tagIds()));
+		addIfPresent(parts, TaskSpecifications.hasAssignee(filter.assigneeIds()));
 		if (filter.overdueOnly()) {
 			parts.add(TaskSpecifications.isOverdue(now()));
 		}
@@ -138,10 +145,13 @@ public class TaskService {
 	public Task update(UUID userId, UUID taskId, TaskDraft draft, Long expectedVersion) {
 		requireVersion(expectedVersion);
 		ValidTaskValues v = validator.validate(draft, false);
-		requireOwnedProjectIfSet(v.projectId(), userId);
 		Task task = loadAccessible(userId, taskId);
 		checkVersion(task, expectedVersion);
-		if (task.update(v.projectId(), v.title(), v.description(), v.status(), v.priority(), v.due(), now())) {
+		requireCanChangeProject(task, userId, v.projectId());
+		requireAccessibleProjectIfSet(v.projectId(), userId);
+		requireValidAssignee(v.projectId(), v.assigneeId(), task.getCreatorId());
+		if (task.update(v.projectId(), v.assigneeId(), v.title(), v.description(), v.status(), v.priority(), v.due(),
+				now())) {
 			flushOrConflict();
 		}
 		return task;
@@ -234,19 +244,57 @@ public class TaskService {
 	}
 
 	private Task loadAccessible(UUID userId, UUID taskId) {
-		return tasks.findAccessibleById(taskId, userId, ownedProjectIds(userId))
+		return tasks.findAccessibleById(taskId, userId, accessibleProjectIds(userId))
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "TASK_NOT_FOUND", "Die Aufgabe wurde nicht gefunden."));
 	}
 
-	private Set<UUID> ownedProjectIds(UUID userId) {
-		return projectAccess.ownedProjectIds(userId);
+	private Set<UUID> accessibleProjectIds(UUID userId) {
+		return projectAccess.accessibleProjectIds(userId);
 	}
 
-	/** US-040ff: Eine Aufgabe darf nur einem Projekt zugeordnet werden, das der Handelnde selbst besitzt. */
-	private void requireOwnedProjectIfSet(UUID projectId, UUID userId) {
-		if (projectId != null && !projectAccess.isOwner(projectId, userId)) {
+	/** US-040ff/US-060: Eine Aufgabe darf nur einem Projekt zugeordnet werden, das der Handelnde selbst zugänglich ist. */
+	private void requireAccessibleProjectIfSet(UUID projectId, UUID userId) {
+		if (projectId != null && !projectAccess.isAccessible(projectId, userId)) {
 			throw ApiException.validation(List
-				.of(new FieldError("projectId", "INVALID", "Dieses Projekt existiert nicht oder gehört dir nicht.")));
+				.of(new FieldError("projectId", "INVALID", "Dieses Projekt existiert nicht oder du hast keinen Zugriff.")));
+		}
+	}
+
+	/**
+	 * US-042/US-062 (docs/DOMAIN_MODEL.md): eine bestehende Aufgabe darf nur ihr Ersteller oder der Eigentümer
+	 * ihres aktuellen Projekts einem anderen Projekt zuordnen (auch das Entfernen aus einem Projekt) — ein
+	 * einfaches Mitglied, das die Aufgabe sonst bearbeiten darf, darf sie nicht verschieben.
+	 */
+	private void requireCanChangeProject(Task task, UUID userId, UUID newProjectId) {
+		if (Objects.equals(task.getProjectId(), newProjectId)) {
+			return;
+		}
+		boolean isCreator = task.getCreatorId().equals(userId);
+		boolean isCurrentProjectOwner = task.getProjectId() != null && projectAccess.isOwner(task.getProjectId(), userId);
+		if (!isCreator && !isCurrentProjectOwner) {
+			throw ApiException.validation(List.of(new FieldError("projectId", "FORBIDDEN",
+					"Nur der Ersteller oder der Eigentümer des aktuellen Projekts darf die Aufgabe einem anderen Projekt zuordnen.")));
+		}
+	}
+
+	/**
+	 * US-062 (docs/DOMAIN_MODEL.md): ohne Projekt ist nur der Ersteller selbst als Bearbeiter erlaubt; mit
+	 * Projekt nur ein aktuelles Mitglied oder der Eigentümer dieses Projekts.
+	 */
+	private void requireValidAssignee(UUID projectId, UUID assigneeId, UUID creatorId) {
+		if (assigneeId == null) {
+			return;
+		}
+		if (projectId == null) {
+			if (!assigneeId.equals(creatorId)) {
+				throw ApiException.validation(List
+					.of(new FieldError("assigneeId", "INVALID", "Ohne Projekt kann nur der Ersteller selbst zugewiesen werden.")));
+			}
+			return;
+		}
+		if (!projectAccess.isAccessible(projectId, assigneeId)) {
+			throw ApiException.validation(List.of(
+					new FieldError("assigneeId", "INVALID", "Dieser Bearbeiter ist kein Mitglied oder Eigentümer dieses Projekts.")));
 		}
 	}
 

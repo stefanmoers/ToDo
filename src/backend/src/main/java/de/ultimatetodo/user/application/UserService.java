@@ -10,8 +10,12 @@ import de.ultimatetodo.user.domain.UserInput;
 import de.ultimatetodo.user.persistence.UserRepository;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Anwendungsfälle des Benutzermoduls: registrieren, Profil lesen/ändern, Passwort ändern. */
 @Service
-public class UserService {
+public class UserService implements UserAccess {
 
 	private static final String MSG_PASSWORD =
 			"Das Passwort muss zwischen " + PasswordPolicy.MIN_LENGTH + " und " + PasswordPolicy.MAX_LENGTH + " Zeichen lang sein.";
@@ -111,6 +115,27 @@ public class UserService {
 			throw ApiException.validation(errors);
 		}
 		user.changePassword(encoder.encode(newPassword), clock.instant());
+	}
+
+	/** US-060: Mitglieder werden ausschließlich über die exakte Login-E-Mail gesucht, nie durchsuchbar aufgelistet. */
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<UserSummary> findByEmail(String rawEmail) {
+		String email = UserInput.normalizeEmail(rawEmail);
+		return users.findByEmail(email).map(UserService::toSummary);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Map<UUID, UserSummary> summarize(Collection<UUID> userIds) {
+		if (userIds.isEmpty()) {
+			return Map.of();
+		}
+		return users.findAllById(userIds).stream().collect(Collectors.toMap(User::getId, UserService::toSummary));
+	}
+
+	private static UserSummary toSummary(User user) {
+		return new UserSummary(user.getId(), user.getDisplayName(), user.isActive());
 	}
 
 }

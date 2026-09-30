@@ -25,4 +25,10 @@ class TaskProjectMaintenance implements TaskProjectSupport {
 		tasks.detachFromProject(projectId);
 	}
 
+	@Override
+	@Transactional
+	public void unassignUser(UUID projectId, UUID userId) {
+		tasks.unassignUser(projectId, userId);
+	}
+
 }

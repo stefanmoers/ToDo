@@ -31,9 +31,9 @@ public final class TaskSpecifications {
 	private TaskSpecifications() {
 	}
 
-	public static Specification<Task> accessibleTo(UUID userId, Set<UUID> ownedProjectIds) {
+	public static Specification<Task> accessibleTo(UUID userId, Set<UUID> accessibleProjectIds) {
 		return (root, query, cb) -> cb.or(cb.equal(root.get("creatorId"), userId),
-				ownedProjectIds.isEmpty() ? cb.disjunction() : root.get("projectId").in(ownedProjectIds));
+				accessibleProjectIds.isEmpty() ? cb.disjunction() : root.get("projectId").in(accessibleProjectIds));
 	}
 
 	public static Specification<Task> hasSearchText(String q) {
@@ -64,6 +64,14 @@ public final class TaskSpecifications {
 			return null;
 		}
 		return (root, query, cb) -> root.get("projectId").in(projectIds);
+	}
+
+	/** US-051 (M2-Teil): Bearbeiter-Filter, erst sinnvoll seit es Zuweisungen gibt (US-062). */
+	public static Specification<Task> hasAssignee(Set<UUID> assigneeIds) {
+		if (assigneeIds == null || assigneeIds.isEmpty()) {
+			return null;
+		}
+		return (root, query, cb) -> root.get("assigneeId").in(assigneeIds);
 	}
 
 	/** Subquery statt Join: eine Aufgabe kann mehrere Tags haben, ohne dass das die Trefferzeilen vervielfacht. */

@@ -48,7 +48,7 @@ class TaskPersistenceIT {
 	}
 
 	static TaskDraft draft(String title) {
-		return new TaskDraft(null, title, null, null, null, null, null, null, null);
+		return new TaskDraft(null, null, title, null, null, null, null, null, null, null);
 	}
 
 	@Test
@@ -92,7 +92,7 @@ class TaskPersistenceIT {
 				catch (Exception e) {
 					throw new RuntimeException(e);
 				}
-				task.update(null, "geändert", null, task.getStatus(), task.getPriority(), null, Instant.now());
+				task.update(null, null, "geändert", null, task.getStatus(), task.getPriority(), null, Instant.now());
 				tasks.flush();
 				return null;
 			})).isInstanceOf(ObjectOptimisticLockingFailureException.class);
@@ -112,7 +112,8 @@ class TaskPersistenceIT {
 
 		assertThatThrownBy(() -> tx.execute(status -> {
 			// Wird durch TaskService.update() sofort geflusht (flushOrConflict()).
-			taskService.update(creator, taskId, new TaskDraft(null, "Neu", null, "OPEN", "NORMAL", null, null, null, null), 0L);
+			taskService.update(creator, taskId,
+					new TaskDraft(null, null, "Neu", null, "OPEN", "NORMAL", null, null, null, null), 0L);
 			// Verstößt gegen den Titel-Constraint und bricht die Transaktion ab.
 			jdbc.update(
 					"insert into task (id, creator_id, title, status, priority, created_at, updated_at) values (?,?,?,?,?,now(),now())",

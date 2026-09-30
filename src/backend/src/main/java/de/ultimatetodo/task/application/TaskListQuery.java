@@ -11,6 +11,6 @@ import java.util.UUID;
  * sind bereits typisiert, weil Spring ungültige Werte darin schon vor Erreichen des Dienstes als 400 abweist.
  */
 public record TaskListQuery(String q, List<String> status, List<String> priority, List<UUID> projectId,
-		List<UUID> tagId, Boolean overdue, LocalDate dueDateFrom, LocalDate dueDateTo, String sortBy,
-		String sortDirection, Integer page, Integer size) {
+		List<UUID> tagId, List<UUID> assigneeId, Boolean overdue, LocalDate dueDateFrom, LocalDate dueDateTo,
+		String sortBy, String sortDirection, Integer page, Integer size) {
 }

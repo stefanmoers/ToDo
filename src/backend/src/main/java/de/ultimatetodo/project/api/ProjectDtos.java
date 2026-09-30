@@ -1,6 +1,7 @@
 package de.ultimatetodo.project.api;
 
 import de.ultimatetodo.project.domain.Project;
+import de.ultimatetodo.user.application.UserSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
@@ -23,7 +24,8 @@ public final class ProjectDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0") Long version) {
 	}
 
-	@Schema(description = "Ein Projekt. Vorerst genau ein Eigentümer, keine Mitgliedschaft (folgt in M2).")
+	@Schema(description = "Ein Projekt. Eigentümer und Mitglieder (US-060) haben Zugriff auf seine Aufgaben; "
+			+ "Projekt selbst umbenennen/löschen/Mitglieder verwalten bleibt dem Eigentümer vorbehalten.")
 	public record ProjectResponse(UUID id, String name, String description, UUID ownerId, Instant createdAt,
 			Instant updatedAt, long version) {
 
@@ -32,6 +34,19 @@ public final class ProjectDtos {
 					p.getUpdatedAt(), p.getVersion());
 		}
 
+	}
+
+	@Schema(description = "Ein aktives oder inaktives Projektmitglied (US-060, US-061).")
+	public record MemberResponse(UUID userId, String displayName, Instant addedAt) {
+
+		public static MemberResponse of(UserSummary user, Instant addedAt) {
+			return new MemberResponse(user.id(), user.displayName(), addedAt);
+		}
+
+	}
+
+	@Schema(description = "Nimmt ein Mitglied über die exakte Login-E-Mail auf (US-060); keine durchsuchbare Benutzerliste.")
+	public record AddMemberRequest(@Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email) {
 	}
 
 }
