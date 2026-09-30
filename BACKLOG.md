@@ -38,7 +38,7 @@ M0 bis M4 beschreiben die Umsetzungsreihenfolge, keine unterschiedlichen Qualit�
 | Priorität | Stories |
 |---|---|
 | Must | US-001–004, US-010–012, US-020–022, US-030–037, US-040–042, US-050–053, US-110, US-120–121, US-130–131, US-140, US-141, US-150, US-170, US-171 |
-| Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172, US-180 |
+| Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172, US-180, US-181 |
 | Could | US-090, US-100, US-151 (Demo-Unterlagen) |
 
 Begründung: Ein sicherer, barrierefreier Kern mit persönlichen Aufgaben (M0/M1) ist das Referenzprodukt. Zusammenarbeit (M2) zeigt Berechtigungen und Konsistenz, die Zeitfunktionen (M3) sind fachlich anspruchsvoll, aber verzichtbar, falls Zeit fehlt. Betrieb (US-160–162) wird vor dem Referenzrelease durchgespielt, gilt aber als Should, weil kein Dritter es abnimmt.
@@ -636,6 +636,34 @@ Als Vorführender möchte ich eine moderne, frische und klar gegliederte Oberfl�
 - Navigation, Status, Priorität, aktive Filter und Aktionen sind visuell klar, auch ohne Farbe unterscheidbar und im gesamten bestehenden Frontend einheitlich.
 - Bei 320 CSS-Pixeln und 200 % Zoom bleiben Inhalte und Funktionen ohne unerwartetes horizontales Scrollen verfügbar; Fokus, Zielgrößen und Kontraste erfüllen die anwendbaren Regeln aus `ACCESSIBILITY.md`.
 - Bestehende Fachabläufe, Filterparameter, Berechtigungen, Fehlermeldungen und Fokusführung funktionieren weiterhin. Automatische und tatsächlich durchgeführte manuelle Prüfungen sind mit Ergebnis dokumentiert; axe allein gilt nicht als Konformitätsnachweis.
+
+### US-181 – Gleichnamige Tags eindeutig erkennbar machen · nach M2 · Should · OFFEN
+
+> **Stand (30.09.2026):** Entschieden (Variante A), noch nicht umgesetzt. Beim Vorführungstest mit zwei Konten fiel auf, dass die Tag-Auswahl einer Aufgabe gleichnamige Tags mehrfach und ohne Herkunftsangabe auflistet. Ausgangslage: Konto A und Konto B besitzen jeweils ein eigenes Projekt „Operation Kaffee & Kuchen“ mit einem Projekt-Tag „Backen“. Konto B ist zusätzlich Mitglied in Projekt A. In der Aufgabe von Projekt A sieht B dann zwei Tags „Backen“ und kann nicht erkennen, welches zu welchem Projekt gehört. Nur eines davon ist der Aufgabe zugeordnet. Die Fachregel „Namen sind je Geltungsbereich eindeutig“ (US-043) ist dabei nicht verletzt: die Tags liegen in verschiedenen Geltungsbereichen. Sichtbar wird das Problem erst, weil die Auswahl mehrere Geltungsbereiche zusammen anzeigt. Nachweis: API-Abfrage `GET /api/v1/tags` als Konto B, Screenshot der Tag-Auswahl.
+
+Als Benutzer möchte ich in Tag-Listen erkennen, woher ein Tag stammt, damit ich bei gleichen Namen nicht versehentlich das falsche Tag zuordne oder filtere.
+
+**Entscheidung des Auftraggebers (30.09.2026):** Variante A, die Herkunft wird gekennzeichnet. Jeder Eintrag zeigt Geltungsbereich und bei Projekt-Tags das Projekt samt Eigentümer, z. B. „Backen · Projekt Operation Kaffee & Kuchen (Stefan Moers)“ bzw. „Backen · persönlich“. Fachregeln und Daten bleiben unverändert. Verworfen wurde das Zusammenführen gleichnamiger Tags, weil es die Bedeutung der Projekt-Tags verändern würde.
+
+**Weiterhin offen (Auftraggeber):** Dürfen zwei Projekte mit gleichem Namen für dieselbe Person sichtbar sein? Das ist bisher nicht geregelt und verstärkt das Problem, denn die Kennzeichnung „Projekt, Eigentümer“ unterscheidet gleichnamige Projekte verschiedener Eigentümer nur über den Eigentümernamen. Möglich sind eine Warnung beim Anlegen oder der Eigentümername in Listen.
+
+**Akzeptanzkriterien:**
+
+- Die Tag-Auswahl in Aufgabenformular und Aufgabenansicht, der Tag-Filter der Aufgabenliste und die Seite „Tags“ unterscheiden gleichnamige Tags erkennbar. Die Kennzeichnung steht im Text und ist damit auch ohne Farbe lesbar.
+- Der zugängliche Name jedes Kontrollkästchens enthält die Herkunft, sodass Screenreader-Nutzer zwei gleichnamige Tags unterscheiden können (Bezug: [ACCESSIBILITY.md](docs/ACCESSIBILITY.md)). Zwei Kontrollkästchen mit identischem Namen gelten als Mangel.
+- Die API liefert dafür die nötigen Angaben (Projektname und Eigentümer) typisiert und in OpenAPI beschrieben, ohne mehr fremde Daten preiszugeben, als der Betrachter bereits sehen darf.
+- Die Reihenfolge ist stabil: nach Name, dann nach Geltungsbereich (persönlich vor Projekt), dann nach Projektname.
+- Bestehendes Verhalten bleibt unverändert: Eindeutigkeit je Geltungsbereich, Rechte zum Anlegen und Ändern, Filterparameter, Zuordnung per `PUT /api/v1/tasks/{id}/tags`.
+
+**Testfälle (Zwei-Benutzer-Test nach `docs/TESTING.md`):**
+
+1. Benutzer A und B legen je ein Projekt gleichen Namens mit einem Tag „Backen“ an; B wird Mitglied in As Projekt. In As Aufgabe zeigt B die Tag-Auswahl: beide „Backen“ erscheinen unterscheidbar, das zugeordnete ist als gewählt erkennbar.
+2. Zusätzlich existiert bei B ein persönliches Tag „Backen“. Drei Einträge mit drei verschiedenen Herkunftsangaben.
+3. B ordnet As Projekt-Tag zu und filtert danach in der Aufgabenliste. Das Ergebnis enthält nur Aufgaben mit genau diesem Tag, nicht die mit Bs eigenem.
+4. Playwright/axe: keine Verstöße in der Tag-Auswahl mit Dubletten; Screenreader-Name je Eintrag eindeutig (manuell in US-172 zu prüfen).
+5. Regression: Ein Benutzer ohne gleichnamige Tags sieht unveränderte, kurze Einträge ohne überflüssigen Zusatz.
+
+**Abhängigkeiten:** US-043, US-053, US-060–062, US-170–172, US-180.
 
 ## 24. Definition of Done
 
