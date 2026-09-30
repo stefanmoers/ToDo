@@ -22,8 +22,13 @@ export default function DashboardPage() {
 
   return (
     <>
-      <h1>Übersicht</h1>
-      <p>Hallo {user?.displayName}! Jede Zahl führt zur passenden Aufgabenliste.</p>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Dein Arbeitsbereich</p>
+          <h1>Übersicht</h1>
+          <p>Hallo {user?.displayName}! Jede Zahl führt zur passenden Aufgabenliste.</p>
+        </div>
+      </div>
       {state.kind === 'loading' && <p role="status">Übersicht wird geladen …</p>}
       {state.kind === 'error' && (
         <div role="alert">

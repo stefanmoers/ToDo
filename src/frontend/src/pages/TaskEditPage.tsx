@@ -98,7 +98,7 @@ function TaskEditForm({ initial, viewerTimeZone }: { initial: Task; viewerTimeZo
   }
 
   return (
-    <>
+    <div className="content-card form-shell">
       <h1>Aufgabe bearbeiten</h1>
       {conflict && (
         <ConflictNotice
@@ -125,6 +125,6 @@ function TaskEditForm({ initial, viewerTimeZone }: { initial: Task; viewerTimeZo
         onSubmit={onSubmit}
         cancelTo={`/aufgaben/${base.id}`}
       />
-    </>
+    </div>
   )
 }

@@ -32,17 +32,20 @@ export default function ProjectListPage() {
 
   return (
     <>
-      <h1>Meine Projekte</h1>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Gemeinsam organisieren</p>
+          <h1>Meine Projekte</h1>
+        </div>
+        <Link to="/projekte/neu" className="button-link">
+          Neues Projekt anlegen
+        </Link>
+      </div>
       {notice && (
         <p role="status" className="notice">
           {notice}
         </p>
       )}
-      <p>
-        <Link to="/projekte/neu" className="button-link">
-          Neues Projekt anlegen
-        </Link>
-      </p>
       {state.kind === 'loading' && <p role="status">Projekte werden geladen …</p>}
       {state.kind === 'error' && (
         <div role="alert">
@@ -53,7 +56,7 @@ export default function ProjectListPage() {
         </div>
       )}
       {state.kind === 'loaded' && state.page.totalElements === 0 && (
-        <p>
+        <p className="empty-state">
           Du hast noch keine Projekte. <Link to="/projekte/neu">Erstes Projekt anlegen</Link>
         </p>
       )}
@@ -62,7 +65,7 @@ export default function ProjectListPage() {
           <h2 ref={headingRef} tabIndex={-1} id="project-list-heading">
             Projekte – Seite {state.page.page + 1} von {state.page.totalPages}
           </h2>
-          <ul className="task-list" aria-labelledby="project-list-heading">
+          <ul className="task-list project-grid" aria-labelledby="project-list-heading">
             {state.page.items.map((project) => (
               <ProjectListItem key={project.id} project={project} />
             ))}

@@ -49,7 +49,7 @@ export default function LoginPage() {
   }
 
   return (
-    <>
+    <div className="content-card auth-card">
       <h1>Anmelden</h1>
       {notice && (
         <p role="status" className="notice">
@@ -80,6 +80,6 @@ export default function LoginPage() {
       <p>
         Noch kein Konto? <Link to="/registrieren">Jetzt registrieren</Link>
       </p>
-    </>
+    </div>
   )
 }

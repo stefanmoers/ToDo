@@ -5,12 +5,12 @@ import { usePageTitle } from '../hooks/usePageTitle'
 export default function PasswordResetUnavailablePage() {
   usePageTitle('Passwort vergessen')
   return (
-    <>
+    <div className="content-card auth-card">
       <h1>Passwort vergessen</h1>
       <p>Die Passwort-Wiederherstellung ist in diesem Demo-Projekt nicht verfügbar.</p>
       <p>
         <Link to="/anmelden">Zurück zur Anmeldung</Link>
       </p>
-    </>
+    </div>
   )
 }

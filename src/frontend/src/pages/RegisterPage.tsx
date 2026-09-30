@@ -63,7 +63,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <>
+    <div className="content-card auth-card">
       <h1>Registrieren</h1>
       <p>Alle Angaben sind Pflicht.</p>
       <ErrorSummary errors={errors} labels={LABELS} general={general} focusToken={focusToken} />
@@ -106,6 +106,6 @@ export default function RegisterPage() {
       <p>
         Bereits registriert? <Link to="/anmelden">Zur Anmeldung</Link>
       </p>
-    </>
+    </div>
   )
 }

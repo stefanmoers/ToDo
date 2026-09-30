@@ -45,7 +45,7 @@ export default function ProjectCreatePage() {
   }
 
   return (
-    <>
+    <div className="content-card form-shell">
       <h1>Neues Projekt</h1>
       <p>Nur der Name ist Pflicht.</p>
       <ProjectForm
@@ -60,6 +60,6 @@ export default function ProjectCreatePage() {
         onSubmit={onSubmit}
         cancelTo="/projekte"
       />
-    </>
+    </div>
   )
 }

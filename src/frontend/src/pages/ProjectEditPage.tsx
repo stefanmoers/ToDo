@@ -92,7 +92,7 @@ function ProjectEditForm({ initial }: { initial: Project }) {
   }
 
   return (
-    <>
+    <div className="content-card form-shell">
       <h1>Projekt bearbeiten</h1>
       {conflict && (
         <ConflictNotice
@@ -116,6 +116,6 @@ function ProjectEditForm({ initial }: { initial: Project }) {
         onSubmit={onSubmit}
         cancelTo={`/projekte/${base.id}`}
       />
-    </>
+    </div>
   )
 }

@@ -29,8 +29,13 @@ export default function TagsPage() {
 
   return (
     <>
-      <h1>Meine Tags</h1>
-      <p>Tags markieren Aufgaben unabhängig von Status oder Projekt und lassen sich in der Aufgabenliste filtern.</p>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Schneller wiederfinden</p>
+          <h1>Meine Tags</h1>
+          <p>Tags markieren Aufgaben unabhängig von Status oder Projekt und lassen sich in der Aufgabenliste filtern.</p>
+        </div>
+      </div>
       {notice && (
         <p role="status" className="notice">
           {notice}
@@ -52,7 +57,7 @@ export default function TagsPage() {
           {state.tags.filter((t) => t.scope === 'PERSONAL').length === 0 ? (
             <p>Noch keine persönlichen Tags.</p>
           ) : (
-            <ul className="task-list" aria-label="Persönliche Tags">
+            <ul className="task-list tag-grid" aria-label="Persönliche Tags">
               {state.tags
                 .filter((t) => t.scope === 'PERSONAL')
                 .map((tag) => (
@@ -66,7 +71,7 @@ export default function TagsPage() {
             return (
               <div key={project.id}>
                 <h2>Tags in „{project.name}“</h2>
-                <ul className="task-list" aria-label={`Tags in ${project.name}`}>
+                <ul className="task-list tag-grid" aria-label={`Tags in ${project.name}`}>
                   {projectTags.map((tag) => (
                     <TagRow key={tag.id} tag={tag} onRenamed={onRenamed} onDeleted={onDeleted} />
                   ))}

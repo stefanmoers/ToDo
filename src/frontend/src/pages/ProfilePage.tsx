@@ -65,7 +65,7 @@ function ProfileForm() {
   }
 
   return (
-    <section aria-labelledby="profile-heading">
+    <section className="content-card" aria-labelledby="profile-heading">
       <h2 id="profile-heading">Profil</h2>
       <dl className="facts">
         <dt>E-Mail-Adresse (Login)</dt>
@@ -148,7 +148,7 @@ function PasswordForm() {
   }
 
   return (
-    <section aria-labelledby="password-heading">
+    <section className="content-card" aria-labelledby="password-heading">
       <h2 id="password-heading">Passwort ändern</h2>
       <p>Nach der Änderung wirst du überall abgemeldet und musst dich neu anmelden.</p>
       <ErrorSummary errors={errors} labels={{ currentPassword: 'Bisheriges Passwort', newPassword: 'Neues Passwort' }} general={general} focusToken={focusToken} />

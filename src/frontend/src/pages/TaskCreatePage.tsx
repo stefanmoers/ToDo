@@ -49,7 +49,7 @@ export default function TaskCreatePage() {
   }
 
   return (
-    <>
+    <div className="content-card form-shell">
       <h1>Neue Aufgabe</h1>
       <p>Nur der Titel ist Pflicht.</p>
       <TaskForm
@@ -66,6 +66,6 @@ export default function TaskCreatePage() {
         onSubmit={onSubmit}
         cancelTo="/"
       />
-    </>
+    </div>
   )
 }

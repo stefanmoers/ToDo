@@ -67,7 +67,12 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <h1>Konten administrieren</h1>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Verwaltung</p>
+          <h1>Konten administrieren</h1>
+        </div>
+      </div>
       {notice && (
         <p role="status" className="notice">
           {notice}
@@ -81,56 +86,61 @@ export default function AdminUsersPage() {
       )}
       {state.kind === 'loaded' && (
         <>
-          <table>
-            <caption className="visually-hidden">Konten – Seite {state.page.page + 1} von {state.page.totalPages}</caption>
-            <thead>
-              <tr>
-                <th scope="col">E-Mail</th>
-                <th scope="col">Anzeigename</th>
-                <th scope="col">Rolle</th>
-                <th scope="col">Status</th>
-                <th scope="col">Aktion</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.page.items.map((u) => {
-                const busy = busyId === u.id
-                return (
-                  <tr key={u.id}>
-                    <td>{u.email}</td>
-                    <td>{u.displayName}</td>
-                    <td>{ROLE_LABELS[u.role]}</td>
-                    <td>{STATUS_LABELS[u.status]}</td>
-                    <td>
-                      {rowError?.id === u.id && (
-                        <p role="alert" className="field-error">
-                          {rowError.message}
-                        </p>
-                      )}
-                      {u.status === 'ACTIVE' ? (
-                        <button
-                          type="button"
-                          className="danger"
-                          disabled={busy}
-                          onClick={(e) => {
-                            lastActionButtonRef.current = e.currentTarget
-                            setRowError(undefined)
-                            setPendingDeactivation(u)
-                          }}
-                        >
-                          Deaktivieren<span className="visually-hidden">: {u.displayName}</span>
-                        </button>
-                      ) : (
-                        <button type="button" disabled={busy} onClick={() => onReactivate(u)}>
-                          Reaktivieren<span className="visually-hidden">: {u.displayName}</span>
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <p id="admin-table-hint" className="hint table-scroll-hint">Die Kontenliste ist seitlich scrollbar. Mit Tab erreichst du die Tabelle.</p>
+          {/* Horizontales Scrollen der Tabelle muss auch per Tastatur erreichbar sein. */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+          <div className="table-scroll" role="region" aria-label="Kontenliste" aria-describedby="admin-table-hint" tabIndex={0}>
+            <table>
+              <caption className="visually-hidden">Konten – Seite {state.page.page + 1} von {state.page.totalPages}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">E-Mail</th>
+                  <th scope="col">Anzeigename</th>
+                  <th scope="col">Rolle</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {state.page.items.map((u) => {
+                  const busy = busyId === u.id
+                  return (
+                    <tr key={u.id}>
+                      <td>{u.email}</td>
+                      <td>{u.displayName}</td>
+                      <td>{ROLE_LABELS[u.role]}</td>
+                      <td>{STATUS_LABELS[u.status]}</td>
+                      <td>
+                        {rowError?.id === u.id && (
+                          <p role="alert" className="field-error">
+                            {rowError.message}
+                          </p>
+                        )}
+                        {u.status === 'ACTIVE' ? (
+                          <button
+                            type="button"
+                            className="danger"
+                            disabled={busy}
+                            onClick={(e) => {
+                              lastActionButtonRef.current = e.currentTarget
+                              setRowError(undefined)
+                              setPendingDeactivation(u)
+                            }}
+                          >
+                            Deaktivieren<span className="visually-hidden">: {u.displayName}</span>
+                          </button>
+                        ) : (
+                          <button type="button" disabled={busy} onClick={() => onReactivate(u)}>
+                            Reaktivieren<span className="visually-hidden">: {u.displayName}</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
           <Pagination
             page={state.page.page}
             totalPages={state.page.totalPages}
