@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a und der Aufgaben-Kern (M1b) sowie US-023 sind umgesetzt und automatisiert geprüft.** Projekte, Tags, Suche/Filter/Sortierung und Zusammenarbeit (M1c/M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und die Projekt-Stories aus M1c (US-040 bis 042) sind umgesetzt und automatisiert geprüft.** Tags, Suche/Filter/Sortierung, Dashboard (Rest von M1c) und Zusammenarbeit (M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
