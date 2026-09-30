@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Backlog](../BACKLOG.md) · [Sicherheitsmodell](SECURITY.md)
 
-**Status:** `User` (V2) und `Task` (V3) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). `Project`, `Membership`, `Subtask`, `Comment`, `Tag`/`TaskTag`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
+**Status:** `User` (V2), `Task` (V3) und `Project` (V4) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). `Project` hat vorerst genau einen Eigentümer und keine `Membership`; Mitgliedschaft/Teilen folgt erst mit US-060 (M2). `Subtask`, `Comment`, `Tag`/`TaskTag`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
 
 ## Begriffe und Beziehungen
 
@@ -68,6 +68,8 @@ Arbeitsannahmen für US-022, US-042 und US-060 bis US-062:
 - Globale Administratoren verwalten Kontostatus und Systemzustand. Sie erhalten keinen automatischen Zugriff auf private Projekte oder Aufgaben.
 
 Beim späteren Ändern dieser Regeln müssen API, UI, Tests und Dokumentation gemeinsam angepasst werden. Die frühere Vorgabe „Projekt löschen löscht Aufgaben nicht“ bleibt dabei verbindlich.
+
+**Umgesetzt in M1c:** Ohne `Membership`-Tabelle ist „Eigentümer und aktuelle Mitglieder“ vorerst gleichbedeutend mit „Eigentümer“ (der erste Bullet-Punkt sowie das Löschen-ohne-Aufgabenverlust, zweiter und fünfter Bullet-Punkt ohne den Zuweisungs-/Tag-Teil, der erst mit Tags/Zuweisungen relevant wird). Zuweisung, Mitgliederverwaltung und die Bereinigung fremder Zuweisungen/Erinnerungen beim Löschen folgen erst mit US-060 bis US-062 (M2).
 
 ## Eingaben und Grenzen
 

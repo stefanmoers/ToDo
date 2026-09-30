@@ -202,7 +202,7 @@ Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuf
 
 ### US-030 – Aufgabe anlegen · M1 · ERLEDIGT
 
-> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel Pflicht (1–200 Zeichen), Beschreibung/Priorität/Fälligkeit optional, Server setzt Ersteller/Status `OPEN`/Priorität `NORMAL`/Zeitstempel, fremde Felder (`status`, `creatorId`, `version`) werden ignoriert. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172).
+> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel Pflicht (1–200 Zeichen), Beschreibung/Priorität/Fälligkeit/Projekt optional, Server setzt Ersteller/Status `OPEN`/Priorität `NORMAL`/Zeitstempel, fremde Felder (`status`, `creatorId`, `version`) werden ignoriert. Ein Projekt darf nur zugeordnet werden, wenn der Handelnde selbst Eigentümer ist (`400`, sonst). Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172); Tags folgen erst mit US-043.
 
 Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 
@@ -282,7 +282,9 @@ Als Benutzer möchte ich Aufgaben mit oder ohne Termin verwalten.
 
 ## 9. EPIC-05 – Projekte und Organisation
 
-### US-040 – Projekt anlegen · M1 · OFFEN
+### US-040 – Projekt anlegen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`ProjectApiIT`, `ProjectPages.test.tsx`, `projects.spec.ts`): Name Pflicht (1–100 Zeichen), Beschreibung optional (≤10.000 Zeichen), Ersteller wird Eigentümer, neues Projekt ist für andere Benutzer nicht sichtbar. Mitgliedschaft/Teilen folgt erst mit US-060 (M2).
 
 Als Benutzer möchte ich Aufgaben nach einem Thema bündeln.
 
@@ -290,7 +292,9 @@ Als Benutzer möchte ich Aufgaben nach einem Thema bündeln.
 - Neues Projekt ist zunächst privat; ein anderer Benutzer kann es nicht lesen.
 - Ungültige Namen werden verständlich abgewiesen.
 
-### US-041 – Projekt bearbeiten · M1 · OFFEN
+### US-041 – Projekt bearbeiten · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet: nur der Eigentümer darf ändern (fremdes Projekt liefert überall `404`, auch mit korrekter Version statt `409`); Validierung und optimistisches Sperren (`409` bei veralteter Version, Formularentwurf bleibt erhalten) analog zu Aufgaben.
 
 Als Eigentümer möchte ich Name und Beschreibung ändern.
 
@@ -298,7 +302,9 @@ Als Eigentümer möchte ich Name und Beschreibung ändern.
 - Validierung und Versionsprüfung verhindern ungültige oder verlorene Änderungen.
 - Bestehende Aufgaben und Mitgliedschaften bleiben erhalten.
 
-### US-042 – Projekt ohne Aufgabenverlust löschen · M1/M2 · OFFEN
+### US-042 – Projekt ohne Aufgabenverlust löschen · M1/M2 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet (`ProjectApiIT.loeschenOhneAufgabenverlustLoestAufgabenTransaktional`, `projects.spec.ts`): Löschen entfernt den Projektbezug transaktional (`task.project_id = null`), die Aufgabe bleibt erhalten und wird zur persönlichen Aufgabe ihres Erstellers; die Bestätigung nennt diese Wirkung. Offen: Bereinigung fremder Zuweisungen/Erinnerungen (erst ab M2 relevant, da es vor US-060 keine Zuweisungen gibt).
 
 Als Eigentümer möchte ich ein Projekt auflösen, ohne Aufgaben zu verlieren.
 
