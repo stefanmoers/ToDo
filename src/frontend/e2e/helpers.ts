@@ -79,6 +79,18 @@ export async function createProjectViaUi(page: Page, name: string) {
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 }
 
+/** Nimmt ein Mitglied direkt über die API auf (schnell, für Testvorbereitung); teilt sich die Cookies mit `page`. */
+export async function addMemberViaApi(page: Page, projectId: string, email: string) {
+  const csrf = await page.request.get('/api/v1/auth/csrf')
+  const { headerName, token } = await csrf.json()
+  const response = await page.request.post(`/api/v1/projects/${projectId}/members`, {
+    headers: { [headerName]: token },
+    data: { email },
+  })
+  const body = await response.json()
+  return body.userId as string
+}
+
 /** Legt einen Tag direkt über die API an (schnell, für Testvorbereitung); teilt sich die Cookies mit `page`. */
 export async function createTagViaApi(page: Page, name: string, projectId: string | null = null): Promise<string> {
   const csrf = await page.request.get('/api/v1/auth/csrf')
