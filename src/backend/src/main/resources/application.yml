@@ -26,6 +26,17 @@ server:
     include-stacktrace: never
     include-binding-errors: never
   shutdown: graceful
+  # Hinter dem nginx-Proxy die echte Client-Adresse (X-Forwarded-For) verwenden; nur interne Proxys werden vertraut.
+  forward-headers-strategy: native
+  servlet:
+    session:
+      timeout: ${SESSION_TIMEOUT:30m}
+      cookie:
+        name: ULTIMATETODO_SESSION
+        http-only: true
+        same-site: lax
+        # Im HTTPS-Betrieb zwingend true; nur der lokale HTTP-Lernbetrieb setzt false.
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 management:
   endpoints:
@@ -53,3 +64,20 @@ logging:
   level:
     root: INFO
     org.springframework.security: WARN
+
+springdoc:
+  api-docs:
+    # Die OpenAPI-Beschreibung ist nur im Entwicklungsprofil und in Tests öffentlich (siehe application-dev.yml).
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  rate-limit:
+    # Ratenbegrenzung ohne dauerhafte Sperre (US-141): höchstens so viele Versuche je Zeitfenster.
+    login-attempts: 10
+    login-window: 15m
+    register-attempts: 10
+    register-window: 1h
+    password-change-attempts: 5
+    password-change-window: 15m

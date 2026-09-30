@@ -30,6 +30,8 @@ services:
       DB_USER: ${POSTGRES_USER:-ultimatetodo}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Bitte POSTGRES_PASSWORD in der Datei .env setzen (siehe .env.example)}
       BACKEND_PORT: "8081"
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
       interval: 5s

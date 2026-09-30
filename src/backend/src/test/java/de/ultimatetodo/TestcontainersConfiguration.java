@@ -7,10 +7,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
 	/** Gleiche PostgreSQL-Version wie im Betrieb (compose.yaml, .env.example). */
-	static final String POSTGRES_IMAGE = "postgres:17.11-alpine";
+	public static final String POSTGRES_IMAGE = "postgres:17.11-alpine";
 
 	@Bean
 	@ServiceConnection

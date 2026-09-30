@@ -16,6 +16,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<springdoc.version>3.1.1</springdoc.version>
+		<bouncycastle.version>1.86</bouncycastle.version>
 		<postgres.image>postgres:17.11-alpine</postgres.image>
 	</properties>
 	<dependencies>
@@ -52,6 +53,12 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
 			<version>${springdoc.version}</version>
+		</dependency>
+		<dependency>
+			<!-- Wird von Spring Securitys Argon2PasswordEncoder benötigt -->
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
