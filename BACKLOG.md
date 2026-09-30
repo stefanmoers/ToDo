@@ -2,6 +2,8 @@
 
 **Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) und M2 bis auf einen offenen Testfall sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** M2 umfasst Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare, die Aktivitätshistorie und Kontenadministration (US-060 bis US-062, US-070, US-071, US-080, US-081, US-014), inklusive der zugehörigen M2-Teile von US-022/031/032/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. US-042 bleibt `IN ARBEIT`: ihr eigenes Akzeptanzkriterium verlangt einen Löschtest mit mehreren Erstellern einschließlich eines deaktivierten Kontos, den es bisher nicht gibt. US-013 (Passwort-Reset) ist mit reduziertem Umfang erledigt: eine Auftraggeber-Entscheidung nimmt die echte Wiederherstellung aus diesem Demo-Projekt heraus (siehe die Story selbst). Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
+**UI-Stand (US-180):** Die visuelle Überarbeitung ist implementiert und automatisiert geprüft; die manuelle Screenreader-Prüfung und ein echter Browser-Zoom-Test stehen noch aus. [Prüfprotokoll](docs/reviews/ui-US180.md).
+
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
 ## 1. Ziel und Umfang
@@ -36,7 +38,7 @@ M0 bis M4 beschreiben die Umsetzungsreihenfolge, keine unterschiedlichen Qualit�
 | Priorität | Stories |
 |---|---|
 | Must | US-001–004, US-010–012, US-020–022, US-030–037, US-040–042, US-050–053, US-110, US-120–121, US-130–131, US-140, US-141, US-150, US-170, US-171 |
-| Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172 |
+| Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172, US-180 |
 | Could | US-090, US-100, US-151 (Demo-Unterlagen) |
 
 Begründung: Ein sicherer, barrierefreier Kern mit persönlichen Aufgaben (M0/M1) ist das Referenzprodukt. Zusammenarbeit (M2) zeigt Berechtigungen und Konsistenz, die Zeitfunktionen (M3) sind fachlich anspruchsvoll, aber verzichtbar, falls Zeit fehlt. Betrieb (US-160–162) wird vor dem Referenzrelease durchgespielt, gilt aber als Should, weil kein Dritter es abnimmt.
@@ -65,6 +67,7 @@ Bereits in M1 werden Aktivitätsdaten zusammen mit Fachänderungen gespeichert; 
 | EPIC-16 | Tests und Ausbildungsnachweise |
 | EPIC-17 | Installation, Deployment und Updates |
 | EPIC-18 | Barrierefreiheit |
+| EPIC-19 | Visuelle Gestaltung für die Vorführung |
 
 ## 5. EPIC-01 – Anwendungsgrundlage und Dokumentation
 
@@ -612,7 +615,29 @@ Als Entwickler möchte ich Bedienbarkeit prüfen, die ein automatischer Scan nic
 - Protokoll nennt Build, Umgebung, Schritte, Ergebnis und offene Befunde.
 - Offene anwendbare A-/AA-Verstöße werden behoben oder als bekannte Einschränkung dokumentiert; eine Konformität wird nicht behauptet.
 
-## 23. Definition of Done
+## 23. EPIC-19 – Visuelle Gestaltung für die Vorführung
+
+### US-180 – Oberfläche einheitlich und übersichtlich gestalten · nach M2, vor der Vorführung · Should · IN ARBEIT
+
+> **Stand (30.09.2026, Schritte 1–4 implementiert):** Das gemeinsame helle/dunkle Gestaltungssystem, die gegliederte Aufgabenliste und die Übertragung auf Übersicht, Projekte, Tags, Details, Formulare, Anmeldung, Profil und Administration sind umgesetzt. Mobil sind Filter über einen beschrifteten Schalter erreichbar; die Administrationstabelle besitzt einen per Tastatur scrollbaren Bereich. Lint, Typprüfung, Build, 114 Frontend-Unit-Tests und 58 Playwright-/axe-Tests sind erfolgreich; die Sichtprüfung bei Desktopbreite, 320 CSS-Pixeln sowie eine rechnerische Prüfung zentraler Kontraste sind in [ui-US180.md](docs/reviews/ui-US180.md) protokolliert. Die manuelle Screenreader-Prüfung durch den Auftraggeber (US-172) und ein echter Browser-Zoom-Test stehen noch aus. Abhängigkeiten: US-050–053, US-110 und US-170–172. Fachfunktionen und API-Verträge sind unverändert.
+
+Als Vorführender möchte ich eine moderne, frische und klar gegliederte Oberfläche zeigen, damit Ausbilder und Azubis die Funktionen schnell erfassen und die Anwendung gern bedienen.
+
+**Umsetzungsplan in überprüfbaren Schritten:**
+
+1. Ein gemeinsames Gestaltungssystem für Farben, Schriftgrößen, Abstände, Flächen, Navigation, Eingaben, Schaltflächen und Fokuszustände festlegen. Helles und dunkles Farbschema vollständig gestalten; Farben und notwendige Elementgrenzen nach [ACCESSIBILITY.md](docs/ACCESSIBILITY.md) messen.
+2. Die Aufgabenliste als Pilot umgestalten: breiterer Seitenrahmen, erkennbare Hauptaktion und aktive Standardansicht, Suche und Sortierung nahe an den Ergebnissen, Filter am Desktop neben der Liste und auf schmalen Bildschirmen vollständig erreichbar. Aufgaben nach Titel, Status, Priorität, Fälligkeit und Aktion klar gliedern. Aktive Filter, Leer-, Lade-, Fehler- und Konfliktzustände erhalten dieselbe Sorgfalt.
+3. Übersicht, Projekte, Tags, Details, Formulare, Anmeldung, Profil, Administration und Dialoge mit denselben Regeln gestalten. Wiederkehrende Muster zentral pflegen; keine neue UI-Bibliothek ohne die in `AGENTS.md` geforderte Prüfung.
+4. Nach jedem größeren Schritt den tatsächlichen Stand und offene Punkte hier dokumentieren. Desktop-, Mobil- sowie Hell-/Dunkel-Ansichten visuell prüfen und die betroffenen Frontend-Tests ausführen. Vor Abschluss zusätzlich Tastatur, sichtbaren und nicht verdeckten Fokus, Kontrast, 200-%-Zoom, 320-CSS-Pixel-Reflow, reduzierte Bewegung und die vorhandene Playwright-/axe-Suite prüfen. Die manuelle Screenreader-Prüfung aus US-172 bleibt ein eigener Nachweis des Auftraggebers.
+
+**Akzeptanzkriterien:**
+
+- Die Aufgabenliste nutzt den Platz auf großen Bildschirmen sinnvoll; Filter verdecken die Ergebnisse nicht und sind auf kleinen Bildschirmen ohne Maus nutzbar.
+- Navigation, Status, Priorität, aktive Filter und Aktionen sind visuell klar, auch ohne Farbe unterscheidbar und im gesamten bestehenden Frontend einheitlich.
+- Bei 320 CSS-Pixeln und 200 % Zoom bleiben Inhalte und Funktionen ohne unerwartetes horizontales Scrollen verfügbar; Fokus, Zielgrößen und Kontraste erfüllen die anwendbaren Regeln aus `ACCESSIBILITY.md`.
+- Bestehende Fachabläufe, Filterparameter, Berechtigungen, Fehlermeldungen und Fokusführung funktionieren weiterhin. Automatische und tatsächlich durchgeführte manuelle Prüfungen sind mit Ergebnis dokumentiert; axe allein gilt nicht als Konformitätsnachweis.
+
+## 24. Definition of Done
 
 Eine Story ist erst `ERLEDIGT`, wenn alle zutreffenden Punkte nachgewiesen sind:
 
@@ -627,7 +652,7 @@ Eine Story ist erst `ERLEDIGT`, wenn alle zutreffenden Punkte nachgewiesen sind:
 
 Für das Referenzrelease kommen die geprüfte Frischinstallation, ein geprüfter Restore, die Updateprobe und die manuelle Accessibility-Prüfung hinzu. Ein erfolgreicher Build allein erfüllt diese Definition nicht.
 
-## 24. Vor der jeweiligen Umsetzung zu konkretisieren
+## 25. Vor der jeweiligen Umsetzung zu konkretisieren
 
 | Zeitpunkt | Offener Umsetzungsentscheid | Bestehende Vorgabe |
 |---|---|---|
