@@ -2,11 +2,13 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockApi, pageOf, renderAt, testTask, testUser } from '../testUtils'
+import type { TagSummary } from '../api/tagSummary'
 
 afterEach(() => vi.restoreAllMocks())
 
 const loggedIn = { 'GET /api/v1/auth/me': () => ({ body: testUser }) }
 const TASK_ID = '22222222-2222-2222-2222-222222222222'
+const TAG: TagSummary = { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Wichtig' }
 
 describe('Aufgabenliste', () => {
   it('zeigt einen leeren Zustand mit Link zum Anlegen', async () => {
@@ -68,6 +70,45 @@ describe('Aufgabenliste', () => {
     await userEvent.click(await screen.findByRole('link', { name: 'Nächste Seite' }))
     expect(await screen.findByRole('link', { name: 'Zweite Seite' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2 })).toHaveFocus()
+  })
+
+  it('zeigt Tags einer Aufgabe in der Liste an', async () => {
+    const task = testTask({ tags: [TAG] })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tags': () => ({ body: [] }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([task], { totalElements: 1 }) }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    expect(screen.getByText(/Tags: Wichtig/)).toBeInTheDocument()
+  })
+
+  it('filtert die Liste über die Tag-Auswahl', async () => {
+    const task = testTask({ tags: [TAG] })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tags': () => ({ body: [{ id: TAG.id, name: TAG.name, scope: 'PERSONAL', createdAt: '2026-09-30T05:00:00Z' }] }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([task], { totalElements: 1 }) }),
+      [`GET /api/v1/tasks?page=0&size=25&tagId=${TAG.id}`]: () => ({ body: pageOf([task], { totalElements: 1 }) }),
+    })
+    renderAt('/')
+    const select = await screen.findByLabelText('Nach Tag filtern')
+    await userEvent.selectOptions(select, TAG.name)
+    expect(await screen.findByRole('link', { name: 'Einkaufen' })).toBeInTheDocument()
+  })
+
+  it('zeigt bei aktivem Tag-Filter ohne Treffer einen Rücksetzen-Link', async () => {
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tags': () => ({ body: [{ id: TAG.id, name: TAG.name, scope: 'PERSONAL', createdAt: '2026-09-30T05:00:00Z' }] }),
+      [`GET /api/v1/tasks?page=0&size=25&tagId=${TAG.id}`]: () => ({ body: pageOf([]) }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([]) }),
+    })
+    renderAt(`/?tag=${TAG.id}`)
+    expect(await screen.findByText('Keine Aufgaben mit diesem Tag.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Filter zurücksetzen' }))
+    expect(await screen.findByText('Du hast noch keine Aufgaben.')).toBeInTheDocument()
   })
 })
 
@@ -131,6 +172,35 @@ describe('Aufgabe ansehen', () => {
     mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }) })
     renderAt(`/aufgaben/${TASK_ID}`)
     expect(await screen.findByText('<b>fett</b>')).toBeInTheDocument()
+  })
+
+  it('zeigt zugeordnete Tags und „Keine“ ohne Zuordnung', async () => {
+    const task = testTask({ tags: [TAG] })
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+    expect(screen.getByText('Wichtig')).toBeInTheDocument()
+  })
+
+  it('ordnet einen Tag über den Editor zu, ohne die Version zu ändern', async () => {
+    const task = testTask({ tags: [] })
+    const tag = { id: TAG.id, name: TAG.name, scope: 'PERSONAL' as const, createdAt: '2026-09-30T05:00:00Z' }
+    const { calls } = mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [tag] }),
+      [`PUT /api/v1/tasks/${TASK_ID}/tags`]: () => ({ body: [TAG] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+    await userEvent.click(await screen.findByLabelText('Wichtig'))
+    await userEvent.click(screen.getByRole('button', { name: 'Tags speichern' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Die Tag-Zuordnung wurde gespeichert.')
+    expect(calls.find((c) => c.key === `PUT /api/v1/tasks/${TASK_ID}/tags`)?.body).toEqual({ tagIds: [TAG.id] })
   })
 })
 
