@@ -47,7 +47,7 @@ Die `.env` lokal bearbeiten und nicht in Git aufnehmen. Für Passwörter etwa ei
 
 ### Konfigurationsvertrag
 
-**Umgesetzt in M0:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (fehlt es, bricht `docker compose` mit einer verständlichen Meldung ab), `WEB_PORT`, `BACKEND_PORT`, `DEV_DB_PORT`. **Noch nicht umgesetzt** (kommen mit M1a/M2): `APP_BASE_URL`, `SESSION_COOKIE_SECURE`, `SESSION_TIMEOUT`. Die Zurückweisung des Platzhalterpassworts aus `.env.example` ist noch offen (Teil von US-001).
+**Umgesetzt in M0:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (fehlt es, bricht `docker compose` mit einer verständlichen Meldung ab), `WEB_PORT`, `BACKEND_PORT`, `DEV_DB_PORT`. **Umgesetzt in M1a:** `SESSION_COOKIE_SECURE` (Standard `false`, nur für localhost; hinter HTTPS `true`), `SESSION_TIMEOUT` (Standard `30m`), optional `RATE_LIMIT_LOGIN_ATTEMPTS` und `RATE_LIMIT_REGISTER_ATTEMPTS` (Standard je 10 pro Zeitfenster; nur für Testläufe anheben). **Noch nicht umgesetzt** (kommt mit M2): `APP_BASE_URL`. Die Zurückweisung des Platzhalterpassworts aus `.env.example` ist noch offen (Teil von US-001).
 
 | Variable | Beispiel/Standard | Bedeutung und Weitergabe |
 |---|---|---|

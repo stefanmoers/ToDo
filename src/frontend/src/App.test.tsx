@@ -1,35 +1,28 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import { mockApi, renderAt, testUser } from './testUtils'
 
 afterEach(() => vi.restoreAllMocks())
 
-function renderAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <App />
-    </MemoryRouter>,
-  )
-}
-
 describe('App', () => {
-  it('zeigt Überschrift, Sprunglink und meldet den Systemstatus', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ status: 'UP' })))
+  it('leitet nicht angemeldete Besucher zur Anmeldung', async () => {
+    mockApi({ 'GET /api/v1/auth/me': () => ({ status: 401, body: { code: 'UNAUTHENTICATED', message: 'Bitte melde dich an.' } }) })
     renderAt('/')
-    expect(screen.getByRole('heading', { level: 1, name: 'UltimateTodo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Anmelden' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Zum Hauptinhalt springen' })).toHaveAttribute('href', '#main')
-    expect(await screen.findByText('Das System ist bereit.')).toBeInTheDocument()
+    expect(document.title).toBe('Anmelden – UltimateTodo')
   })
 
-  it('meldet einen nicht erreichbaren Server verständlich', async () => {
-    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Netzwerkfehler'))
+  it('zeigt angemeldeten Benutzern die Startseite mit Systemstatus', async () => {
+    mockApi({ 'GET /api/v1/auth/me': () => ({ body: testUser }) })
+    vi.spyOn(globalThis, 'fetch')
     renderAt('/')
-    expect(await screen.findByText('Der Systemstatus konnte nicht abgefragt werden.')).toBeInTheDocument()
+    expect(await screen.findByText(/Hallo Max!/)).toBeInTheDocument()
   })
 
-  it('zeigt für unbekannte Adressen eine Nicht-gefunden-Seite', () => {
+  it('zeigt für unbekannte Adressen eine Nicht-gefunden-Seite', async () => {
+    mockApi({ 'GET /api/v1/auth/me': () => ({ status: 401, body: { code: 'UNAUTHENTICATED', message: 'x' } }) })
     renderAt('/gibt-es-nicht')
-    expect(screen.getByRole('heading', { level: 1, name: 'Seite nicht gefunden' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Seite nicht gefunden' })).toBeInTheDocument()
   })
 })

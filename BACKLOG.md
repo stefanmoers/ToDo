@@ -108,7 +108,9 @@ Als Entwickler möchte ich Anforderungen, Architektur und erste Befehle an einem
 
 ## 6. EPIC-02 – Benutzerverwaltung
 
-### US-010 – Konto registrieren · M1 · OFFEN
+### US-010 – Konto registrieren · M1 · IN ARBEIT
+
+> **Stand:** Umgesetzt und automatisiert nachgewiesen (`AuthApiIT`: Validierung, Argon2id, parallele Doppelregistrierung, Rolle nur `USER`; Playwright/axe für Registrierung normal und mit Fehlern). Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) für die Definition of Done.
 
 Als Gast möchte ich ein Konto mit eindeutiger Login-E-Mail anlegen.
 
@@ -116,7 +118,9 @@ Als Gast möchte ich ein Konto mit eindeutiger Login-E-Mail anlegen.
 - Nur ein sicherer Passwort-Hash wird gespeichert; Selbstregistrierung erzeugt ausschließlich die Rolle `USER`.
 - Das neue aktive Konto kann sich anmelden; Fehler sind verständlich und zugänglich.
 
-### US-011 – Eigenes Profil bearbeiten · M1 · OFFEN
+### US-011 – Eigenes Profil bearbeiten · M1 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet (`AuthApiIT`, `auth.spec.ts`): nur Anzeigename und Zeitzone änderbar, E-Mail/Rolle nicht. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) für die Definition of Done.
 
 Als Benutzer möchte ich mein Profil sehen und Anzeigename sowie Zeitzone bearbeiten.
 
@@ -124,7 +128,9 @@ Als Benutzer möchte ich mein Profil sehen und Anzeigename sowie Zeitzone bearbe
 - Nur der angemeldete Benutzer kann sein Profil ändern; Rolle und Kontostatus sind dort nicht bearbeitbar.
 - Änderungen werden validiert; ein Zeitzonenwechsel verändert keine gespeicherten Fälligkeiten rückwirkend.
 
-### US-012 – Passwort ändern · M1 · OFFEN
+### US-012 – Passwort ändern · M1 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet: alte und parallele Sitzungen enden über die Sitzungsgeneration, altes Passwort wird abgelehnt, Passwörter nicht in Logs. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) für die Definition of Done.
 
 Als Benutzer möchte ich mein Passwort ersetzen können.
 
@@ -150,7 +156,9 @@ Als Administrator möchte ich Konten auflisten, deaktivieren und reaktivieren.
 
 ## 7. EPIC-03 – Authentifizierung und Autorisierung
 
-### US-020 – Anmelden · M1 · OFFEN
+### US-020 – Anmelden · M1 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet: Session-ID-Wechsel, CSRF für alle schreibenden Anfragen, `401`/`403` im JSON-Format, Status bleibt beim Neuladen. Cookie-Flag `Secure` ist konfigurierbar, aber im lokalen Betrieb aus. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) für die Definition of Done.
 
 Als registrierter Benutzer möchte ich sicher auf meine Daten zugreifen.
 
@@ -158,7 +166,9 @@ Als registrierter Benutzer möchte ich sicher auf meine Daten zugreifen.
 - Navigation und Neuladen innerhalb der gültigen Session erhalten den Anmeldestatus.
 - Geschützte APIs liefern ohne Anmeldung `401`; Session-Cookie und CSRF-Ablauf entsprechen dem Sicherheitsmodell.
 
-### US-021 – Abmelden · M1 · OFFEN
+### US-021 – Abmelden · M1 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet: Logout entwertet Sitzung serverseitig, löscht Cookie, ist CSRF-geschützt; Clientzustand wird geleert. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) für die Definition of Done.
 
 Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 
@@ -166,7 +176,9 @@ Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 - Eine Wiederverwendung des bisherigen Cookies erlaubt keinen Zugriff; erneute Anmeldung ist erforderlich.
 - Logout ist gegen CSRF geschützt; andere Benutzer oder private Daten erscheinen nach Logout nicht aus einem UI-Cache.
 
-### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · OFFEN
+### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · IN ARBEIT
+
+> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. Offen: Aufgabendaten ab M1b, Projektmitgliedschaft ab M2.
 
 Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
@@ -175,6 +187,8 @@ Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 - Tests mit zwei Benutzern und Admin decken persönliche Aufgaben ab M1 und entzogene Projektmitgliedschaft ab M2 ab.
 
 ### US-023 – Sitzung bei Inaktivität beenden · M1 · Should · OFFEN
+
+> **Stand:** Noch nicht begonnen (nur der serverseitige Timeout von 30 Minuten ist konfiguriert).
 
 Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuft.
 
@@ -431,7 +445,7 @@ Als Benutzer möchte ich keine halbfertigen Datenänderungen erhalten.
 
 ### US-130 – Verständliche Logs erhalten · M0 · IN ARBEIT
 
-> **Stand:** Umgesetzt: Anfragekennung (`X-Request-Id`, MDC im Logmuster), einheitliches Fehlerformat ohne Interna, Unit-Test des Filters. Offen: Nachweis, dass Logs keine Passwörter/Bodies enthalten, sobald es Eingaben gibt (ab M1a).
+> **Stand:** Umgesetzt: Anfragekennung, einheitliches Fehlerformat, Test dass Passwörter/CSRF-Token nicht im Log stehen (`AuthApiIT`). Offen: gleiche Prüfung für Aufgabenbeschreibungen ab M1b.
 
 Als Betreiber möchte ich Fehler eingrenzen können.
 
@@ -459,7 +473,9 @@ Als Benutzer möchte ich auf sichere Verarbeitung meiner Daten vertrauen.
 - Negative API-Tests decken Rechteumgehung, Rollenerhöhung, Tokenmissbrauch, schädliche Texte und Session-Entwertung ab.
 - Keine echten Secrets im Repository oder Browser-Build; Abhängigkeiten auf bekannte Probleme prüfen und relevante offene Befunde dokumentieren/beheben.
 
-### US-141 – Missbrauch begrenzen und Header setzen · M1 · Must · OFFEN
+### US-141 – Missbrauch begrenzen und Header setzen · M1 · Must · IN ARBEIT
+
+> **Stand:** Umgesetzt: Ratenbegrenzung für Login und Registrierung (`429` mit `Retry-After`, keine Dauersperre, Test mit fester Uhr), Sicherheitsheader und CSP im nginx (im E2E gegen den echten Build geprüft), `no-store` für die Token-Antwort. Offen: Ratenbegrenzung für Passwort-Wiederherstellung (M2).
 
 Als Betreiber möchte ich Angriffsflächen der Anmeldung und des Browsers reduzieren.
 

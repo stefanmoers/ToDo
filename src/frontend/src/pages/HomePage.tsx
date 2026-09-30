@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchReadiness, type Readiness } from '../api/health'
+import { useAuth } from '../features/auth/AuthContext'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const LABELS: Record<Readiness | 'LOADING', string> = {
   LOADING: 'Systemstatus wird geprüft …',
@@ -9,6 +11,8 @@ const LABELS: Record<Readiness | 'LOADING', string> = {
 }
 
 export default function HomePage() {
+  usePageTitle('Start')
+  const { user } = useAuth()
   const [status, setStatus] = useState<Readiness | 'LOADING'>('LOADING')
 
   useEffect(() => {
@@ -22,7 +26,7 @@ export default function HomePage() {
   return (
     <>
       <h1>UltimateTodo</h1>
-      <p>Persönliche und gemeinsame Aufgaben. Anmeldung und Aufgaben folgen in den nächsten Meilensteinen.</p>
+      <p>Hallo {user?.displayName}! Deine Aufgaben folgen im nächsten Meilenstein.</p>
       <p role="status" data-testid="system-status">
         {LABELS[status]}
       </p>

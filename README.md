@@ -2,7 +2,7 @@
 
 UltimateTodo wird eine Webanwendung für persönliche und gemeinsame Aufgaben. Sie dient als Referenzprojekt für die Ausbildung und für die Arbeit mit Coding-Agenten. Azubis sollen die Architektur erklären, die Technologien einordnen und die Anwendung selbst installieren können.
 
-**Stand: 30.09.2026 – M0 (Grundlage) umgesetzt.** Es gibt ein lauffähiges Grundgerüst: Backend mit Health-Endpunkten und Flyway, Frontend-Startseite, Docker Compose, Tests und CI. Fachfunktionen (Konten, Aufgaben, …) folgen ab M1; ihre Beschreibungen in den Fachdokumenten sind weiterhin Zielbild. Den Status je Story zeigt das [Backlog](BACKLOG.md).
+**Stand: 30.09.2026 – M0 (Grundlage) und M1a (Konten und Anmeldung) umgesetzt.** Registrierung, Anmeldung mit Session und CSRF, Profil und Passwortänderung laufen im Compose-Stack. Aufgaben und Projekte folgen ab M1b; ihre Beschreibungen in den Fachdokumenten sind weiterhin Zielbild. Den Status je Story zeigt das [Backlog](BACKLOG.md).
 
 ## Was entsteht?
 
@@ -84,4 +84,4 @@ Die Modulaufteilung innerhalb von `src/backend/` und `src/frontend/` steht in de
 
 ## Nächster Arbeitsschritt
 
-**M1a** aus dem Backlog: Registrierung, Login/Logout, Session und CSRF, Profil, Passwort ändern. Der Coding-Agent liest vorher die [Arbeitsregeln](AGENTS.md) und die zur Story gehörenden Dokumente. Eine Story ist erst abgeschlossen, wenn ihre Akzeptanzkriterien und die Definition of Done erfüllt sind.
+**M1b** aus dem Backlog: Aufgaben anlegen, ansehen, bearbeiten, löschen, erledigen; Priorität, Fälligkeit, Versionskonflikte. Offen aus M1a: US-023 (Sitzungs-Timeout mit Warnung). Der Coding-Agent liest vorher die [Arbeitsregeln](AGENTS.md) und die zur Story gehörenden Dokumente. Eine Story ist erst abgeschlossen, wenn ihre Akzeptanzkriterien und die Definition of Done erfüllt sind.

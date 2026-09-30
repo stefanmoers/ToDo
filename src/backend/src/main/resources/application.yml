@@ -75,9 +75,9 @@ springdoc:
 app:
   rate-limit:
     # Ratenbegrenzung ohne dauerhafte Sperre (US-141): höchstens so viele Versuche je Zeitfenster.
-    login-attempts: 10
+    login-attempts: ${RATE_LIMIT_LOGIN_ATTEMPTS:10}
     login-window: 15m
-    register-attempts: 10
+    register-attempts: ${RATE_LIMIT_REGISTER_ATTEMPTS:10}
     register-window: 1h
     password-change-attempts: 5
     password-change-window: 15m

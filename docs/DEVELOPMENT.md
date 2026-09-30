@@ -59,6 +59,8 @@ set +a
 
 Das Laden führt Shell-Inhalt aus; ausschließlich die selbst angelegte Konfiguration laden. Alternativ dieselben Variablen in der lokalen IDE-Startkonfiguration setzen, ohne sie zu versionieren. Im Containerbetrieb übernimmt Compose die explizite Weitergabe. Eine `.env` allein exportiert nichts in beliebige Prozesse.
 
+Im `dev`-Profil ist die OpenAPI-Beschreibung unter [localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs) abrufbar (im Betrieb deaktiviert, nginx blendet `/v3/` aus). Eine Swagger-Oberfläche ist nicht eingerichtet.
+
 Flyway führt Migrationen beim Start aus. Ein Migrationsfehler verhindert Bereitschaft. Der erwartete lokale Prüfpunkt lautet nach Umsetzung [Backend-Readiness](http://localhost:8081/actuator/health/readiness).
 
 ## 5. Zielablauf ab M0: Frontend starten
@@ -72,7 +74,7 @@ npm --prefix src/frontend run dev
 
 Die Entwicklungsoberfläche soll unter [localhost:5173](http://localhost:5173) erscheinen. Vite leitet `/api` standardmäßig an `http://127.0.0.1:8081` weiter; ein abweichender Backend-Port wird über eine in M0 dokumentierte Proxy-Einstellung übernommen. Der Browser verwendet relative `/api/v1`-URLs. Keine Zugangsdaten in `VITE_*`-Variablen speichern.
 
-Testanmeldung erfolgt nach M1 über eine normale Registrierung. Ein Administratorkonto entsteht erst über den in US-014 festzulegenden Bootstrap-Vorgang. Keine Demo-Standardpasswörter in der normalen Anwendung.
+Testanmeldung erfolgt über eine normale Registrierung unter <http://localhost:5173/registrieren> (ab M1a vorhanden; mindestens 15 Zeichen Passwort). Ein Administratorkonto entsteht erst über den in US-014 festzulegenden Bootstrap-Vorgang. Keine Demo-Standardpasswörter in der normalen Anwendung.
 
 ## 6. Bauen, testen und debuggen
 
