@@ -30,11 +30,12 @@ export default function Layout() {
       <a className="skip-link" href="#main">
         Zum Hauptinhalt springen
       </a>
-      <header>
-        <p className="brand">
-          <Link to="/">UltimateTodo</Link>
-        </p>
-        <nav aria-label="Hauptnavigation">
+      <header className="site-header">
+        <div className="site-header-inner">
+          <p className="brand">
+            <Link to="/"><span className="brand-mark" aria-hidden="true">✓</span>UltimateTodo</Link>
+          </p>
+          <nav className="main-nav" aria-label="Hauptnavigation">
           {user ? (
             <ul>
               <li>
@@ -75,12 +76,13 @@ export default function Layout() {
               </li>
             </ul>
           ) : null}
-        </nav>
+          </nav>
+        </div>
       </header>
-      <main id="main" tabIndex={-1}>
+      <main id="main" className="site-main" tabIndex={-1}>
         <Outlet />
       </main>
-      <footer>
+      <footer className="site-footer">
         <p>Referenzprojekt – Entwicklungsstand M2</p>
       </footer>
       <SessionTimeoutWarning />
