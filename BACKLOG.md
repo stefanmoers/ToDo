@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie aus M2 die Mitgliedschaft und Zuweisung (US-060 bis US-062) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen; die übrigen M2-Stories (Unteraufgaben, Kommentare, Aktivitätshistorie, Passwort-Reset, Kontoverwaltung) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie aus M2 die Mitgliedschaft, Zuweisung und Unteraufgaben (US-060 bis US-062, US-070, US-071) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen; die übrigen M2-Stories (Kommentare, Aktivitätshistorie, Passwort-Reset, Kontoverwaltung) sowie US-062 selbst (wartet auf die Aktivitätshistorie) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -398,7 +398,9 @@ Als Projektmitglied möchte ich die Zuständigkeit sichtbar machen.
 
 ## 12. EPIC-08 – Unteraufgaben
 
-### US-070 – Unteraufgaben verwalten · M2 · OFFEN
+### US-070 – Unteraufgaben verwalten · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`SubtaskApiIT`, `TaskPages.test.tsx`, `subtasks.spec.ts`): Unteraufgaben gehören zu `task` (V7, `subtask.task_id` FK `ON DELETE CASCADE`); Anlegen, Umbenennen und Löschen sind über `/api/v1/tasks/{id}/subtasks[...]` möglich. Leere oder zu lange Titel (1–200 Zeichen nach Trim, dieselbe Regel wie Aufgabentitel, `TaskInput`) werden am Feld gemeldet; jede Operation prüft die Rechte über die Hauptaufgabe (`TaskService.loadAccessible`) — ein fremder Benutzer erhält für jede Unteraufgaben-Operation `404`, genau wie für die Aufgabe selbst. Reihenfolge (`sortOrder`) ist über „Nach oben“/„Nach unten“-Schaltflächen ohne Ziehbewegung bedienbar, an den Rändern wirkungslos; keine verschachtelten Unteraufgaben (genau eine Ebene).
 
 Als Benutzer möchte ich eine Aufgabe in kleine Schritte zerlegen.
 
@@ -406,7 +408,9 @@ Als Benutzer möchte ich eine Aufgabe in kleine Schritte zerlegen.
 - Leere Titel scheitern; Rechte werden über die Hauptaufgabe geprüft.
 - Reihenfolge ist auch ohne Ziehbewegung bedienbar; keine verschachtelten Unteraufgaben.
 
-### US-071 – Fortschritt anzeigen · M2 · OFFEN
+### US-071 – Fortschritt anzeigen · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`SubtaskApiIT`, `TaskPages.test.tsx`, `subtasks.spec.ts`): der Erledigt-Zustand ist über eine Checkbox rückgängig änderbar und bleibt nach Neuladen erhalten (echte Persistenz, kein reiner Client-Zustand). Der Fortschritt erscheint als Text „X von Y erledigt“ sowohl auf der Detailseite als auch in der Aufgabenliste (`TaskResponse.subtasks`, serverseitig berechnet, ändert nicht die Version der Aufgabe — Arbeitsannahme analog zu Tags, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Alle Unteraufgaben erledigt setzt die Hauptaufgabe nachweislich nicht automatisch auf `DONE` (eigener Testfall).
 
 Als Benutzer möchte ich einzelne Schritte abhaken und den Fortschritt sehen.
 

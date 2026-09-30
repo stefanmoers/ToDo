@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Backlog](../BACKLOG.md) · [Sicherheitsmodell](SECURITY.md)
 
-**Status:** `User` (V2), `Task` (V3), `Project` (V4), `Tag`/`TaskTag` (V5) und `Membership`/`Task.assigneeId` (V6) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). Ein Projekt hat genau einen Eigentümer, dazu beliebig viele Mitglieder über `Membership`. `Subtask`, `Comment`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
+**Status:** `User` (V2), `Task` (V3), `Project` (V4), `Tag`/`TaskTag` (V5), `Membership`/`Task.assigneeId` (V6) und `Subtask` (V7) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). Ein Projekt hat genau einen Eigentümer, dazu beliebig viele Mitglieder über `Membership`. `Comment`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
 
 ## Begriffe und Beziehungen
 
@@ -53,6 +53,8 @@ Technische IDs sind undurchsichtige UUIDs. Sie ersetzen keine Rechteprüfung. Ze
 Statuswerte: `OPEN` (offen), `IN_PROGRESS` (in Bearbeitung), `DONE` (erledigt). Neue Aufgaben starten mit `OPEN`. Prioritäten: `LOW`, `NORMAL`, `HIGH`, `URGENT`; Standard ist `NORMAL`. Die Sortierung folgt dieser expliziten Rangfolge und nicht dem Alphabet.
 
 Arbeitsannahme: Jeder Wechsel zwischen den drei Statuswerten ist erlaubt. Beim Wechsel nach `DONE` wird `completedAt` gesetzt, beim Verlassen geleert. Ein erneutes Abschließen derselben erledigten Instanz ist wirkungslos und erzeugt weder einen weiteren Abschlusszeitpunkt noch einen zweiten Nachfolger. Vollständig abgehakte Unteraufgaben erledigen die Hauptaufgabe nicht automatisch.
+
+**Umgesetzt in M2 (US-070/071), normale technische Umsetzungsentscheidungen:** Unteraufgaben gehören zum `task`-Modul, nicht zu einem eigenen Modul (siehe [ARCHITECTURE.md](ARCHITECTURE.md)); Rechte prüft `SubtaskService` ausschließlich über die bereits vorhandene Zugriffsprüfung der Hauptaufgabe, ohne sie zu duplizieren. Die Reihenfolge (`sort_order`) ist bewusst nicht als datenbankweit eindeutig erzwungen — Gleichstände löst die Unteraufgaben-ID auf (Muster wie bei anderen Listen, z. B. `createdAt`/`id`) — damit ein Vertauschen zweier Positionen ohne `DEFERRABLE`-Constraint möglich bleibt. Der Fortschritt (`TaskResponse.subtasks`, „X von Y erledigt“) ändert bewusst nicht `version`/`updatedAt` der Aufgabe, analog zur Tag-Regel weiter unten.
 
 ## Rechte, persönliche Aufgaben und Projektlöschung
 
