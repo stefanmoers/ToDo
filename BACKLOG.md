@@ -39,7 +39,7 @@ M0 bis M4 beschreiben die Umsetzungsreihenfolge, keine unterschiedlichen Qualit�
 |---|---|
 | Must | US-001–004, US-010–012, US-020–022, US-030–037, US-040–042, US-050–053, US-110, US-120–121, US-130–131, US-140, US-141, US-150, US-170, US-171 |
 | Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172, US-180, US-181 |
-| Could | US-090, US-100, US-151 (Demo-Unterlagen) |
+| Could | US-090, US-100, US-151 (Demo-Unterlagen), US-182 (Präsentation in der Anwendung) |
 
 Begründung: Ein sicherer, barrierefreier Kern mit persönlichen Aufgaben (M0/M1) ist das Referenzprodukt. Zusammenarbeit (M2) zeigt Berechtigungen und Konsistenz, die Zeitfunktionen (M3) sind fachlich anspruchsvoll, aber verzichtbar, falls Zeit fehlt. Betrieb (US-160–162) wird vor dem Referenzrelease durchgespielt, gilt aber als Should, weil kein Dritter es abnimmt.
 
@@ -664,6 +664,23 @@ Als Benutzer möchte ich in Tag-Listen erkennen, woher ein Tag stammt, damit ich
 5. Regression: Ein Benutzer ohne gleichnamige Tags sieht unveränderte, kurze Einträge ohne überflüssigen Zusatz.
 
 **Abhängigkeiten:** US-043, US-053, US-060–062, US-170–172, US-180.
+
+### US-182 – Projektpräsentation in der Anwendung · Could · UMGESETZT, Nachweis teilweise offen
+
+> **Stand (01.10.2026):** Die Projektvorstellung (18 Folien, Quellen in [docs/praesentation](docs/praesentation/README.md)) ist als öffentliche Seite unter `/präsentation` (Alias `/praesentation`, Einzelfolie `/präsentation/7`) in das Frontend eingebaut. Die Route liegt außerhalb von `AuthProvider` und `Layout`, ruft keine API auf und braucht keine Anmeldung; die Folien sind React-Komponenten mit eigenen CSS-Klassen (keine Inline-Stile, keine externen Schriften), damit die Content-Security-Policy des Webservers unverändert bleibt. **Tatsächlich ausgeführt:** Typprüfung und ESLint (auch auf dem Entwicklungsrechner), 137 Frontend-Unit-Tests einschließlich 10 neuer Fälle in `PresentationPage.test.tsx`, zwei neue Playwright-Tests in `e2e/presentation.spec.ts` gegen `vite preview` (Container mit Node 22, nicht 24.21.0) und ein axe-Lauf über alle 18 Folien ohne Verstoß. **Nicht ausgeführt:** Aufruf gegen den echten Compose-Stack mit nginx (`docker compose up -d --build`, dann <http://localhost:8080/präsentation>), Gesamtlauf der E2E-Suite und die manuelle Screenreader-Prüfung (US-172).
+
+Als Vortragender möchte ich die Projektvorstellung direkt aus der laufenden Anwendung starten, damit ich sie vor der Live-Demo ohne zusätzliche Software zeigen kann.
+
+**Akzeptanzkriterien:**
+
+- `/präsentation` (auch als `/praesentation` und `/präsentation/<Nr>`) zeigt die Folie ohne Anmeldung; eine ungültige Nummer wird auf die erste bzw. letzte Folie begrenzt.
+- Jede Folie hat Schaltflächen „Vorherige Folie“ und „Nächste Folie“ (Pfeile links/rechts); am Anfang bzw. Ende sind sie als nicht verfügbar gekennzeichnet, behalten aber den Fokus.
+- Tastatur: Pfeil links/rechts, Bild auf/ab, Pos1/Ende, `N` (Sprechernotizen), `F` (Vollbild). Die Kürzel greifen nicht in Eingabefeldern.
+- Die Folie skaliert im 16:9-Format mit dem Fenster; bei schmalen Fenstern stehen die Pfeile unter der Folie.
+- Aktuelle Folie und Position werden Screenreadern angekündigt; Kontraste, Fokus und Tastaturbedienung entsprechen [ACCESSIBILITY.md](docs/ACCESSIBILITY.md).
+- Bestehende Seiten und Routen bleiben unverändert erreichbar (Regression über die vorhandenen Tests).
+
+**Abhängigkeiten:** US-001, US-170–172.
 
 ## 24. Definition of Done
 

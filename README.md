@@ -38,6 +38,8 @@ Die [Technologieübersicht](docs/TECHNOLOGIES.md) erklärt jeweils **was**, **wo
 
 **Heute:** Der komplette Stack startet mit `cp .env.example .env` (Passwort setzen) und `docker compose up -d --build --wait`; danach ist die Anwendung unter <http://localhost:8080> erreichbar. Konto registrieren, anmelden, Aufgaben und Projekte anlegen/bearbeiten/erledigen/löschen, Unteraufgaben verwalten, Projekte teilen und Aufgaben Mitgliedern zuweisen, Aufgaben kommentieren und ihre Änderungshistorie einsehen, Tags anlegen/zuordnen/filtern, Aufgaben durchsuchen/filtern/sortieren, Standardansichten, die persönliche Übersicht sowie Konten auflisten/deaktivieren/reaktivieren als Administrator (erstmalige Einrichtung über `ADMIN_BOOTSTRAP_EMAIL`, siehe [DEPLOYMENT.md](docs/DEPLOYMENT.md)) funktionieren bereits. Eine echte Passwort-Wiederherstellung ist für dieses Demo-Projekt bewusst nicht umgesetzt.
 
+Die Projektvorstellung (18 Folien mit Sprechernotizen) läuft ohne Anmeldung direkt in der Anwendung: <http://localhost:8080/präsentation> (Bedienung mit Pfeiltasten oder den Pfeilen neben der Folie, `N` Notizen, `F` Vollbild; Story US-182). Quellen und Pflegehinweise stehen in [docs/praesentation](docs/praesentation/README.md).
+
 **Nach Umsetzung von M0/M1:** Die [Entwicklungsanleitung](docs/DEVELOPMENT.md) beschreibt die Arbeit am Code. Die [Deployment-Anleitung](docs/DEPLOYMENT.md) führt durch Installation, Start, Prüfung, Update und Datensicherung. Die dort genannten künftigen Dateien und Befehle müssen vom umsetzenden Agenten tatsächlich bereitgestellt und überprüft werden.
 
 | Dokument | Frage, die es beantwortet |

@@ -6,6 +6,7 @@ import AdminUsersPage from './pages/AdminUsersPage'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import PresentationPage from './pages/PresentationPage'
 import PasswordResetUnavailablePage from './pages/PasswordResetUnavailablePage'
 import ProfilePage from './pages/ProfilePage'
 import ProjectCreatePage from './pages/ProjectCreatePage'
@@ -19,31 +20,47 @@ import TaskDetailPage from './pages/TaskDetailPage'
 import TaskEditPage from './pages/TaskEditPage'
 import TaskListPage from './pages/TaskListPage'
 
+/** Die Präsentation ist öffentlich und braucht weder Anmeldung noch API; sie liegt daher außerhalb des AuthProvider. */
 export default function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="anmelden" element={<LoginPage />} />
-          <Route path="registrieren" element={<RegisterPage />} />
-          <Route path="passwort-vergessen" element={<PasswordResetUnavailablePage />} />
-          <Route element={<RequireAuth />}>
-            <Route index element={<TaskListPage />} />
-            <Route path="uebersicht" element={<DashboardPage />} />
-            <Route path="aufgaben/neu" element={<TaskCreatePage />} />
-            <Route path="aufgaben/:taskId" element={<TaskDetailPage />} />
-            <Route path="aufgaben/:taskId/bearbeiten" element={<TaskEditPage />} />
-            <Route path="projekte" element={<ProjectListPage />} />
-            <Route path="projekte/neu" element={<ProjectCreatePage />} />
-            <Route path="projekte/:projectId" element={<ProjectDetailPage />} />
-            <Route path="projekte/:projectId/bearbeiten" element={<ProjectEditPage />} />
-            <Route path="tags" element={<TagsPage />} />
-            <Route path="profil" element={<ProfilePage />} />
-            <Route path="administration" element={<AdminUsersPage />} />
-          </Route>
-          <Route path="*" element={<NotFoundPage />} />
+    <Routes>
+      <Route path="präsentation/:folie?" element={<PresentationPage />} />
+      <Route path="praesentation/:folie?" element={<PresentationPage />} />
+      <Route
+        path="*"
+        element={
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        }
+      />
+    </Routes>
+  )
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="anmelden" element={<LoginPage />} />
+        <Route path="registrieren" element={<RegisterPage />} />
+        <Route path="passwort-vergessen" element={<PasswordResetUnavailablePage />} />
+        <Route element={<RequireAuth />}>
+          <Route index element={<TaskListPage />} />
+          <Route path="uebersicht" element={<DashboardPage />} />
+          <Route path="aufgaben/neu" element={<TaskCreatePage />} />
+          <Route path="aufgaben/:taskId" element={<TaskDetailPage />} />
+          <Route path="aufgaben/:taskId/bearbeiten" element={<TaskEditPage />} />
+          <Route path="projekte" element={<ProjectListPage />} />
+          <Route path="projekte/neu" element={<ProjectCreatePage />} />
+          <Route path="projekte/:projectId" element={<ProjectDetailPage />} />
+          <Route path="projekte/:projectId/bearbeiten" element={<ProjectEditPage />} />
+          <Route path="tags" element={<TagsPage />} />
+          <Route path="profil" element={<ProfilePage />} />
+          <Route path="administration" element={<AdminUsersPage />} />
         </Route>
-      </Routes>
-    </AuthProvider>
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }
