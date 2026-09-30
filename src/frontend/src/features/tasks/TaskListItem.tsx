@@ -33,6 +33,12 @@ export function TaskListItem({
         )}
         {task.assigneeId && <> · Bearbeiter: {task.assigneeDisplayName ?? 'Unbekannt'}</>}
         {task.tags.length > 0 && <> · Tags: {task.tags.map((t) => t.name).join(', ')}</>}
+        {task.subtasks.total > 0 && (
+          <>
+            {' '}
+            · Unteraufgaben: {task.subtasks.done} von {task.subtasks.total} erledigt
+          </>
+        )}
       </p>
       <StatusToggleButton task={task} onChanged={onChanged} onConflict={onConflict} onGone={onGone} />
     </li>

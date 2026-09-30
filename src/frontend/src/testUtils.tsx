@@ -49,6 +49,7 @@ export function testTask(overrides: Partial<Task> = {}): Task {
     updatedAt: '2026-09-30T05:00:00Z',
     version: 0,
     tags: [],
+    subtasks: { done: 0, total: 0 },
     ...overrides,
   }
 }

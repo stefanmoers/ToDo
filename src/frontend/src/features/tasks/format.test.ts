@@ -13,6 +13,7 @@ const base: Task = {
   updatedAt: '2026-01-01T00:00:00Z',
   version: 0,
   tags: [],
+  subtasks: { done: 0, total: 0 },
 }
 
 describe('formatDue', () => {

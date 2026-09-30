@@ -6,6 +6,7 @@ import { DeleteTaskDialog } from '../features/tasks/DeleteTaskDialog'
 import { formatDue, formatTimestamp } from '../features/tasks/format'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../features/tasks/labels'
 import { StatusToggleButton } from '../features/tasks/StatusToggleButton'
+import { SubtasksSection } from '../features/tasks/SubtasksSection'
 import { TaskNotFound } from '../features/tasks/TaskNotFound'
 import { useTask } from '../features/tasks/useTask'
 import { TaskTagsEditor } from '../features/tags/TaskTagsEditor'
@@ -124,6 +125,7 @@ function TaskDetail({ taskId }: { taskId: string }) {
         <Link to="/">Zurück zur Aufgabenliste</Link>
       </div>
       <TaskTagsEditor taskId={task.id} currentTags={task.tags} onChanged={(tags) => replace({ ...task, tags })} />
+      <SubtasksSection taskId={task.id} />
       {dialogOpen && (
         <DeleteTaskDialog
           task={task}

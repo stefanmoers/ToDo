@@ -36,6 +36,20 @@ export interface Task {
   version: number
   /** Immer vorhanden (leeres Array ohne Zuordnung); ändert nicht die Version (US-043). */
   tags: TagSummary[]
+  /** US-071: done=total=0 ohne Unteraufgaben. */
+  subtasks: SubtaskProgress
+}
+
+export interface SubtaskProgress {
+  done: number
+  total: number
+}
+
+export interface Subtask {
+  id: string
+  title: string
+  done: boolean
+  sortOrder: number
 }
 
 export interface TaskInput {
@@ -120,3 +134,26 @@ export const reopenTask = (id: string, version: number) =>
 /** Ersetzt die Tag-Zuordnung vollständig; ändert nicht die Version der Aufgabe (US-043). */
 export const setTaskTags = (id: string, tagIds: string[]) =>
   api<TagSummary[]>('PUT', `/api/v1/tasks/${encodeURIComponent(id)}/tags`, { tagIds })
+
+/** US-070/071: Unteraufgaben. Jede Mutation liefert die vollständige, neu geordnete Liste zurück. */
+export const listSubtasks = (taskId: string) =>
+  api<Subtask[]>('GET', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks`)
+
+export const createSubtask = (taskId: string, title: string) =>
+  api<Subtask[]>('POST', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks`, { title })
+
+export const renameSubtask = (taskId: string, subtaskId: string, title: string) =>
+  api<Subtask[]>('PUT', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subtaskId)}`, { title })
+
+export const setSubtaskDone = (taskId: string, subtaskId: string, done: boolean) =>
+  api<Subtask[]>('PUT', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subtaskId)}/done`, {
+    done,
+  })
+
+export const moveSubtask = (taskId: string, subtaskId: string, direction: 'UP' | 'DOWN') =>
+  api<Subtask[]>('POST', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subtaskId)}/move`, {
+    direction,
+  })
+
+export const deleteSubtask = (taskId: string, subtaskId: string) =>
+  api<Subtask[]>('DELETE', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subtaskId)}`)

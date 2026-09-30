@@ -9,6 +9,7 @@ afterEach(() => vi.restoreAllMocks())
 const loggedIn = { 'GET /api/v1/auth/me': () => ({ body: testUser }) }
 const TASK_ID = '22222222-2222-2222-2222-222222222222'
 const TAG: TagSummary = { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Wichtig' }
+const noSubtasks = { [`GET /api/v1/tasks/${TASK_ID}/subtasks`]: () => ({ body: [] }) }
 
 describe('Aufgabenliste', () => {
   it('zeigt einen leeren Zustand mit Link zum Anlegen', async () => {
@@ -270,6 +271,7 @@ describe('Aufgabe ansehen', () => {
     const task = testTask({ assigneeId: 'mem-1', assigneeDisplayName: 'Herr Mitglied' })
     mockApi({
       ...loggedIn,
+      ...noSubtasks,
       [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
       'GET /api/v1/tags': () => ({ body: [] }),
     })
@@ -280,7 +282,12 @@ describe('Aufgabe ansehen', () => {
 
   it('zeigt „Keine Zuweisung“ ohne Bearbeiter', async () => {
     const task = testTask()
-    mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }), 'GET /api/v1/tags': () => ({ body: [] }) })
+    mockApi({
+      ...loggedIn,
+      ...noSubtasks,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [] }),
+    })
     renderAt(`/aufgaben/${TASK_ID}`)
     await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
     expect(screen.getByText('Keine Zuweisung')).toBeInTheDocument()
@@ -297,7 +304,7 @@ describe('Aufgabe ansehen', () => {
 
   it('zeigt die Beschreibung als reinen Text, nicht als HTML', async () => {
     const task = testTask({ description: '<b>fett</b>' })
-    mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }) })
+    mockApi({ ...loggedIn, ...noSubtasks, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }) })
     renderAt(`/aufgaben/${TASK_ID}`)
     expect(await screen.findByText('<b>fett</b>')).toBeInTheDocument()
   })
@@ -306,6 +313,7 @@ describe('Aufgabe ansehen', () => {
     const task = testTask({ tags: [TAG] })
     mockApi({
       ...loggedIn,
+      ...noSubtasks,
       [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
       'GET /api/v1/tags': () => ({ body: [] }),
     })
@@ -319,6 +327,7 @@ describe('Aufgabe ansehen', () => {
     const tag = { id: TAG.id, name: TAG.name, scope: 'PERSONAL' as const, createdAt: '2026-09-30T05:00:00Z' }
     const { calls } = mockApi({
       ...loggedIn,
+      ...noSubtasks,
       [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
       'GET /api/v1/tags': () => ({ body: [tag] }),
       [`PUT /api/v1/tasks/${TASK_ID}/tags`]: () => ({ body: [TAG] }),
@@ -329,6 +338,124 @@ describe('Aufgabe ansehen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tags speichern' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Die Tag-Zuordnung wurde gespeichert.')
     expect(calls.find((c) => c.key === `PUT /api/v1/tasks/${TASK_ID}/tags`)?.body).toEqual({ tagIds: [TAG.id] })
+  })
+})
+
+describe('Unteraufgaben (US-070/071)', () => {
+  const subtasksUrl = `GET /api/v1/tasks/${TASK_ID}/subtasks`
+
+  it('zeigt „Noch keine Unteraufgaben.“ ohne Einträge', async () => {
+    mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }), [subtasksUrl]: () => ({ body: [] }) })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    expect(await screen.findByText('Noch keine Unteraufgaben.')).toBeInTheDocument()
+  })
+
+  it('legt eine Unteraufgabe an und zeigt den Fortschritt', async () => {
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({ body: [] }),
+      [`POST /api/v1/tasks/${TASK_ID}/subtasks`]: () => ({
+        status: 201,
+        body: [{ id: 's1', title: 'Kartons besorgen', done: false, sortOrder: 0 }],
+      }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByText('Noch keine Unteraufgaben.')
+    await userEvent.type(screen.getByLabelText('Neue Unteraufgabe'), 'Kartons besorgen')
+    await userEvent.click(screen.getByRole('button', { name: 'Hinzufügen' }))
+    expect(await screen.findByText('Kartons besorgen')).toBeInTheDocument()
+    expect(screen.getByText('0 von 1 erledigt')).toBeInTheDocument()
+  })
+
+  it('zeigt einen Feldfehler bei leerem Titel ohne die Liste zu ändern', async () => {
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({ body: [] }),
+      [`POST /api/v1/tasks/${TASK_ID}/subtasks`]: () => ({
+        status: 400,
+        body: { code: 'VALIDATION_FAILED', message: 'x', fieldErrors: [{ field: 'title', code: 'INVALID', message: 'Bitte gib einen Titel an.' }] },
+      }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByText('Noch keine Unteraufgaben.')
+    await userEvent.click(screen.getByRole('button', { name: 'Hinzufügen' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Bitte gib einen Titel an.')
+    expect(screen.getByText('Noch keine Unteraufgaben.')).toBeInTheDocument()
+  })
+
+  it('setzt den Erledigt-Zustand und aktualisiert den Fortschritt', async () => {
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({ body: [{ id: 's1', title: 'Kartons besorgen', done: false, sortOrder: 0 }] }),
+      [`PUT /api/v1/tasks/${TASK_ID}/subtasks/s1/done`]: () => ({
+        body: [{ id: 's1', title: 'Kartons besorgen', done: true, sortOrder: 0 }],
+      }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    const checkbox = await screen.findByRole('checkbox', { name: 'Kartons besorgen' })
+    await userEvent.click(checkbox)
+    expect(await screen.findByText('1 von 1 erledigt')).toBeInTheDocument()
+  })
+
+  it('benennt eine Unteraufgabe um', async () => {
+    const { calls } = mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({ body: [{ id: 's1', title: 'Alter Titel', done: false, sortOrder: 0 }] }),
+      [`PUT /api/v1/tasks/${TASK_ID}/subtasks/s1`]: () => ({
+        body: [{ id: 's1', title: 'Neuer Titel', done: false, sortOrder: 0 }],
+      }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByText('Alter Titel')
+    await userEvent.click(screen.getByRole('button', { name: 'Umbenennen: Alter Titel' }))
+    const input = screen.getByLabelText('Titel von „Alter Titel“ ändern')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Neuer Titel')
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }))
+    expect(await screen.findByText('Neuer Titel')).toBeInTheDocument()
+    expect(calls.find((c) => c.key === `PUT /api/v1/tasks/${TASK_ID}/subtasks/s1`)?.body).toEqual({ title: 'Neuer Titel' })
+  })
+
+  it('verschiebt eine Unteraufgabe nach oben; am Rand ist der Button deaktiviert', async () => {
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({
+        body: [
+          { id: 's1', title: 'A', done: false, sortOrder: 0 },
+          { id: 's2', title: 'B', done: false, sortOrder: 1 },
+        ],
+      }),
+      [`POST /api/v1/tasks/${TASK_ID}/subtasks/s2/move`]: () => ({
+        body: [
+          { id: 's2', title: 'B', done: false, sortOrder: 0 },
+          { id: 's1', title: 'A', done: false, sortOrder: 1 },
+        ],
+      }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByText('A')
+    expect(screen.getByRole('button', { name: 'Nach oben: A' })).toBeDisabled()
+    await userEvent.click(screen.getByRole('button', { name: 'Nach oben: B' }))
+    const titles = await screen.findAllByText(/^[AB]$/)
+    expect(titles.map((t) => t.textContent)).toEqual(['B', 'A'])
+  })
+
+  it('löscht eine Unteraufgabe', async () => {
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: testTask() }),
+      [subtasksUrl]: () => ({ body: [{ id: 's1', title: 'Kartons besorgen', done: false, sortOrder: 0 }] }),
+      [`DELETE /api/v1/tasks/${TASK_ID}/subtasks/s1`]: () => ({ body: [] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByText('Kartons besorgen')
+    await userEvent.click(screen.getByRole('button', { name: 'Löschen: Kartons besorgen' }))
+    expect(await screen.findByText('Noch keine Unteraufgaben.')).toBeInTheDocument()
   })
 })
 
@@ -390,7 +517,7 @@ describe('Aufgabe bearbeiten', () => {
 describe('Aufgabe löschen', () => {
   it('öffnet den Löschdialog; Abbrechen gibt den Fokus zurück', async () => {
     const task = testTask()
-    mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }) })
+    mockApi({ ...loggedIn, ...noSubtasks, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }) })
     renderAt(`/aufgaben/${TASK_ID}`)
     const deleteButton = await screen.findByRole('button', { name: 'Löschen' })
     await userEvent.click(deleteButton)
@@ -403,6 +530,7 @@ describe('Aufgabe löschen', () => {
     const task = testTask()
     mockApi({
       ...loggedIn,
+      ...noSubtasks,
       [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
       [`DELETE /api/v1/tasks/${TASK_ID}?version=0`]: () => ({ status: 204 }),
       'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([]) }),
@@ -417,6 +545,7 @@ describe('Aufgabe löschen', () => {
     const task = testTask()
     mockApi({
       ...loggedIn,
+      ...noSubtasks,
       [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
       [`DELETE /api/v1/tasks/${TASK_ID}?version=0`]: () => ({ status: 409, body: { code: 'VERSION_CONFLICT', message: 'x' } }),
     })
