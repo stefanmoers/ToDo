@@ -110,6 +110,62 @@ describe('Aufgabenliste', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Filter zurücksetzen' }))
     expect(await screen.findByText('Du hast noch keine Aufgaben.')).toBeInTheDocument()
   })
+
+  it('sucht über die Suchleiste', async () => {
+    const task = testTask({ title: 'Steuererklärung' })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([testTask()], { totalElements: 1 }) }),
+      'GET /api/v1/tasks?page=0&size=25&q=steuer': () => ({ body: pageOf([task], { totalElements: 1 }) }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    await userEvent.type(screen.getByLabelText('Suche'), 'steuer')
+    await userEvent.click(screen.getByRole('button', { name: 'Suchen' }))
+    expect(await screen.findByRole('link', { name: 'Steuererklärung' })).toBeInTheDocument()
+  })
+
+  it('filtert über eine Status-Checkbox', async () => {
+    const done = testTask({ status: 'DONE' })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([testTask()], { totalElements: 1 }) }),
+      'GET /api/v1/tasks?page=0&size=25&status=DONE': () => ({ body: pageOf([done], { totalElements: 1 }) }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    await userEvent.click(screen.getByLabelText('Erledigt', { selector: 'input' }))
+    expect(await screen.findByText(/Status: Erledigt/)).toBeInTheDocument()
+  })
+
+  it('öffnet die Standardansicht „Überfällig“ über den Kurzverweis', async () => {
+    const overdue = testTask({ overdue: true, dueDate: '2000-01-01' })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([testTask()], { totalElements: 1 }) }),
+      'GET /api/v1/tasks?page=0&size=25&overdue=true': () => ({ body: pageOf([overdue], { totalElements: 1 }) }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    await userEvent.click(screen.getByRole('link', { name: 'Überfällig' }))
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    expect(screen.getByText(/Überfällig/, { selector: '.badge' })).toBeInTheDocument()
+  })
+
+  it('sortiert über die Sortierauswahl', async () => {
+    const { calls } = mockApi({
+      ...loggedIn,
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([testTask()], { totalElements: 1 }) }),
+      'GET /api/v1/tasks?page=0&size=25&sortBy=priority&sortDirection=asc': () => ({
+        body: pageOf([testTask()], { totalElements: 1 }),
+      }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    await userEvent.selectOptions(screen.getByLabelText('Sortierung'), 'Priorität (niedrig zuerst)')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    expect(calls.some((c) => c.key === 'GET /api/v1/tasks?page=0&size=25&sortBy=priority&sortDirection=asc')).toBe(true)
+  })
 })
 
 describe('Aufgabe anlegen', () => {
