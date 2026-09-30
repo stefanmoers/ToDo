@@ -19,27 +19,26 @@ export function TaskListItem({
 }) {
   return (
     <li className={task.status === 'DONE' ? 'task done' : 'task'}>
-      <Link to={`/aufgaben/${task.id}`} className="task-title">
-        {task.title}
-      </Link>
-      <p className="task-meta">
-        Status: {STATUS_LABELS[task.status]} · Priorität: {PRIORITY_LABELS[task.priority]}
-        {task.dueDate && <> · Fällig: {formatDue(task, viewerTimeZone)}</>}
+      <div className="task-card-top">
+        <Link to={`/aufgaben/${task.id}`} className="task-title">
+          {task.title}
+        </Link>
+        <span className={`meta-pill status-${task.status.toLowerCase()}`}>Status: {STATUS_LABELS[task.status]}</span>
+      </div>
+      <div className="task-meta">
+        <span className={`meta-pill priority-${task.priority.toLowerCase()}`}>Priorität: {PRIORITY_LABELS[task.priority]}</span>
+        {task.dueDate && <span>Fällig: {formatDue(task, viewerTimeZone)}</span>}
         {task.overdue && (
           <span className="badge overdue">
-            {' '}
             <span aria-hidden="true">⚠ </span>Überfällig
           </span>
         )}
-        {task.assigneeId && <> · Bearbeiter: {task.assigneeDisplayName ?? 'Unbekannt'}</>}
-        {task.tags.length > 0 && <> · Tags: {task.tags.map((t) => t.name).join(', ')}</>}
+        {task.assigneeId && <span>Bearbeiter: {task.assigneeDisplayName ?? 'Unbekannt'}</span>}
+        {task.tags.length > 0 && <span>Tags: {task.tags.map((t) => t.name).join(', ')}</span>}
         {task.subtasks.total > 0 && (
-          <>
-            {' '}
-            · Unteraufgaben: {task.subtasks.done} von {task.subtasks.total} erledigt
-          </>
+          <span>Unteraufgaben: {task.subtasks.done} von {task.subtasks.total} erledigt</span>
         )}
-      </p>
+      </div>
       <StatusToggleButton task={task} onChanged={onChanged} onConflict={onConflict} onGone={onGone} />
     </li>
   )

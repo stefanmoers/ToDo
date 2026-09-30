@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   TASK_PRIORITIES,
@@ -40,6 +40,7 @@ export default function TaskListPage() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const loadedOnce = useRef(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const pageParam = Number.parseInt(searchParams.get('seite') ?? '1', 10)
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam - 1 : 0
@@ -59,6 +60,8 @@ export default function TaskListPage() {
     q || statuses.length > 0 || priorities.length > 0 || projectId || tagId || assigneeId || overdue || dueDateFrom
       || dueDateTo,
   )
+  const activeFacetCount = statuses.length + priorities.length + Number(Boolean(projectId)) + Number(Boolean(tagId))
+    + Number(Boolean(assigneeId)) + Number(overdue) + Number(Boolean(dueDateFrom)) + Number(Boolean(dueDateTo))
 
   const filters: TaskListFilters = {
     q,
@@ -162,19 +165,21 @@ export default function TaskListPage() {
 
   return (
     <>
-      <h1>Meine Aufgaben</h1>
-      <p>Hallo {user?.displayName}!</p>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Dein Arbeitsbereich</p>
+          <h1>Meine Aufgaben</h1>
+          <p>Hallo {user?.displayName}! Hier behältst du den Überblick.</p>
+        </div>
+        <Link to="/aufgaben/neu" className="button-link">
+          Neue Aufgabe anlegen
+        </Link>
+      </div>
       {notice && (
         <p role="status" className="notice">
           {notice}
         </p>
       )}
-      <p>
-        <Link to="/aufgaben/neu" className="button-link">
-          Neue Aufgabe anlegen
-        </Link>
-      </p>
-
       <nav aria-label="Standardansichten" className="standard-views">
         <ul>
           {STANDARD_VIEWS.map(({ view, label }) => {
@@ -191,151 +196,171 @@ export default function TaskListPage() {
         </ul>
       </nav>
 
-      <form role="search" onSubmit={onSearchSubmit}>
-        <div className="field">
-          <label htmlFor="task-search">Suche</label>
-          <input
-            key={q ?? ''}
-            id="task-search"
-            ref={searchInputRef}
-            defaultValue={q ?? ''}
-            placeholder="Titel oder Beschreibung"
-          />
-        </div>
-        <button type="submit">Suchen</button>
-      </form>
+      <div className="task-workspace">
+        <aside className="filter-panel" aria-labelledby="task-filter-heading">
+          <section aria-labelledby="task-filter-heading">
+            <div className="filter-heading">
+              <h2 id="task-filter-heading">Filter</h2>
+              <button
+                type="button"
+                className="filter-toggle secondary"
+                aria-controls="task-filter-fields"
+                aria-expanded={filtersOpen}
+                onClick={() => setFiltersOpen((open) => !open)}
+              >
+                {filtersOpen ? 'Filter schließen' : 'Filter anzeigen'}
+                {activeFacetCount > 0 && ` (${activeFacetCount} aktiv)`}
+              </button>
+            </div>
+            <div id="task-filter-fields" className={filtersOpen ? 'filter-fields is-open' : 'filter-fields'}>
+              <fieldset>
+                <legend>Status</legend>
+                {TASK_STATUSES.map((s) => (
+                  <p key={s} className="radio-option">
+                    <input
+                      type="checkbox"
+                      id={`filter-status-${s}`}
+                      checked={statuses.includes(s)}
+                      onChange={() => toggleMultiValue('status', s)}
+                    />{' '}
+                    <label htmlFor={`filter-status-${s}`}>{STATUS_LABELS[s]}</label>
+                  </p>
+                ))}
+              </fieldset>
+              <fieldset>
+                <legend>Priorität</legend>
+                {TASK_PRIORITIES.map((p) => (
+                  <p key={p} className="radio-option">
+                    <input
+                      type="checkbox"
+                      id={`filter-priority-${p}`}
+                      checked={priorities.includes(p)}
+                      onChange={() => toggleMultiValue('priority', p)}
+                    />{' '}
+                    <label htmlFor={`filter-priority-${p}`}>{PRIORITY_LABELS[p]}</label>
+                  </p>
+                ))}
+              </fieldset>
+              {projects.length > 0 && (
+                <div className="field">
+                  <label htmlFor="filter-project">Projekt</label>
+                  <select id="filter-project" value={projectId ?? ''} onChange={(e) => onSingleValueChange('projectId', e.target.value)}>
+                    <option value="">Alle Projekte</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {tags.length > 0 && (
+                <div className="field">
+                  <label htmlFor="tag-filter">Nach Tag filtern</label>
+                  <select id="tag-filter" value={tagId ?? ''} onChange={(e) => onSingleValueChange('tag', e.target.value)}>
+                    <option value="">Alle Tags</option>
+                    {tags.map((tag) => (
+                      <option key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <p className="radio-option">
+                <input type="checkbox" id="filter-overdue" checked={overdue} onChange={(e) => onOverdueChange(e.target.checked)} />{' '}
+                <label htmlFor="filter-overdue">Nur überfällige Aufgaben</label>
+              </p>
+              <p className="radio-option">
+                <input
+                  type="checkbox"
+                  id="filter-assignee-me"
+                  checked={assigneeId === user!.id}
+                  onChange={(e) => onSingleValueChange('assigneeId', e.target.checked ? user!.id : '')}
+                />{' '}
+                <label htmlFor="filter-assignee-me">Nur mir zugewiesene Aufgaben</label>
+              </p>
+              {hasActiveFilters && (
+                <p>
+                  <button type="button" className="link-button" onClick={resetFilters}>
+                    Alle Filter zurücksetzen
+                  </button>
+                </p>
+              )}
+            </div>
+          </section>
+        </aside>
 
-      <section aria-labelledby="task-filter-heading">
-        <h2 id="task-filter-heading">Filter</h2>
-        <fieldset>
-          <legend>Status</legend>
-          {TASK_STATUSES.map((s) => (
-            <p key={s} className="radio-option">
+        <div className="task-results">
+          <form role="search" className="task-search" onSubmit={onSearchSubmit}>
+            <div className="field">
+              <label htmlFor="task-search">Suche</label>
               <input
-                type="checkbox"
-                id={`filter-status-${s}`}
-                checked={statuses.includes(s)}
-                onChange={() => toggleMultiValue('status', s)}
-              />{' '}
-              <label htmlFor={`filter-status-${s}`}>{STATUS_LABELS[s]}</label>
-            </p>
-          ))}
-        </fieldset>
-        <fieldset>
-          <legend>Priorität</legend>
-          {TASK_PRIORITIES.map((p) => (
-            <p key={p} className="radio-option">
-              <input
-                type="checkbox"
-                id={`filter-priority-${p}`}
-                checked={priorities.includes(p)}
-                onChange={() => toggleMultiValue('priority', p)}
-              />{' '}
-              <label htmlFor={`filter-priority-${p}`}>{PRIORITY_LABELS[p]}</label>
-            </p>
-          ))}
-        </fieldset>
-        {projects.length > 0 && (
-          <div className="field">
-            <label htmlFor="filter-project">Projekt</label>
-            <select id="filter-project" value={projectId ?? ''} onChange={(e) => onSingleValueChange('projectId', e.target.value)}>
-              <option value="">Alle Projekte</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        {tags.length > 0 && (
-          <div className="field">
-            <label htmlFor="tag-filter">Nach Tag filtern</label>
-            <select id="tag-filter" value={tagId ?? ''} onChange={(e) => onSingleValueChange('tag', e.target.value)}>
-              <option value="">Alle Tags</option>
-              {tags.map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-        <p className="radio-option">
-          <input type="checkbox" id="filter-overdue" checked={overdue} onChange={(e) => onOverdueChange(e.target.checked)} />{' '}
-          <label htmlFor="filter-overdue">Nur überfällige Aufgaben</label>
-        </p>
-        <p className="radio-option">
-          <input
-            type="checkbox"
-            id="filter-assignee-me"
-            checked={assigneeId === user!.id}
-            onChange={(e) => onSingleValueChange('assigneeId', e.target.checked ? user!.id : '')}
-          />{' '}
-          <label htmlFor="filter-assignee-me">Nur mir zugewiesene Aufgaben</label>
-        </p>
-        {hasActiveFilters && (
-          <p>
-            <button type="button" className="link-button" onClick={resetFilters}>
-              Alle Filter zurücksetzen
-            </button>
-          </p>
-        )}
-      </section>
-
-      <div className="field">
-        <label htmlFor="sort-select">Sortierung</label>
-        <select id="sort-select" value={currentSortValue} onChange={(e) => onSortChange(e.target.value)}>
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {state.kind === 'loading' && <p role="status">Aufgaben werden geladen …</p>}
-      {state.kind === 'error' && (
-        <div role="alert">
-          <p>Die Aufgaben konnten nicht geladen werden. {state.message}</p>
-          <button type="button" onClick={reload}>
-            Erneut versuchen
-          </button>
-        </div>
-      )}
-      {state.kind === 'loaded' && state.page.totalElements === 0 && hasActiveFilters && (
-        <p>
-          Keine Aufgaben für diese Auswahl.{' '}
-          <button type="button" className="link-button" onClick={resetFilters}>
-            Filter zurücksetzen
-          </button>
-        </p>
-      )}
-      {state.kind === 'loaded' && state.page.totalElements === 0 && !hasActiveFilters && (
-        <p>
-          Du hast noch keine Aufgaben. <Link to="/aufgaben/neu">Erste Aufgabe anlegen</Link>
-        </p>
-      )}
-      {state.kind === 'loaded' && state.page.totalElements > 0 && (
-        <>
-          <h2 ref={headingRef} tabIndex={-1} id="task-list-heading">
-            Aufgaben – Seite {state.page.page + 1} von {state.page.totalPages} ({pluralTasks(state.page.totalElements)})
-          </h2>
-          <ul className="task-list" aria-labelledby="task-list-heading">
-            {state.page.items.map((task) => (
-              <TaskListItem
-                key={task.id}
-                task={task}
-                viewerTimeZone={user!.timeZone}
-                onChanged={replaceItem}
-                onConflict={reload}
-                onGone={reload}
+                key={q ?? ''}
+                id="task-search"
+                ref={searchInputRef}
+                defaultValue={q ?? ''}
+                placeholder="Titel oder Beschreibung"
               />
-            ))}
-          </ul>
-          <Pagination page={state.page.page} totalPages={state.page.totalPages} label="Seiten der Aufgabenliste" toHref={pageHref} />
-        </>
-      )}
+            </div>
+            <button type="submit">Suchen</button>
+          </form>
+
+          <div className="field">
+            <label htmlFor="sort-select">Sortierung</label>
+            <select id="sort-select" value={currentSortValue} onChange={(e) => onSortChange(e.target.value)}>
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {state.kind === 'loading' && <p role="status">Aufgaben werden geladen …</p>}
+          {state.kind === 'error' && (
+            <div role="alert">
+              <p>Die Aufgaben konnten nicht geladen werden. {state.message}</p>
+              <button type="button" onClick={reload}>
+                Erneut versuchen
+              </button>
+            </div>
+          )}
+          {state.kind === 'loaded' && state.page.totalElements === 0 && hasActiveFilters && (
+            <p className="empty-state">
+              Keine Aufgaben für diese Auswahl.{' '}
+              <button type="button" className="link-button" onClick={resetFilters}>
+                Filter zurücksetzen
+              </button>
+            </p>
+          )}
+          {state.kind === 'loaded' && state.page.totalElements === 0 && !hasActiveFilters && (
+            <p className="empty-state">
+              Du hast noch keine Aufgaben. <Link to="/aufgaben/neu">Erste Aufgabe anlegen</Link>
+            </p>
+          )}
+          {state.kind === 'loaded' && state.page.totalElements > 0 && (
+            <>
+              <h2 ref={headingRef} tabIndex={-1} id="task-list-heading" className="results-heading">
+                Aufgaben – Seite {state.page.page + 1} von {state.page.totalPages} ({pluralTasks(state.page.totalElements)})
+              </h2>
+              <ul className="task-list" aria-labelledby="task-list-heading">
+                {state.page.items.map((task) => (
+                  <TaskListItem
+                    key={task.id}
+                    task={task}
+                    viewerTimeZone={user!.timeZone}
+                    onChanged={replaceItem}
+                    onConflict={reload}
+                    onGone={reload}
+                  />
+                ))}
+              </ul>
+              <Pagination page={state.page.page} totalPages={state.page.totalPages} label="Seiten der Aufgabenliste" toHref={pageHref} />
+            </>
+          )}
+        </div>
+      </div>
     </>
   )
 }
