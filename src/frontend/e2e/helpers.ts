@@ -71,3 +71,12 @@ export async function createProjectViaUi(page: Page, name: string) {
   await page.getByRole('button', { name: 'Projekt anlegen' }).click()
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
 }
+
+/** Legt einen Tag direkt über die API an (schnell, für Testvorbereitung); teilt sich die Cookies mit `page`. */
+export async function createTagViaApi(page: Page, name: string, projectId: string | null = null): Promise<string> {
+  const csrf = await page.request.get('/api/v1/auth/csrf')
+  const { headerName, token } = await csrf.json()
+  const response = await page.request.post('/api/v1/tags', { headers: { [headerName]: token }, data: { name, projectId } })
+  const body = await response.json()
+  return body.id as string
+}
