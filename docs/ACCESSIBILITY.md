@@ -2,9 +2,9 @@
 
 [Zur Übersicht](../README.md) · [Teststrategie](TESTING.md) · [EPIC-18 im Backlog](../BACKLOG.md)
 
-**Ziel: WCAG 2.2, Konformitätsstufe AA.** Damit sind alle anwendbaren Kriterien der Stufen A und AA gemeint. Dies ist eine Entwicklungs- und Abnahmevorgabe, keine Behauptung über die heutige Dokumentationsbasis oder eine bereits zertifizierte Anwendung. Maßgeblich ist die [W3C-Empfehlung WCAG 2.2](https://www.w3.org/TR/WCAG22/); rechtliche Konformität wird hier nicht behauptet.
+**Ziel: WCAG 2.2, Konformitätsstufe AA.** Damit sind alle anwendbaren Kriterien der Stufen A und AA gemeint. Dies ist eine Entwicklungs- und Prüfvorgabe, keine Behauptung über die heutige Dokumentationsbasis oder eine bereits zertifizierte Anwendung. Maßgeblich ist die [W3C-Empfehlung WCAG 2.2](https://www.w3.org/TR/WCAG22/); rechtliche Konformität wird hier nicht behauptet.
 
-Barrierefreiheit gehört zu Entwurf, Implementierung, Tests und Definition of Done. Der WebUI-/Accessibility-Ausbilder soll die grundlegenden Bedienmuster früh und das Referenzrelease abschließend prüfen.
+Barrierefreiheit gehört zu Entwurf, Implementierung, Tests und Definition of Done. Der Auftraggeber prüft die grundlegenden Bedienmuster früh selbst und das Referenzrelease abschließend manuell (US-172).
 
 ## Konkrete Regeln für UltimateTodo
 
@@ -70,7 +70,7 @@ Zusätzlich denselben Kernablauf mit mindestens einer dokumentierten Kombination
 
 Zoom bei 200 % und Reflow bei 320 CSS-Pixeln prüfen; Kontraste und vergrößerte Textabstände kontrollieren. Die Oberfläche soll ohne Informationsverlust nutzbar bleiben. Manuelle Prüfung ergänzt axe auch dann, wenn alle automatischen Tests grün sind.
 
-## Abnahmeprotokoll
+## Prüfprotokoll
 
 Bei Implementierung unter `docs/reviews/` ablegen, beispielsweise `accessibility-M1.md`:
 
@@ -78,9 +78,8 @@ Bei Implementierung unter `docs/reviews/` ablegen, beispielsweise `accessibility
 |---|---|
 | Build und Zeitpunkt | Commit-ID, Datum |
 | Umgebung | Betriebssystem, Browser, Screenreader mit Versionen |
-| Prüfer | Tatsächlich prüfende Person |
 | Ablauf | Schritte und getestete UI-Zustände |
 | Befund | Erwartung, tatsächliches Ergebnis, betroffenes Kriterium |
 | Nachprüfung | Korrektur, Ergebnis und offene Einschränkungen |
 
-Für das Referenzrelease verhindern offene anwendbare A-/AA-Verstöße die Abnahme. Die Freigabe darf nicht stellvertretend für den Ausbilder erfunden werden.
+Für das Referenzrelease werden offene anwendbare A-/AA-Verstöße behoben oder als bekannte Einschränkung dokumentiert. Ergebnisse werden nicht erfunden: nur tatsächlich durchgeführte Prüfungen eintragen.

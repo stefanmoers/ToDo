@@ -1,8 +1,8 @@
-# Installation und Betrieb durch einen anderen Azubi
+# Installation und Betrieb
 
 [Zur Übersicht](../README.md) · [Entwicklung](DEVELOPMENT.md) · [Sicherheit](SECURITY.md)
 
-**Stand: Planungsanleitung, noch nicht ausführbar.** Der heutige Commit enthält ausschließlich Dokumentation. Compose-Dateien, Images, Build-Dateien und Konfigurationsbeispiele entstehen in M0; ein fachlicher Funktionstest ist ab M1 möglich. Die folgenden Schritte definieren, was der implementierende Agent bereitstellen und auf einem frischen Rechner prüfen muss. Noch keine Installation wurde nach dieser Anleitung abgenommen.
+**Stand: Planungsanleitung, noch nicht ausführbar.** Der heutige Commit enthält ausschließlich Dokumentation. Compose-Dateien, Images, Build-Dateien und Konfigurationsbeispiele entstehen in M0; ein fachlicher Funktionstest ist ab M1 möglich. Die folgenden Schritte definieren, was der implementierende Agent bereitstellen und auf einem frischen Rechner prüfen muss. Noch keine Installation wurde nach dieser Anleitung geprüft.
 
 ## 1. Ziel und Voraussetzungen
 
@@ -171,14 +171,14 @@ Flyway-Migrationen laufen vor Bereitschaft. Scheitern sie, Fehler untersuchen; k
 
 `docker compose down` ohne `--volumes` erhält normale benannte Volumes. `down --volumes`, `docker volume rm` und pauschales Aufräumen können Daten endgültig löschen und gehören nicht zum normalen Updateablauf.
 
-## 10. Unabhängige Installationsabnahme
+## 10. Frischinstallation prüfen
 
-US-160 ist erst erfüllt, wenn ein anderer Azubi ohne mündliche Zusatzschritte erfolgreich installiert. Bei Implementierung wird unter `docs/reviews/installation-M1.md` bzw. für das Release ein Protokoll angelegt:
+US-160 ist erst erfüllt, wenn die Anleitung auf einem frischen Checkout (ohne vorhandene Volumes und `.env`) wörtlich und ohne Zusatzschritte zum Erfolg führt. Bei Implementierung wird unter `docs/reviews/installation-M1.md` bzw. für das Release ein Protokoll angelegt:
 
-- Datum, Prüfer, Betriebssystem, Docker-/Compose-Version, Release-/Commit-ID.
+- Datum, Betriebssystem, Docker-/Compose-Version, Release-/Commit-ID.
 - Tatsächlich ausgeführte Schritte, Dauer und Abweichungen von der Anleitung.
 - Healthcheck, Konto, Aufgabe, Berechtigungsprobe und Persistenz nach Neustart.
 - Für M4 zusätzlich Update und Restore; verbleibende Grenzen ausdrücklich nennen.
 - Jede notwendige Korrektur in die Anleitung übernehmen und die betroffenen Schritte erneut prüfen.
 
-Bis diese Nachweise existieren, lautet der Status „geplant“ bzw. „noch nicht unabhängig geprüft“.
+Bis diese Nachweise existieren, lautet der Status „geplant“ bzw. „noch nicht auf frischem System geprüft“.

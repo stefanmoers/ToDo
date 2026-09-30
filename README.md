@@ -36,7 +36,7 @@ Die [Technologieübersicht](docs/TECHNOLOGIES.md) erklärt jeweils **was**, **wo
 
 **Heute:** Die Dokumentation lesen; es gibt noch keinen Startbefehl für eine Anwendung.
 
-**Nach Umsetzung von M0/M1:** Die [Entwicklungsanleitung](docs/DEVELOPMENT.md) beschreibt die Arbeit am Code. Die [Deployment-Anleitung](docs/DEPLOYMENT.md) führt einen anderen Azubi durch Installation, Start, Prüfung, Update und Datensicherung. Die dort genannten künftigen Dateien und Befehle müssen vom umsetzenden Agenten tatsächlich bereitgestellt und überprüft werden.
+**Nach Umsetzung von M0/M1:** Die [Entwicklungsanleitung](docs/DEVELOPMENT.md) beschreibt die Arbeit am Code. Die [Deployment-Anleitung](docs/DEPLOYMENT.md) führt durch Installation, Start, Prüfung, Update und Datensicherung. Die dort genannten künftigen Dateien und Befehle müssen vom umsetzenden Agenten tatsächlich bereitgestellt und überprüft werden.
 
 | Dokument | Frage, die es beantwortet |
 |---|---|

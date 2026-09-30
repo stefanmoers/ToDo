@@ -6,7 +6,7 @@
 
 ## 1. Ziel und Umfang
 
-UltimateTodo unterstützt persönliche und gemeinsame Aufgaben. Die Referenzlösung soll typische professionelle Anforderungen zeigen: Konten, Berechtigungen, dauerhafte Daten, REST-API, barrierefreie Oberfläche, Konfliktbehandlung, Tests und nachvollziehbaren Betrieb. Azubis sollen Architektur und Technologieauswahl erklären können, auch wenn ein Agent wesentliche Teile des Codes geschrieben hat.
+UltimateTodo unterstützt persönliche und gemeinsame Aufgaben. Die Referenzlösung soll typische professionelle Anforderungen zeigen: Konten, Berechtigungen, dauerhafte Daten, REST-API, barrierefreie Oberfläche, Konfliktbehandlung, Tests und nachvollziehbaren Betrieb. Das Projekt wird von einer Person gemeinsam mit einem Coding-Agenten gebaut und später Azubis als Referenzlösung vorgeführt und mit deren eigenen Lösungen verglichen. Es gibt keine formalen Abnahmen durch Dritte; Nachweise erbringen Tests und die Prüfprotokolle der Entwickler.
 
 Nicht vorgesehen sind native Mobilanwendungen, Offline-Synchronisation, Unternehmens-SSO, Microsoft-365-/Google-Workspace-Integration, Abrechnung, KI-generierte Aufgaben, große Dateianhänge, Echtzeit-Chat und frei konfigurierbare Jira-Workflows. Drag & Drop ist optional; falls später umgesetzt, benötigt es eine gleichwertige Bedienung ohne Ziehen.
 
@@ -17,17 +17,29 @@ Nicht vorgesehen sind native Mobilanwendungen, Offline-Synchronisation, Unterneh
 - **Projekt-Eigentümer:** zusätzlich Projekt und Mitgliedschaften verwalten.
 - **Administrator:** Konten deaktivieren/reaktivieren und Systemzustand prüfen; kein pauschaler Zugriff auf private Inhalte.
 
-M0 bis M4 beschreiben die Umsetzungsreihenfolge, keine unterschiedlichen Qualitätsniveaus. Sicherheit, Barrierefreiheit und Dokumentation beginnen in M0. Eine Story mit mehreren Kriterien wird nicht abgeschlossen, wenn nur ein Teil umgesetzt ist. Statuswerte: `OFFEN`, `IN ARBEIT`, `BLOCKIERT` mit konkretem Grund, `ABGENOMMEN` mit Nachweis.
+M0 bis M4 beschreiben die Umsetzungsreihenfolge, keine unterschiedlichen Qualitätsniveaus. Jede Story trägt zusätzlich eine Priorität nach MoSCoW: **Must** (ohne sie ist das Referenzprodukt unvollständig), **Should** (wichtig, aber ein Release ist ohne sie vertretbar), **Could** (nützliche Ergänzung). Innerhalb eines Meilensteins gilt die Reihenfolge der Slices aus Abschnitt 3. Sicherheit, Barrierefreiheit und Dokumentation beginnen in M0. Eine Story mit mehreren Kriterien wird nicht abgeschlossen, wenn nur ein Teil umgesetzt ist. Statuswerte: `OFFEN`, `IN ARBEIT`, `BLOCKIERT` mit konkretem Grund, `ERLEDIGT` mit Nachweis (Tests, Commit-ID). Stories über mehrere Meilensteine (etwa „M1/M2“) werden je Meilenstein als Teilstatus geführt und sind erst nach dem letzten Teil `ERLEDIGT`.
 
 ## 3. Meilensteine
 
-| Meilenstein | Ergebnis | Stories / Abhängigkeiten |
+| Slice | Ergebnis | Stories / Abhängigkeiten |
 |---|---|---|
-| M0 – Grundlage | Baubarer Stack, Compose, Migrationen, Healthchecks, erste Test- und UI-Grundlage | US-001, US-003, US-004, US-130, US-131; technische Basis für US-140, US-150, US-170–172 |
-| M1 – Persönliche Aufgaben | Registrierung, Login, persönliche Aufgaben und Projekte, Suche, Filter, Dashboard, sichere Konfliktbehandlung | US-002, US-010–012, US-020–022, US-030–037, US-040–043, US-050–053, US-110, US-120–121; Installationsprobe US-160 |
-| M2 – Zusammenarbeit | Mitglieder, Zuweisungen, Unteraufgaben, Kommentare und sichtbare Historie; Kontoverwaltung vervollständigen | US-013–014, US-060–062, US-070–071, US-080–081; M1 vorhanden |
+| M0 – Grundlage | Baubarer Stack, Compose, Migrationen, Healthchecks, erste Test- und UI-Grundlage, CI | US-001, US-003, US-004, US-130, US-131; technische Basis für US-140, US-150, US-170–172 |
+| M1a – Konten und Anmeldung | Registrierung, Login/Logout, Session/CSRF, Profil, Passwort ändern, Ratenbegrenzung | US-010–012, US-020, US-021, US-023, US-141, US-022 (M1-Teil), US-002 (Teil) |
+| M1b – Aufgaben-Kern | Aufgaben anlegen, ansehen, bearbeiten, löschen, erledigen; Priorität, Fälligkeit; Konflikte und Transaktionen | US-030–037, US-120, US-121 (M1-Teil), US-002; M1a |
+| M1c – Organisation und Findbarkeit | Projekte, Tags, Suche, Filter, Sortierung, Standardansichten, Dashboard; Frischinstallations-Probe | US-040–043, US-050–053, US-110, US-160; M1b |
+| M2 – Zusammenarbeit | Mitglieder, Zuweisungen, Unteraufgaben, Kommentare und sichtbare Historie; Kontoverwaltung vervollständigen | US-013–014, US-060–062, US-070–071, US-080–081 und M2-Teile von US-022/031/032/042/051; M1 vorhanden |
 | M3 – Zeitfunktionen | Wiederkehrende Aufgaben und persönliche In-App-Erinnerungen | US-090, US-100; stabile Zeit- und Transaktionsregeln aus M1/M2 |
-| M4 – Referenzrelease | Vollständige Abnahme, Updates, Restore und Übergabe an anderen Azubi | US-140, US-150–151, US-160–162, US-170–172 abschließend nachweisen; M1–M3 erfüllt |
+| M4 – Referenzrelease | Vollständiger Nachweis, Updates, Restore, Demo-Unterlagen | US-140, US-150, US-161, US-162, US-170–172 abschließend nachweisen; M1–M3 erfüllt |
+
+### Priorisierung
+
+| Priorität | Stories |
+|---|---|
+| Must | US-001–004, US-010–012, US-020–022, US-030–037, US-040–042, US-050–053, US-110, US-120–121, US-130–131, US-140, US-141, US-150, US-170, US-171 |
+| Should | US-013, US-014, US-023, US-043, US-060–062, US-070–071, US-080–081, US-160–162, US-172 |
+| Could | US-090, US-100, US-151 (Demo-Unterlagen) |
+
+Begründung: Ein sicherer, barrierefreier Kern mit persönlichen Aufgaben (M0/M1) ist das Referenzprodukt. Zusammenarbeit (M2) zeigt Berechtigungen und Konsistenz, die Zeitfunktionen (M3) sind fachlich anspruchsvoll, aber verzichtbar, falls Zeit fehlt. Betrieb (US-160–162) wird vor dem Referenzrelease durchgespielt, gilt aber als Should, weil kein Dritter es abnimmt.
 
 Bereits in M1 werden Aktivitätsdaten zusammen mit Fachänderungen gespeichert; die vollständige Anzeige folgt in M2. Vor M2 kann es noch keine Zuweisung an andere Personen geben. UI und API sollen später vorgesehene Funktionen nicht durch funktionslose Platzhalter vortäuschen.
 
@@ -82,7 +94,7 @@ Als Betreiber möchte ich die Einsatzbereitschaft ohne UI feststellen.
 
 ### US-004 – Dokumentation als Einstieg nutzen · M0 · OFFEN
 
-Als Azubi möchte ich Anforderungen, Architektur und erste Befehle an einem Ort finden.
+Als Entwickler möchte ich Anforderungen, Architektur und erste Befehle an einem Ort finden.
 
 - README verlinkt alle Fachdateien; reale Pfade und Befehle stimmen nach Umsetzung mit dem Repository überein.
 - Getestete Versionen und verbleibende Einschränkungen sind eingetragen; Zielabläufe sind von verifizierten Abläufen unterscheidbar.
@@ -94,7 +106,7 @@ Als Azubi möchte ich Anforderungen, Architektur und erste Befehle an einem Ort 
 
 Als Gast möchte ich ein Konto mit eindeutiger Login-E-Mail anlegen.
 
-- Pflichtfelder, E-Mail und Passwortregeln werden serverseitig geprüft; doppelte E-Mails auch bei parallelen Anfragen abgewiesen.
+- Pflichtfelder, E-Mail, Passwortregeln und eine gültige IANA-Zeitzone (aus dem Browser vorgeschlagen, änderbar) werden serverseitig geprüft; doppelte E-Mails auch bei parallelen Anfragen abgewiesen.
 - Nur ein sicherer Passwort-Hash wird gespeichert; Selbstregistrierung erzeugt ausschließlich die Rolle `USER`.
 - Das neue aktive Konto kann sich anmelden; Fehler sind verständlich und zugänglich.
 
@@ -155,6 +167,14 @@ Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 - Backend prüft jede Lese- und Schreiboperation einschließlich Suche, Zähler und abhängiger Daten.
 - Geänderte URLs, fremde IDs und manipulierte Request-Felder umgehen keine Rechte.
 - Tests mit zwei Benutzern und Admin decken persönliche Aufgaben ab M1 und entzogene Projektmitgliedschaft ab M2 ab.
+
+### US-023 – Sitzung bei Inaktivität beenden · M1 · Should · OFFEN
+
+Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuft.
+
+- Nach 30 Minuten Inaktivität endet die Session serverseitig; die Oberfläche warnt vorher zugänglich (Statusmeldung, per Tastatur bedienbar) und ermöglicht die Verlängerung.
+- Ungesendete Formulareingaben bleiben bei erneuter Anmeldung innerhalb der laufenden Seite erhalten; Ablauf wird nie als erfolgreiches Speichern dargestellt.
+- Die Frist ist konfigurierbar und testbar (Test-Uhr).
 
 ## 8. EPIC-04 – Aufgabenverwaltung
 
@@ -429,6 +449,13 @@ Als Benutzer möchte ich auf sichere Verarbeitung meiner Daten vertrauen.
 - Negative API-Tests decken Rechteumgehung, Rollenerhöhung, Tokenmissbrauch, schädliche Texte und Session-Entwertung ab.
 - Keine echten Secrets im Repository oder Browser-Build; Abhängigkeiten auf bekannte Probleme prüfen und relevante offene Befunde dokumentieren/beheben.
 
+### US-141 – Missbrauch begrenzen und Header setzen · M1 · Must · OFFEN
+
+Als Betreiber möchte ich Angriffsflächen der Anmeldung und des Browsers reduzieren.
+
+- Anmeldung (und ab M2 Passwort-Wiederherstellung) haben konfigurierbare Ratenbegrenzung ohne dauerhafte Kontosperre; Grenzwerte sind getestet.
+- Sicherheitsheader einschließlich Content Security Policy sind gegen den tatsächlichen Build getestet; private API-Antworten sind nicht öffentlich cachebar.
+
 ## 20. EPIC-16 – Tests und Ausbildungsnachweise
 
 ### US-150 – Automatisierte Qualitätsprüfungen · ab M0, Abschluss M4 · OFFEN
@@ -439,23 +466,23 @@ Als Entwickler möchte ich Regressionen vor einem Release erkennen.
 - Die Build-Pipeline führt die vereinbarten Prüfungen aus und scheitert bei Fehlern; übersprungene Tests werden nicht als bestanden gewertet.
 - Berichte sind auswertbar, Daten synthetisch und Tests unabhängig; Migration von leerem Schema und vorherigem Release wird geprüft.
 
-### US-151 – Architektur erklären · M4 · OFFEN
+### US-151 – Demo-Unterlagen für die Vorführung · M4 · Could · OFFEN
 
-Als Azubi möchte ich die Referenzlösung fachlich und technisch vorstellen können.
+Als Entwickler möchte ich die Referenzlösung Azubis verständlich vorführen und mit deren Lösungen vergleichen können.
 
-- Der Weg vom Speichern im Browser bis zur Datenbank wird anhand des Diagramms erklärt.
-- Technologien, Migrationen, Sessions, Berechtigungen, Testarten, Konflikte und Healthchecks werden in eigenen Worten eingeordnet.
-- Ein Ausbilder dokumentiert Rückfragen und Ergebnis; auswendig gelesene Codezeilen sind kein Abnahmekriterium.
+- Kurze Vorführabfolge: Weg vom Speichern im Browser bis zur Datenbank anhand des Architekturdiagramms, Technologien, Migrationen, Sessions, Berechtigungen, Testarten, Konflikte und Healthchecks.
+- Vergleichspunkte (Architekturentscheidungen, Rechte-/Konfliktbehandlung, Tests, Barrierefreiheit) als Checkliste für den Vergleich mit den Azubi-Lösungen.
+- Es gibt keine Abnahme durch Dritte.
 
 ## 21. EPIC-17 – Installation, Deployment und Updates
 
-### US-160 – Installation durch einen anderen Azubi · Probe M1, Abschluss M4 · OFFEN
+### US-160 – Frischinstallation prüfen · Probe M1c, Abschluss M4 · Should · OFFEN
 
-Als neuer Betreiber möchte ich allein mit Repository und Anleitung starten können.
+Als Betreiber möchte ich mit Repository und Anleitung auf einem frischen System starten können.
 
-- Ein bisher unbeteiligter Azubi installiert auf einem frischen System ohne mündliche Zusatzschritte.
-- Er konfiguriert eigene Secrets, startet Dienste, prüft Healthcheck und führt Registrierung, Login, Aufgabe, Neustart und erneutes Lesen durch.
-- Versionen, Dauer, Abweichungen und nötige Korrekturen werden protokolliert; keine erfundenen Abnahmeeinträge.
+- Die Anleitung wird auf einem frisch geklonten Checkout (ohne vorhandene Volumes und `.env`) wörtlich ausgeführt, ohne undokumentierte Zusatzschritte.
+- Secrets konfigurieren, Dienste starten, Healthcheck prüfen, Registrierung, Login, Aufgabe, Neustart und erneutes Lesen durchführen.
+- Versionen, Dauer, Abweichungen und nötige Korrekturen werden protokolliert; keine erfundenen Einträge.
 
 ### US-161 – Anwendung aktualisieren · M4 · OFFEN
 
@@ -491,17 +518,17 @@ Als Entwickler möchte ich erkennbare Barrieren bei jeder Änderung finden.
 - Keine ungeklärten Regelverstöße im geprüften Umfang; insbesondere neue schwerwiegende Verstöße lassen die Pipeline scheitern.
 - Keine pauschalen Regelausschlüsse; ein Scan ohne Befund wird nicht als vollständige WCAG-Konformität ausgegeben.
 
-### US-172 – Manuelle Accessibility-Abnahme · ab M1, Abschluss M4 · OFFEN
+### US-172 – Manuelle Accessibility-Prüfung · ab M1, Abschluss M4 · Should · OFFEN
 
-Als Ausbilder möchte ich Bedienbarkeit prüfen, die ein automatischer Scan nicht beurteilt.
+Als Entwickler möchte ich Bedienbarkeit prüfen, die ein automatischer Scan nicht beurteilt.
 
-- Tastaturablauf, mindestens eine dokumentierte Screenreader-/Browser-Kombination sowie Zoom und Reflow werden je größerem Meilenstein geprüft.
-- Protokoll nennt Build, Umgebung, Prüfer, Schritte, Ergebnis und offene Befunde.
-- Der WebUI-/Accessibility-Ausbilder prüft das Referenzrelease; offene anwendbare A-/AA-Verstöße verhindern dessen Abnahme.
+- Tastaturablauf, mindestens eine dokumentierte Screenreader-/Browser-Kombination (zum Beispiel VoiceOver/Safari) sowie Zoom und Reflow werden je größerem Meilenstein geprüft.
+- Protokoll nennt Build, Umgebung, Schritte, Ergebnis und offene Befunde.
+- Offene anwendbare A-/AA-Verstöße werden behoben oder als bekannte Einschränkung dokumentiert; eine Konformität wird nicht behauptet.
 
 ## 23. Definition of Done
 
-Eine Story ist erst `ABGENOMMEN`, wenn alle zutreffenden Punkte nachgewiesen sind:
+Eine Story ist erst `ERLEDIGT`, wenn alle zutreffenden Punkte nachgewiesen sind:
 
 - Akzeptanzkriterien erfüllt, inklusive Fehler-, Leer- und Berechtigungsfällen.
 - Passende automatisierte Tests erfolgreich; keine bekannten still übersprungenen Pflichtprüfungen.
@@ -509,10 +536,10 @@ Eine Story ist erst `ABGENOMMEN`, wenn alle zutreffenden Punkte nachgewiesen sin
 - Sicherheitsregeln, serverseitige Validierung, Konflikt- und Transaktionsregeln eingehalten.
 - Schemaänderungen als Flyway-Migration, Schnittstellen in OpenAPI dokumentiert.
 - README, Fachdateien, Konfiguration und Betriebsbefehle stimmen mit dem tatsächlichen Stand überein.
-- Review ohne offene blockierende Befunde; Nachweise mit Story-ID und konkretem Build dokumentiert.
+- Selbst-Review (gegebenenfalls mit `/code-review`) ohne offene blockierende Befunde; Nachweise mit Story-ID und konkretem Build dokumentiert.
 - Keine Secrets, lokalen Daten oder erzeugten Build-Dateien im Commit.
 
-Für das Referenzrelease kommen die unabhängige Installation, geprüfter Restore, Updateprobe, Architekturvorstellung und manuelle Accessibility-Abnahme hinzu. Ein erfolgreicher Build allein erfüllt diese Definition nicht.
+Für das Referenzrelease kommen die geprüfte Frischinstallation, ein geprüfter Restore, die Updateprobe und die manuelle Accessibility-Prüfung hinzu. Ein erfolgreicher Build allein erfüllt diese Definition nicht.
 
 ## 24. Vor der jeweiligen Umsetzung zu konkretisieren
 

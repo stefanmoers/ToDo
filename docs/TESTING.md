@@ -16,7 +16,7 @@ Ein Test belegt erwartetes Verhalten mit nachvollziehbaren Eingaben. Viele grün
 | Frontend-Logik/Komponente | Vitest; React Testing Library als Arbeitsannahme | Formularfehler, zugängliche Labels, Lade- und Konfliktzustand |
 | Ende-zu-Ende | Playwright gegen komplette Anwendung | Login → Aufgabe erstellen → neuladen → erledigen |
 | Automatische Barrierefreiheit | axe-core mit Playwright | Sichtbare Dialoge und Fehlerzustände prüfen |
-| Manuelle Abnahme | Mensch, Tastatur und Screenreader | Sinnvolle Fokusführung und verständliche Meldungen |
+| Manuelle Prüfung | Entwickler, Tastatur und Screenreader | Sinnvolle Fokusführung und verständliche Meldungen |
 | Betriebsprobe | Docker Compose und dokumentierte Befehle | Frischinstallation, Neustart, Update und Restore |
 
 Unit-Tests sind schnell und isolieren eine Regel. Integrationstests prüfen das Zusammenspiel echter Komponenten. E2E-Tests verfolgen einen Benutzerablauf durch das ganze System. Jede Ebene hat eine andere Aufgabe; alles ausschließlich über E2E zu prüfen wäre langsam und schwer zu diagnostizieren.
@@ -91,4 +91,4 @@ Keine starre Abdeckungszahl ersetzt diese Nachweise. Tests dürfen Verhalten pr�
 
 ## Ergebnisnachweis
 
-Jede abgeschlossene Story verweist auf Tests und gegebenenfalls ein manuelles Protokoll mit Commit-ID, Datum, Umgebung und tatsächlichem Ergebnis. Nicht ausgeführte Prüfungen werden mit Ursache benannt. Das Referenzrelease verlangt zusätzlich die unabhängige Installation aus US-160, den Restore aus US-162 und die Accessibility-Abnahme aus US-172.
+Jede abgeschlossene Story verweist auf Tests und gegebenenfalls ein manuelles Protokoll mit Commit-ID, Datum, Umgebung und tatsächlichem Ergebnis. Nicht ausgeführte Prüfungen werden mit Ursache benannt. Das Referenzrelease verlangt zusätzlich die Frischinstallation aus US-160, den Restore aus US-162 und die manuelle Accessibility-Prüfung aus US-172.

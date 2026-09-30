@@ -28,4 +28,4 @@ Anfangs reicht React-Zustand ohne Redux. Eine spätere Bibliothek für Serverdat
 
 ## Überprüfung
 
-Bereits der erste Login-/Aufgabenablauf muss ohne Maus funktionieren. M0/M1 dokumentieren Paketversionen, Build und Prüfungen. Komplexe Komponenten werden vor breiter Wiederverwendung manuell durch den Accessibility-Ausbilder geprüft; die tatsächliche Prüfung ist zu protokollieren.
+Bereits der erste Login-/Aufgabenablauf muss ohne Maus funktionieren. M0/M1 dokumentieren Paketversionen, Build und Prüfungen. Komplexe Komponenten werden vor breiter Wiederverwendung manuell vom Entwickler geprüft; die tatsächliche Prüfung ist zu protokollieren.

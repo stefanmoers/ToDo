@@ -37,7 +37,7 @@ Neue wesentliche Architekturentscheidungen erhalten eine ADR mit Kontext, Altern
 2. Prüfe Frontend-Zustände einschließlich Dialogen, Formularfehlern und leerer Listen mit Playwright/axe und manuell nach `docs/ACCESSIBILITY.md`.
 3. Führe die betroffenen Prüfungen aus. Berichte exakt, was gelaufen ist, was erfolgreich war und was noch nicht überprüft werden konnte. Ein fehlendes Docker-System ist kein bestandener Integrationstest.
 4. Aktualisiere Dokumentation, OpenAPI, Konfigurationsbeispiele und Backlog-Status im selben Änderungspaket wie das Verhalten.
-5. Markiere eine Story erst nach erfüllten Akzeptanzkriterien und Definition of Done als erledigt. Manuelle Abnahmen nicht behaupten oder selbst im Namen eines Ausbilders bestätigen.
+5. Markiere eine Story erst nach erfüllten Akzeptanzkriterien und Definition of Done als erledigt. Manuelle Prüfungen nur als durchgeführt eintragen, wenn sie tatsächlich stattfanden; der Auftraggeber führt sie selbst durch und bestätigt sie. Es gibt keine Abnahmen durch Dritte.
 6. Halte Änderungen und Commits überschaubar. Ein sinnvoller Commit nennt Zweck und gegebenenfalls Story-ID. Prüfe vor einem Commit, ob Secrets oder erzeugte Dateien enthalten sind.
 
 ## Erster Implementierungsauftrag
