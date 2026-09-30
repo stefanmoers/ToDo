@@ -33,7 +33,7 @@ describe('Sitzungs-Timeout-Warnung (US-023)', () => {
     await vi.waitFor(() => expect(meCalls).toBeGreaterThanOrEqual(2))
   })
 
-  it('meldet nach Ablauf ohne weitere Aktivität automatisch ab', async () => {
+  it('zeigt nach Ablauf ohne weitere Aktivität die Anmeldung innerhalb der laufenden Seite (kein Navigieren)', async () => {
     const user = { ...testUser, sessionTimeoutSeconds: 20 }
     mockApi({
       'GET /api/v1/auth/me': () => ({ body: user }),
@@ -43,8 +43,10 @@ describe('Sitzungs-Timeout-Warnung (US-023)', () => {
     await screen.findByRole('heading', { level: 1, name: 'Meine Aufgaben' })
 
     await vi.advanceTimersByTimeAsync(30_000)
-    expect(await screen.findByRole('heading', { level: 1, name: 'Anmelden' })).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('wegen Inaktivität abgemeldet')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sitzung abgelaufen' })).toBeInTheDocument()
+    // Die laufende Seite bleibt gemountet, damit ein ungesendeter Entwurf nicht verloren geht (US-023).
+    expect(screen.getByRole('heading', { level: 1, name: 'Meine Aufgaben' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: 'Anmelden' })).not.toBeInTheDocument()
   })
 
   it('schließt bei Escape wie "Angemeldet bleiben" (echte Anfrage statt stillem Ausblenden)', async () => {

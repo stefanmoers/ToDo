@@ -7,18 +7,15 @@ import { useSessionTimeoutWarning } from './sessionTimeout'
 
 /**
  * US-023: Warnt vor dem Ablauf der Sitzung wegen Inaktivität. "Angemeldet bleiben" löst eine echte Anfrage aus,
- * damit auch der Server die Inaktivität zurücksetzt (nicht nur der lokale Zähler).
+ * damit auch der Server die Inaktivität zurücksetzt (nicht nur der lokale Zähler). Reagiert niemand rechtzeitig,
+ * übernimmt SessionExpiredDialog — ohne Navigation, damit ein ungesendeter Formularentwurf erhalten bleibt.
  */
 export function SessionTimeoutWarning() {
-  const { user, setUser, setNotice } = useAuth()
+  const { user, setUser, setNotice, markSessionExpired } = useAuth()
   const navigate = useNavigate()
   const stayButtonRef = useRef<HTMLButtonElement>(null)
 
-  const onExpired = useCallback(() => {
-    setUser(null)
-    setNotice('Du wurdest wegen Inaktivität abgemeldet.')
-    navigate('/anmelden', { replace: true })
-  }, [setUser, setNotice, navigate])
+  const onExpired = useCallback(() => markSessionExpired(), [markSessionExpired])
 
   const { warning } = useSessionTimeoutWarning(user?.sessionTimeoutSeconds, onExpired)
 
@@ -32,6 +29,7 @@ export function SessionTimeoutWarning() {
     }
   }
 
+  /** Ausdrücklicher Wunsch des Benutzers (nicht die Sitzung, die abläuft): sofortige Navigation ist hier angemessen. */
   function logout() {
     setUser(null)
     setNotice('Du wurdest abgemeldet.')

@@ -28,8 +28,13 @@ export function useSessionTimeoutWarning(timeoutSeconds: number | undefined, onE
     const interval = setInterval(() => {
       const elapsedSeconds = (Date.now() - lastActivity.current) / 1000
       const remaining = timeoutSeconds - elapsedSeconds
-      if (remaining <= 0) onExpired()
-      else if (remaining <= WARNING_SECONDS) setWarning(true)
+      if (remaining <= 0) {
+        // SessionExpiredDialog übernimmt jetzt; der Warn-Dialog soll nicht gleichzeitig offen bleiben.
+        setWarning(false)
+        onExpired()
+      } else if (remaining <= WARNING_SECONDS) {
+        setWarning(true)
+      }
     }, CHECK_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [timeoutSeconds, onExpired])

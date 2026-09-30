@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
+import { SessionExpiredDialog } from '../features/auth/SessionExpiredDialog'
 import { SessionTimeoutWarning } from '../features/auth/SessionTimeoutWarning'
 
 /** Seitenrahmen: Sprunglink, Landmarken und Fokusführung bei Seitenwechsel (WCAG 2.4.1, 2.4.3). */
@@ -69,6 +70,7 @@ export default function Layout() {
         <p>Referenzprojekt – Entwicklungsstand M1b</p>
       </footer>
       <SessionTimeoutWarning />
+      <SessionExpiredDialog />
     </>
   )
 }

@@ -185,6 +185,26 @@ class TaskApiIT {
 	}
 
 	@Test
+	void adminRolleGewaehrtKeinenZugriffAufFremdeAufgaben() throws Exception {
+		ApiTestClient a = loggedIn();
+		String id = tree(a.post("/api/v1/tasks", createBody("Geheim A"))).get("id").asString();
+
+		ApiTestClient admin = client();
+		String adminEmail = ApiTestClient.newEmail();
+		admin.registerAndLogin(adminEmail);
+		jdbc.update("update app_user set role = 'ADMIN' where email = ?", adminEmail);
+		// Neue Anmeldung, damit die Sitzung die geänderte Rolle aus der Datenbank übernimmt.
+		assertThat(admin.login(adminEmail, ApiTestClient.PASSWORD).getResponse().getStatus()).isEqualTo(200);
+
+		assertThat(admin.get("/api/v1/tasks/" + id).getResponse().getStatus()).as("ADMIN sieht fremde Aufgabe nicht")
+			.isEqualTo(404);
+		assertThat(admin.put("/api/v1/tasks/" + id, "{\"title\":\"X\",\"status\":\"OPEN\",\"priority\":\"NORMAL\",\"version\":0}")
+			.getResponse().getStatus()).isEqualTo(404);
+		assertThat(admin.delete("/api/v1/tasks/" + id + "?version=0").getResponse().getStatus()).isEqualTo(404);
+		assertThat(tree(admin.get("/api/v1/tasks")).get("totalElements").asLong()).isZero();
+	}
+
+	@Test
 	void ohneAnmeldungIstDieApiNichtErreichbar() throws Exception {
 		mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/tasks"))
 			.andExpect(status().isUnauthorized());
