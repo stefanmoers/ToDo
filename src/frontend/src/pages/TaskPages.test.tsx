@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockApi, pageOf, renderAt, testTask, testUser } from '../testUtils'
@@ -342,6 +342,76 @@ describe('Aufgabe ansehen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Tags speichern' }))
     expect(await screen.findByRole('status')).toHaveTextContent('Die Tag-Zuordnung wurde gespeichert.')
     expect(calls.find((c) => c.key === `PUT /api/v1/tasks/${TASK_ID}/tags`)?.body).toEqual({ tagIds: [TAG.id] })
+  })
+})
+
+describe('Gleichnamige Tags (US-181)', () => {
+  const MINE = {
+    id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    name: 'Backen',
+    scope: 'PROJECT' as const,
+    projectId: 'p-mine',
+    projectName: 'Kaffee',
+    projectOwnerId: testUser.id,
+    projectOwnerDisplayName: testUser.displayName,
+    createdAt: '2026-09-30T05:00:00Z',
+  }
+  const FOREIGN = {
+    id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    name: 'Backen',
+    scope: 'PROJECT' as const,
+    projectId: 'p-foreign',
+    projectName: 'Kaffee',
+    projectOwnerId: '99999999-9999-9999-9999-999999999999',
+    projectOwnerDisplayName: 'Uli',
+    createdAt: '2026-09-30T05:00:00Z',
+  }
+
+  it('unterscheidet gleichnamige Tags im Editor über den zugänglichen Namen', async () => {
+    const task = testTask({ tags: [] })
+    const { calls } = mockApi({
+      ...loggedIn,
+      ...noSubtasks,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [MINE, FOREIGN] }),
+      [`PUT /api/v1/tasks/${TASK_ID}/tags`]: () => ({ body: [{ id: FOREIGN.id, name: FOREIGN.name }] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+
+    const mine = await screen.findByRole('checkbox', { name: 'Backen · Projekt „Kaffee“ (du)' })
+    const foreign = screen.getByRole('checkbox', { name: 'Backen · Projekt „Kaffee“ (Uli)' })
+    expect(mine).not.toBe(foreign)
+
+    await userEvent.click(foreign)
+    await userEvent.click(screen.getByRole('button', { name: 'Tags speichern' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Die Tag-Zuordnung wurde gespeichert.')
+    expect(calls.find((c) => c.key === `PUT /api/v1/tasks/${TASK_ID}/tags`)?.body).toEqual({ tagIds: [FOREIGN.id] })
+  })
+
+  it('zeigt bei eindeutigen Tag-Namen keine Herkunft', async () => {
+    const task = testTask({ tags: [] })
+    mockApi({
+      ...loggedIn,
+      ...noSubtasks,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [MINE] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+    expect(await screen.findByRole('checkbox', { name: 'Backen' })).toBeInTheDocument()
+  })
+
+  it('beschriftet gleichnamige Tags im Filter der Aufgabenliste mit ihrer Herkunft', async () => {
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tags': () => ({ body: [MINE, FOREIGN] }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([]) }),
+    })
+    renderAt('/')
+    const select = await screen.findByLabelText('Nach Tag filtern')
+    expect(within(select).getByRole('option', { name: 'Backen · Projekt „Kaffee“ (du)' })).toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Backen · Projekt „Kaffee“ (Uli)' })).toBeInTheDocument()
   })
 })
 

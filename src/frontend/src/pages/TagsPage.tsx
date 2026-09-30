@@ -5,11 +5,13 @@ import { useTagList } from '../features/tags/useTagList'
 import { useAllProjects } from '../features/projects/useProjectList'
 import { usePageTitle } from '../hooks/usePageTitle'
 import type { Tag } from '../api/tags'
+import { useAuth } from '../features/auth/AuthContext'
 
 export default function TagsPage() {
   usePageTitle('Meine Tags')
   const { state, reload } = useTagList()
   const projects = useAllProjects()
+  const { user } = useAuth()
   const [notice, setNotice] = useState<string>()
 
   function onCreated(tag: Tag) {
@@ -68,10 +70,14 @@ export default function TagsPage() {
           {projects.map((project) => {
             const projectTags = state.tags.filter((t) => t.projectId === project.id)
             if (projectTags.length === 0) return null
+            // US-181: Projekte anderer Eigentümer nennen den Eigentümer, damit gleichnamige Projekte unterscheidbar sind.
+            const ownerSuffix = project.ownerId === user?.id ? '' : ` (von ${project.ownerDisplayName ?? 'unbekannt'})`
             return (
               <div key={project.id}>
-                <h2>Tags in „{project.name}“</h2>
-                <ul className="task-list tag-grid" aria-label={`Tags in ${project.name}`}>
+                <h2>
+                  Tags in „{project.name}“{ownerSuffix}
+                </h2>
+                <ul className="task-list tag-grid" aria-label={`Tags in ${project.name}${ownerSuffix}`}>
                   {projectTags.map((tag) => (
                     <TagRow key={tag.id} tag={tag} onRenamed={onRenamed} onDeleted={onDeleted} />
                   ))}

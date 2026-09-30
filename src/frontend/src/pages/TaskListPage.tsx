@@ -11,6 +11,7 @@ import {
 import { Pagination } from '../components/Pagination'
 import { useAuth } from '../features/auth/AuthContext'
 import { useAllProjects } from '../features/projects/useProjectList'
+import { tagLabels } from '../features/tags/origin'
 import { useAllTags } from '../features/tags/useTagList'
 import { PRIORITY_LABELS, STATUS_LABELS, pluralTasks } from '../features/tasks/labels'
 import { matchesStandardView, STANDARD_VIEWS, standardViewParams } from '../features/tasks/standardViews'
@@ -83,6 +84,7 @@ export default function TaskListPage() {
 
   const { state, reload, replaceItem } = useTaskList(page, stableFilters)
   const tags = useAllTags()
+  const tagTexts = tagLabels(tags, user?.id)
   const projects = useAllProjects()
   const notice = (location.state as { notice?: string } | null)?.notice
 
@@ -261,7 +263,7 @@ export default function TaskListPage() {
                     <option value="">Alle Tags</option>
                     {tags.map((tag) => (
                       <option key={tag.id} value={tag.id}>
-                        {tag.name}
+                        {tagTexts.get(tag.id)?.text ?? tag.name}
                       </option>
                     ))}
                   </select>

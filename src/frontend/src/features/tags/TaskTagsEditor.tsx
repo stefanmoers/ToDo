@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { TagSummary } from '../../api/tagSummary'
 import { setTaskTags } from '../../api/tasks'
+import { useAuth } from '../auth/AuthContext'
 import { mapTagApiError } from './errors'
+import { tagLabels } from './origin'
 import { useAllTags } from './useTagList'
 
 /**
@@ -19,6 +21,7 @@ export function TaskTagsEditor({
   onChanged: (tags: TagSummary[]) => void
 }) {
   const allTags = useAllTags()
+  const { user } = useAuth()
   const [selected, setSelected] = useState<Set<string>>(() => new Set(currentTags.map((t) => t.id)))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
@@ -50,6 +53,7 @@ export function TaskTagsEditor({
   }
 
   if (allTags.length === 0) return null
+  const labels = tagLabels(allTags, user?.id)
 
   return (
     <section aria-labelledby="task-tags-heading">
@@ -70,7 +74,15 @@ export function TaskTagsEditor({
               checked={selected.has(tag.id)}
               onChange={() => toggle(tag.id)}
             />{' '}
-            <label htmlFor={`task-tag-${tag.id}`}>{tag.name}</label>
+            <label htmlFor={`task-tag-${tag.id}`}>
+              {tag.name}
+              {labels.get(tag.id)?.origin && (
+                <>
+                  {' · '}
+                  <span className="tag-origin">{labels.get(tag.id)?.origin}</span>
+                </>
+              )}
+            </label>
           </p>
         ))}
       </fieldset>

@@ -7,6 +7,10 @@ export interface Tag {
   name: string
   scope: TagScope
   projectId?: string
+  /** US-181: Nur bei Projekt-Tags; nennt die Herkunft, damit gleichnamige Tags unterscheidbar sind. */
+  projectName?: string
+  projectOwnerId?: string
+  projectOwnerDisplayName?: string
   createdAt: string
 }
 

@@ -108,4 +108,22 @@ describe('Tags', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Tags in „Umzug“' })).toBeInTheDocument()
     expect(screen.getByText('Projekt-Tag')).toBeInTheDocument()
   })
+
+  it('nennt bei Projekten anderer Eigentümer den Eigentümer in der Überschrift (US-181)', async () => {
+    const mine = { id: 'p1', name: 'Kaffee', ownerId: testUser.id, ownerDisplayName: 'Max', createdAt: '2026-09-30T05:00:00Z', updatedAt: '2026-09-30T05:00:00Z', version: 0 }
+    const foreign = { id: 'p2', name: 'Kaffee', ownerId: '99999999-9999-9999-9999-999999999999', ownerDisplayName: 'Uli', createdAt: '2026-09-30T05:00:00Z', updatedAt: '2026-09-30T05:00:00Z', version: 0 }
+    mockApi({
+      'GET /api/v1/auth/me': () => ({ body: testUser }),
+      'GET /api/v1/projects?page=0&size=100': () => ({ body: pageOf([mine, foreign], { totalElements: 2 }) }),
+      'GET /api/v1/tags': () => ({
+        body: [
+          testTag({ id: 't1', name: 'Backen', scope: 'PROJECT', projectId: 'p1' }),
+          testTag({ id: 't2', name: 'Backen', scope: 'PROJECT', projectId: 'p2' }),
+        ],
+      }),
+    })
+    renderAt('/tags')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Tags in „Kaffee“' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Tags in „Kaffee“ (von Uli)' })).toBeInTheDocument()
+  })
 })

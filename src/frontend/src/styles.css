@@ -214,3 +214,4 @@ tbody tr:hover { background: var(--surface-soft); }
 @media (forced-colors: active) {
   .brand-mark, .main-nav a[aria-current='page'], .standard-views a[aria-current='page'], .meta-pill { border: 2px solid CanvasText; }
 }
+.tag-origin { color: var(--muted); font-size: 0.92em; font-weight: 400; }
