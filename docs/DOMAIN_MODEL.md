@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Backlog](../BACKLOG.md) · [Sicherheitsmodell](SECURITY.md)
 
-**Status:** `User` (V2), `Task` (V3) und `Project` (V4) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). `Project` hat vorerst genau einen Eigentümer und keine `Membership`; Mitgliedschaft/Teilen folgt erst mit US-060 (M2). `Subtask`, `Comment`, `Tag`/`TaskTag`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
+**Status:** `User` (V2), `Task` (V3), `Project` (V4) und `Tag`/`TaskTag` (V5) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). `Project` hat vorerst genau einen Eigentümer und keine `Membership`; Mitgliedschaft/Teilen folgt erst mit US-060 (M2). `Subtask`, `Comment`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
 
 ## Begriffe und Beziehungen
 
@@ -70,6 +70,8 @@ Arbeitsannahmen für US-022, US-042 und US-060 bis US-062:
 Beim späteren Ändern dieser Regeln müssen API, UI, Tests und Dokumentation gemeinsam angepasst werden. Die frühere Vorgabe „Projekt löschen löscht Aufgaben nicht“ bleibt dabei verbindlich.
 
 **Umgesetzt in M1c:** Ohne `Membership`-Tabelle ist „Eigentümer und aktuelle Mitglieder“ vorerst gleichbedeutend mit „Eigentümer“ (der erste Bullet-Punkt sowie das Löschen-ohne-Aufgabenverlust, zweiter und fünfter Bullet-Punkt ohne den Zuweisungs-/Tag-Teil, der erst mit Tags/Zuweisungen relevant wird). Zuweisung, Mitgliederverwaltung und die Bereinigung fremder Zuweisungen/Erinnerungen beim Löschen folgen erst mit US-060 bis US-062 (M2).
+
+**Arbeitsannahmen für US-043 (Tags), umgesetzt in M1c:** Ein Tag gehört entweder genau einem Benutzer persönlich oder genau einem seiner eigenen Projekte, nie beidem (Datenbank-Constraint). Nur der Eigentümer des Projekts darf projektbezogene Tags anlegen, umbenennen oder löschen; persönliche Tags stehen ausschließlich ihrem Ersteller zur Verfügung. Das Ersetzen der Tag-Zuordnung einer Aufgabe (`PUT /api/v1/tasks/{id}/tags`) ändert bewusst nicht deren `version`/`updatedAt` — Tags gelten als reine Markierung ohne fachliche Auswirkung auf den Bearbeitungsstand der Aufgabe, anders als Titel, Beschreibung, Status, Priorität und Fälligkeit. Löschen eines Tags oder einer Aufgabe entfernt nur die Zuordnung in `task_tag`, nie die jeweils andere Seite. Diese Einordnung ist eine normale technische Umsetzungsentscheidung ohne abweichende fachliche Wirkung und wurde daher ohne separate Rückfrage getroffen.
 
 ## Eingaben und Grenzen
 

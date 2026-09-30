@@ -73,7 +73,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer>
-        <p>Referenzprojekt – Entwicklungsstand M1b</p>
+        <p>Referenzprojekt – Entwicklungsstand M1c</p>
       </footer>
       <SessionTimeoutWarning />
       <SessionExpiredDialog />

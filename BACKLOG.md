@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und die Projekt-Stories aus M1c (US-040 bis 042) sind umgesetzt und automatisiert geprüft.** Tags, Suche/Filter/Sortierung, Dashboard (Rest von M1c) und Zusammenarbeit (M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 sowie Projekte und Tags aus M1c (US-040 bis 043) sind umgesetzt und automatisiert geprüft.** Suche/Filter/Sortierung, Dashboard (Rest von M1c) und Zusammenarbeit (M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -202,7 +202,7 @@ Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuf
 
 ### US-030 – Aufgabe anlegen · M1 · ERLEDIGT
 
-> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel Pflicht (1–200 Zeichen), Beschreibung/Priorität/Fälligkeit/Projekt optional, Server setzt Ersteller/Status `OPEN`/Priorität `NORMAL`/Zeitstempel, fremde Felder (`status`, `creatorId`, `version`) werden ignoriert. Ein Projekt darf nur zugeordnet werden, wenn der Handelnde selbst Eigentümer ist (`400`, sonst). Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172); Tags folgen erst mit US-043.
+> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel Pflicht (1–200 Zeichen), Beschreibung/Priorität/Fälligkeit/Projekt optional, Server setzt Ersteller/Status `OPEN`/Priorität `NORMAL`/Zeitstempel, fremde Felder (`status`, `creatorId`, `version`) werden ignoriert. Ein Projekt darf nur zugeordnet werden, wenn der Handelnde selbst Eigentümer ist (`400`, sonst). Tags werden erst nach dem Anlegen über `PUT /api/v1/tasks/{id}/tags` zugeordnet (US-043). Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172).
 
 Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 
@@ -212,7 +212,7 @@ Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 
 ### US-031 – Aufgabe ansehen · M1/M2 · IN ARBEIT
 
-> **Stand:** M1-Teil umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller und Zeitstempel; unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Projekt/Tags (M1c), Bearbeiter/Unteraufgaben/Kommentare/Aktivitäten (M2).
+> **Stand:** Umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller, Projekt, Tags und Zeitstempel; unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Bearbeiter/Unteraufgaben/Kommentare/Aktivitäten (M2).
 
 Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 
@@ -312,7 +312,9 @@ Als Eigentümer möchte ich ein Projekt auflösen, ohne Aufgaben zu verlieren.
 - Projektbezug wird entfernt; unzulässige Zuweisungen, Tags und Erinnerungen werden transaktional bereinigt.
 - Fremde Mitglieder verlieren Zugriff; Tests prüfen ab M2 mehrere Ersteller, einschließlich eines deaktivierten Kontos.
 
-### US-043 – Tags verwalten · M1 · OFFEN
+### US-043 – Tags verwalten · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TagApiIT`, `TagsPage.test.tsx`/`TaskPages.test.tsx`, `tags.spec.ts`): ein Tag gehört entweder einem Benutzer persönlich oder genau einem eigenen Projekt (DB-CHECK, nicht beides); Namen sind je Geltungsbereich fallunabhängig eindeutig (`409` bei Duplikat). Zuordnung/Entfernung an einer Aufgabe ersetzt die gesamte Tag-Liste über `PUT /api/v1/tasks/{id}/tags`, ändert bewusst nicht deren Version (Arbeitsannahme, siehe [Fachregeln](docs/DOMAIN_MODEL.md)); fremde oder unbekannte Tags werden serverseitig abgelehnt. Löschen eines Tags oder einer Aufgabe entfernt nur die Zuordnung, nie die andere Seite. Die Aufgabenliste ist nach einem Tag filterbar.
 
 Als Benutzer möchte ich Aufgaben unabhängig von ihrer Projektansicht markieren.
 

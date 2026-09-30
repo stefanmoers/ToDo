@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entscheidungen](adr/README.md)
 
-**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` (seit M1c, vorerst ohne Mitgliedschaft) sind umgesetzt; `notification` ist weiterhin Planung.
+**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c, `project` vorerst ohne Mitgliedschaft) sind umgesetzt; `notification` ist weiterhin Planung.
 
 ## Das System erklären
 
@@ -31,6 +31,7 @@ src/
 │       │   ├── user/{api,application,domain,persistence}/
 │       │   ├── project/{api,application,domain,persistence}/
 │       │   ├── task/{api,application,domain,persistence}/
+│       │   ├── tag/{api,application,domain,persistence}/
 │       │   ├── notification/{api,application,domain,persistence}/
 │       │   └── common/
 │       ├── main/resources/db/migration/
@@ -38,7 +39,7 @@ src/
 └── frontend/
     ├── package.json, package-lock.json
     └── src/
-        ├── features/{auth,tasks,projects,dashboard}/
+        ├── features/{auth,tasks,projects,tags,dashboard}/
         ├── components/
         ├── api/
         ├── hooks/
@@ -53,7 +54,8 @@ Diese Pfade entstehen erst bei Implementierung. `compose.yaml`, `compose.dev.yam
 |---|---|---|
 | `user` | Konto, Passwort, Anmeldung, Kontostatus | Kennt keine Aufgabeninhalte |
 | `project` | Projekte, Eigentümer, Mitgliedschaften | Nutzt öffentliche Benutzerabfragen |
-| `task` | Aufgaben, Tags, Unteraufgaben, Kommentare, Aktivitäten, Wiederholungen | Nutzt Benutzer- und Projektberechtigungen |
+| `task` | Aufgaben, Tag-Zuordnung (`TaskTag`), Unteraufgaben, Kommentare, Aktivitäten, Wiederholungen | Nutzt Benutzer-, Projekt- und Tag-Berechtigungen |
+| `tag` | Tags (persönlich oder projektbezogen), Namensregeln je Geltungsbereich | Nutzt öffentliche Projektabfragen zur Eigentümerprüfung |
 | `notification` | Erinnerungen und persönliche In-App-Mitteilungen | Prüft Aufgabenstatus und Berechtigung über öffentliche Schnittstellen |
 | `common` | Kleine gemeinsame Typen, Uhr, Fehlerformat | Enthält keine heimliche Sammelstelle für Fachlogik |
 
