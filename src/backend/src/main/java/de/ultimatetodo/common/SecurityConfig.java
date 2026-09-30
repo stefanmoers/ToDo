@@ -73,6 +73,8 @@ class SecurityConfig {
 				.requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/logout")
 				.permitAll()
+				// US-014: Administration bleibt auf die Rolle ADMIN beschränkt, unabhängig von jeder UI-Ausblendung.
+				.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated())
 			.securityContext(c -> c.securityContextRepository(contextRepository))
 			.csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))

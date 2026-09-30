@@ -2,9 +2,33 @@ package de.ultimatetodo.user.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 class UserRulesTest {
+
+	static final Instant T0 = Instant.parse("2026-01-01T10:00:00Z");
+	static final Instant T1 = Instant.parse("2026-01-02T10:00:00Z");
+
+	@Test
+	void deaktivierenUndReaktivierenSindWirkungslosWennBereitsImZielzustand() {
+		User u = User.register("max@example.test", "Max", "hash", "Europe/Berlin", T0);
+		assertThat(u.reactivate(T1)).isFalse();
+		assertThat(u.deactivate(T1)).isTrue();
+		assertThat(u.getStatus()).isEqualTo(User.Status.INACTIVE);
+		assertThat(u.deactivate(T1.plusSeconds(1))).isFalse();
+		assertThat(u.reactivate(T1.plusSeconds(1))).isTrue();
+		assertThat(u.getStatus()).isEqualTo(User.Status.ACTIVE);
+	}
+
+	@Test
+	void befoerdernZumAdministratorIstIdempotent() {
+		User u = User.register("max@example.test", "Max", "hash", "Europe/Berlin", T0);
+		assertThat(u.getRole()).isEqualTo(User.Role.USER);
+		assertThat(u.promoteToAdmin(T1)).isTrue();
+		assertThat(u.getRole()).isEqualTo(User.Role.ADMIN);
+		assertThat(u.promoteToAdmin(T1.plusSeconds(1))).isFalse();
+	}
 
 	@Test
 	void passwortGrenzenZaehlenCodepoints() {

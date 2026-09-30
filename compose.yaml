@@ -34,6 +34,7 @@ services:
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
       RATE_LIMIT_LOGIN_ATTEMPTS: ${RATE_LIMIT_LOGIN_ATTEMPTS:-10}
       RATE_LIMIT_REGISTER_ATTEMPTS: ${RATE_LIMIT_REGISTER_ATTEMPTS:-10}
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/actuator/health/readiness | grep -q '\"status\":\"UP\"'"]
       interval: 5s

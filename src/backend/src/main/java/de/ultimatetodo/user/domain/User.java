@@ -35,8 +35,9 @@ public class User {
 	@Column(nullable = false)
 	private Status status;
 
+	// Nicht mehr unveränderlich seit US-014: der Bootstrap-Vorgang befördert ein bestehendes Konto zum Administrator.
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, updatable = false)
+	@Column(nullable = false)
 	private Role role;
 
 	@Column(name = "time_zone", nullable = false)
@@ -83,6 +84,35 @@ public class User {
 		this.passwordHash = newHash;
 		this.authEpoch++;
 		this.updatedAt = now;
+	}
+
+	/** US-014: befördert ein bestehendes, selbst registriertes Konto zum Administrator (kein Standardkennwort nötig). */
+	public boolean promoteToAdmin(Instant now) {
+		if (role == Role.ADMIN) {
+			return false;
+		}
+		this.role = Role.ADMIN;
+		this.updatedAt = now;
+		return true;
+	}
+
+	/** Sitzungen enden spätestens bei der nächsten Anfrage (siehe {@code SessionEpochFilter}); Daten bleiben bestehen. */
+	public boolean deactivate(Instant now) {
+		if (status == Status.INACTIVE) {
+			return false;
+		}
+		this.status = Status.INACTIVE;
+		this.updatedAt = now;
+		return true;
+	}
+
+	public boolean reactivate(Instant now) {
+		if (status == Status.ACTIVE) {
+			return false;
+		}
+		this.status = Status.ACTIVE;
+		this.updatedAt = now;
+		return true;
 	}
 
 	public UUID getId() { return id; }

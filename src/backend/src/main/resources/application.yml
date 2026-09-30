@@ -73,6 +73,8 @@ springdoc:
     enabled: false
 
 app:
+  # US-014: befördert dieses bereits registrierte Konto beim Start zum Administrator; leer lassen, wenn nicht benötigt.
+  admin-bootstrap-email: ${ADMIN_BOOTSTRAP_EMAIL:}
   rate-limit:
     # Ratenbegrenzung ohne dauerhafte Sperre (US-141): höchstens so viele Versuche je Zeitfenster.
     login-attempts: ${RATE_LIMIT_LOGIN_ATTEMPTS:10}
