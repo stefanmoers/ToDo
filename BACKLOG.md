@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 sowie Projekte und Tags aus M1c (US-040 bis 043) sind umgesetzt und automatisiert geprüft.** Suche/Filter/Sortierung, Dashboard (Rest von M1c) und Zusammenarbeit (M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und M1c (US-040 bis 043, US-050 bis 053, US-110) sind umgesetzt und automatisiert geprüft.** Der Bearbeiter-Anteil von US-051 sowie die Frischinstallations-Probe (US-160) bleiben offen; Zusammenarbeit (M2) ist weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -324,7 +324,9 @@ Als Benutzer möchte ich Aufgaben unabhängig von ihrer Projektansicht markieren
 
 ## 10. EPIC-06 – Suche, Filter und Sortierung
 
-### US-050 – Aufgaben durchsuchen · M1 · OFFEN
+### US-050 – Aufgaben durchsuchen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): `q` sucht in Titel und Beschreibung ohne Beachtung der Großschreibung (Teilstring); die Ownership-Prüfung der Liste gilt unverändert, fremde Aufgaben sind nie Treffer. Leerer Suchtext zeigt die erlaubte Liste; eine leere Trefferliste erklärt sich über den allgemeinen „Keine Aufgaben für diese Auswahl“-Hinweis mit Rücksetzmöglichkeit.
 
 Als Benutzer möchte ich Aufgaben anhand von Text finden.
 
@@ -332,7 +334,9 @@ Als Benutzer möchte ich Aufgaben anhand von Text finden.
 - Nur zugängliche Aufgaben zählen als Treffer; Seitenzahlen verraten keine fremden Treffer.
 - Leerer Suchtext zeigt die erlaubte Liste; leere Trefferliste erklärt das Ergebnis.
 
-### US-051 – Aufgaben filtern · M1/M2 · OFFEN
+### US-051 – Aufgaben filtern · M1/M2 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): Filter für Status, Priorität, Projekt, Tag, Fälligkeitsbereich (`dueDateFrom`/`dueDateTo`, vergleicht das rohe Fälligkeitsdatum) und Überfälligkeit; unterschiedliche Filterarten werden mit UND verknüpft, mehrere Werte derselben Art (z. B. zwei Status) mit ODER. Aktive Filter sind über die Bedienelemente selbst sichtbar und über „Alle Filter zurücksetzen“ per Tastatur zurücksetzbar; die Seitengröße bleibt durch `Paging` begrenzt. Offen: Bearbeiter-Filter (erst ab M2/US-060, da es vor Zuweisungen keinen Bearbeiter gibt).
 
 Als Benutzer möchte ich relevante Aufgaben eingrenzen.
 
@@ -340,7 +344,9 @@ Als Benutzer möchte ich relevante Aufgaben eingrenzen.
 - Unterschiedliche Filter werden mit UND verknüpft; mehrere Werte desselben Filters mit ODER.
 - Aktive Filter sind sichtbar und per Tastatur zurücksetzbar; Seitengröße ist begrenzt.
 
-### US-052 – Aufgaben sortieren · M1 · OFFEN
+### US-052 – Aufgaben sortieren · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): Sortierfelder `createdAt`, `updatedAt`, `due`, `priority`, `title`, je auf- oder absteigend; Priorität sortiert nach der fachlichen Rangfolge (nicht alphabetisch), Titel ohne Beachtung der Großschreibung. Gleichstände lösen sich stabil über die ID auf; bei `sortBy=due` stehen Aufgaben ohne Fälligkeit unabhängig von der Richtung immer zuletzt. Nicht erlaubte Werte für `sortBy`/`sortDirection` liefern `400` statt eines stillschweigenden Rückfalls auf den Standard; die Auswahl ist ein einzelnes, beschriftetes `<select>`.
 
 Als Benutzer möchte ich eine nachvollziehbare Reihenfolge wählen.
 
@@ -348,7 +354,9 @@ Als Benutzer möchte ich eine nachvollziehbare Reihenfolge wählen.
 - Gleichstände werden stabil nach ID aufgelöst; Aufgaben ohne Fälligkeit stehen bei Fälligkeitssortierung immer zuletzt.
 - Nicht erlaubte Sortierfelder werden abgewiesen; Auswahl ist zugänglich beschriftet.
 
-### US-053 – Standardansichten nutzen · M1 · OFFEN
+### US-053 – Standardansichten nutzen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TaskPages.test.tsx`, `tasklist-query.spec.ts`): die fünf Ansichten sind Kurzverweise, die feste Kombinationen der US-051-Filter setzen (Heute/Demnächst/Erledigt zusätzlich mit Status-Einschränkung, Überfällig über das `overdue`-Flag, Alle ohne Einschränkung); „heute“ löst der Client in der Kontozeitzone des Betrachters auf und sendet sie explizit (Modulgrenze, siehe [Fachregeln](docs/DOMAIN_MODEL.md)). Die aktive Ansicht ist über `aria-current="page"` erkennbar. Jede Ansicht nutzt denselben Leerzustand wie die gefilterte Liste allgemein.
 
 Als Benutzer möchte ich häufige Ansichten direkt öffnen.
 
@@ -441,7 +449,9 @@ Als Benutzer möchte ich an zugängliche, offene Aufgaben erinnert werden.
 
 ## 16. EPIC-12 – Dashboard
 
-### US-110 – Persönliche Übersicht ansehen · M1 · OFFEN
+### US-110 – Persönliche Übersicht ansehen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TaskSummaryApiIT`, `DashboardPage.test.tsx`, `dashboard.spec.ts`): eigene Seite „Übersicht“ (Menüpunkt vor „Meine Aufgaben“; die Startseite bleibt die Aufgabenliste) zeigt fünf Zähler — nicht erledigt, heute fällig, überfällig, erledigt, offen mit hoher/dringender Priorität —, die serverseitig mit denselben Spezifikationen wie die Listen berechnet werden (`TaskSpecifications`, `TaskService.summary`). Jeder Zähler verlinkt auf dieselben Filterparameter, mit denen er berechnet wurde; nach einer Änderung stimmen Übersicht und Liste überein, weil beide dieselbe Quelle abfragen. `today` ist ein Pflichtparameter, den der Client in seiner Kontozeitzone auflöst (Modulgrenze).
 
 Als Benutzer möchte ich offene Arbeit schnell überblicken.
 

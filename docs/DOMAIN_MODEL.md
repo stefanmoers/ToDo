@@ -107,6 +107,8 @@ Arbeitsannahmen für US-037, US-053 und US-100:
 - **Erledigen ist idempotent.** Ist eine Aufgabe bereits `DONE`, wird ein erneuter „Erledigen“-Aufruf nicht anhand der Version geprüft; er ändert nichts und liefert unverändert die aktuelle Fassung zurück (kein `409` bei Doppelklick oder zwei geöffneten Tabs). Symmetrisch dazu ist „Wieder öffnen“ auf einer nicht erledigten Aufgabe wirkungslos, ebenfalls ohne Versionsprüfung.
 - Diese drei Punkte wurden vor der Umsetzung von M1b mit dem Auftraggeber bestätigt (30.09.2026).
 
+**Umgesetzt in M1c (US-050 bis US-053), normale technische Umsetzungsentscheidung:** Der Fälligkeitsbereichs-Filter (`dueDateFrom`/`dueDateTo`) und die Standardansichten „Heute“/„Demnächst“ vergleichen das rohe, gespeicherte Fälligkeitsdatum (`dueDate`), nicht den um einen Tag verschobenen Überfällig-Zeitpunkt — konsistent mit „Datumsaufgaben behalten ihr Datum“ oben. „Heute“/„Demnächst“ lösen die Kalendertage weiterhin im Client in dessen Kontozeitzone auf und senden sie explizit als Datumsgrenzen; „Überfällig“ nutzt stattdessen das serverseitige `overdue`-Flag (Instant-Vergleich, siehe oben), da dieser Vergleich bereits zeitzonenunabhängig korrekt ist.
+
 ## Wiederholungen und Erinnerungen
 
 Arbeitsannahmen für M3; vor Umsetzung mit Beispielen in Tests festhalten:

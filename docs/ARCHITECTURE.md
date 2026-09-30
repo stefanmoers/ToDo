@@ -39,7 +39,7 @@ src/
 └── frontend/
     ├── package.json, package-lock.json
     └── src/
-        ├── features/{auth,tasks,projects,tags,dashboard}/
+        ├── features/{auth,tasks,projects,tags}/
         ├── components/
         ├── api/
         ├── hooks/
