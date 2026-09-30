@@ -53,6 +53,7 @@ Die [Technologieübersicht](docs/TECHNOLOGIES.md) erklärt jeweils **was**, **wo
 | [DEVELOPMENT.md](docs/DEVELOPMENT.md) | Wie entwickle und teste ich lokal? |
 | [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Wie installiere und betreibe ich die Anwendung? |
 | [Architekturentscheidungen](docs/adr/README.md) | Warum wurden diese Entscheidungen getroffen? |
+| [Präsentation](docs/praesentation/README.md) | Wie stelle ich das Projekt in etwa 20 Minuten vor? |
 
 ## Projektstruktur
 

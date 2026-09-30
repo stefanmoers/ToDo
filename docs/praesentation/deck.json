@@ -1,0 +1,66 @@
+{
+ "v": 4,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-09-30T21:20:00Z"
+ },
+ "lists": "css",
+ "title": "UltimateTodo – Projektvorstellung",
+ "order": [
+  "cover",
+  "agenda",
+  "scope",
+  "milestones",
+  "arch",
+  "modules",
+  "request",
+  "tech",
+  "adr",
+  "deploy",
+  "security",
+  "integrity",
+  "tests",
+  "a11y",
+  "agents",
+  "status",
+  "demo",
+  "close"
+ ],
+ "sections": {
+  "s1": {
+   "description": "Einstieg: Ziel, Umfang und Vorgehen des Projekts.",
+   "start": "cover"
+  },
+  "s2": {
+   "description": "Architektur: Aufbau des Systems und seiner Module.",
+   "start": "arch"
+  },
+  "s3": {
+   "description": "Technologien und die Gründe für die Auswahl.",
+   "start": "tech"
+  },
+  "s4": {
+   "description": "Deployment, Sicherheit und Datenintegrität.",
+   "start": "deploy"
+  },
+  "s5": {
+   "description": "Tests, Barrierefreiheit und Arbeitsweise.",
+   "start": "tests"
+  },
+  "s6": {
+   "description": "Live-Demo und Abschluss.",
+   "start": "demo"
+  }
+ },
+ "faces": {
+  "ibm-plex-sans": {
+   "family": "IBM Plex Sans",
+   "href": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+  },
+  "jetbrains-mono": {
+   "family": "JetBrains Mono",
+   "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+  }
+ },
+ "designSystems": []
+}
