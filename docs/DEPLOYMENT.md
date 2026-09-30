@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entwicklung](DEVELOPMENT.md) · [Sicherheit](SECURITY.md)
 
-**Stand: M0.** `compose.yaml`, Images und `.env.example` existieren; der Start von `web`, `backend` und `db` samt Healthchecks wurde über `scripts/e2e.sh` (isolierter Compose-Lauf) erfolgreich geprüft. Die Schritte zu Update, Backup und Restore (Abschnitte weiter unten) sind noch Planung und werden in M4 umgesetzt. Ein fachlicher Funktionstest ist ab M1 möglich. Eine Frischinstallation auf einem zweiten Rechner nach dieser Anleitung (US-160) steht noch aus. Noch keine Installation wurde nach dieser Anleitung geprüft.
+**Stand: M1c, Frischinstallations-Probe durchgeführt (US-160, M1-Anteil).** `compose.yaml`, Images und `.env.example` existieren; Abschnitte 4 und 5 dieser Anleitung wurden auf einem frischen Checkout geprüft, siehe [Installationsprotokoll](reviews/installation-M1.md) — dabei wurde ein Fehler in Abschnitt 5 gefunden und korrigiert (falscher Healthcheck-Pfad). Die Schritte zu Update, Backup und Restore (Abschnitte 6 bis 8) sind noch Planung und werden erst zum Abschluss von US-160 in M4 geprüft.
 
 ## 1. Ziel und Voraussetzungen
 
@@ -90,7 +90,7 @@ docker compose --project-name ultimatetodo start
 ## 5. Funktion und Zustand prüfen
 
 ```sh
-curl --fail http://localhost:8080/actuator/health/readiness
+curl --fail http://localhost:8080/actuator/health
 docker compose --project-name ultimatetodo ps
 docker compose --project-name ultimatetodo logs --tail=100 backend
 ```

@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und M1c (US-040 bis 043, US-050 bis 053, US-110) sind umgesetzt und automatisiert geprüft.** Der Bearbeiter-Anteil von US-051 sowie die Frischinstallations-Probe (US-160) bleiben offen; Zusammenarbeit (M2) ist weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und M1c (US-040 bis 043, US-050 bis 053, US-110) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der Bearbeiter-Anteil von US-051 sowie der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleiben offen; Zusammenarbeit (M2) ist weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -542,7 +542,9 @@ Als Entwickler möchte ich die Referenzlösung Azubis verständlich vorführen u
 
 ## 21. EPIC-17 – Installation, Deployment und Updates
 
-### US-160 – Frischinstallation prüfen · Probe M1c, Abschluss M4 · Should · OFFEN
+### US-160 – Frischinstallation prüfen · Probe M1c, Abschluss M4 · Should · IN ARBEIT
+
+> **Stand:** M1-Probe durchgeführt und protokolliert ([Installationsprotokoll](docs/reviews/installation-M1.md)): Bauen, Starten, Healthcheck, Kontoanlage, Aufgabe anlegen, Persistenz nach Neustart und Rechtetrennung zwischen zwei Konten liefen wie in [DEPLOYMENT.md](docs/DEPLOYMENT.md) beschrieben; dabei wurde ein falscher Healthcheck-Pfad in der Anleitung gefunden und korrigiert. Nicht auf einem physisch zweiten Rechner geprüft, siehe Abweichungen im Protokoll. Offen bis M4: Update, Sicherung und Wiederherstellung (Abschnitte 6 bis 8 der Anleitung).
 
 Als Betreiber möchte ich mit Repository und Anleitung auf einem frischen System starten können.
 
