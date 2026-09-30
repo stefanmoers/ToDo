@@ -29,11 +29,12 @@ public final class Dtos {
 
 	@Schema(description = "Eigenes Konto. Enthält weder Passwort noch Hash.")
 	public record UserResponse(UUID id, String email, String displayName, String timeZone, String role,
-			Instant createdAt) {
+			Instant createdAt,
+			@Schema(description = "Inaktivitäts-Timeout der Sitzung in Sekunden (US-023); Grundlage für die Warnung im Frontend") long sessionTimeoutSeconds) {
 
-		public static UserResponse of(User u) {
+		public static UserResponse of(User u, long sessionTimeoutSeconds) {
 			return new UserResponse(u.getId(), u.getEmail(), u.getDisplayName(), u.getTimeZone(), u.getRole().name(),
-					u.getCreatedAt());
+					u.getCreatedAt(), sessionTimeoutSeconds);
 		}
 
 	}

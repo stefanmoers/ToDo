@@ -12,6 +12,8 @@ import de.ultimatetodo.user.application.UserService;
 import de.ultimatetodo.user.domain.UserInput;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,16 +47,19 @@ class AuthController {
 	private final SessionAuthenticationStrategy sessionStrategy;
 	private final RateLimiter limiter;
 	private final RateLimitProperties limits;
+	private final Duration sessionTimeout;
 
 	AuthController(UserService users, AuthenticationManager authenticationManager,
 			SecurityContextRepository contextRepository, SessionAuthenticationStrategy sessionStrategy,
-			RateLimiter limiter, RateLimitProperties limits) {
+			RateLimiter limiter, RateLimitProperties limits,
+			@Value("${server.servlet.session.timeout}") Duration sessionTimeout) {
 		this.users = users;
 		this.authenticationManager = authenticationManager;
 		this.contextRepository = contextRepository;
 		this.sessionStrategy = sessionStrategy;
 		this.limiter = limiter;
 		this.limits = limits;
+		this.sessionTimeout = sessionTimeout;
 	}
 
 	/** Liefert den CSRF-Token der aktuellen Sitzung. Nach Login/Logout muss er neu abgerufen werden. */
@@ -68,7 +73,7 @@ class AuthController {
 	@ResponseStatus(HttpStatus.CREATED)
 	UserResponse register(@RequestBody RegisterRequest request, HttpServletRequest http) {
 		return UserResponse.of(users.register(request.email(), request.displayName(), request.password(),
-				request.timeZone(), http.getRemoteAddr()));
+				request.timeZone(), http.getRemoteAddr()), sessionTimeout.toSeconds());
 	}
 
 	@PostMapping("/login")
@@ -97,12 +102,12 @@ class AuthController {
 		SecurityContextHolder.setContext(context);
 		contextRepository.saveContext(context, http, response);
 		limiter.reset("login-account:" + email);
-		return UserResponse.of(users.get(((AppUserDetails) authentication.getPrincipal()).id()));
+		return UserResponse.of(users.get(((AppUserDetails) authentication.getPrincipal()).id()), sessionTimeout.toSeconds());
 	}
 
 	@GetMapping("/me")
 	UserResponse me(@AuthenticationPrincipal AppUserDetails principal) {
-		return UserResponse.of(users.get(principal.id()));
+		return UserResponse.of(users.get(principal.id()), sessionTimeout.toSeconds());
 	}
 
 	private static ApiException badCredentials() {

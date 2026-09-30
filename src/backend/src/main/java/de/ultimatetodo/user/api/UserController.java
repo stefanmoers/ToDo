@@ -8,6 +8,8 @@ import de.ultimatetodo.user.application.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,20 +27,23 @@ import org.springframework.web.bind.annotation.RestController;
 class UserController {
 
 	private final UserService users;
+	private final Duration sessionTimeout;
 
-	UserController(UserService users) {
+	UserController(UserService users, @Value("${server.servlet.session.timeout}") Duration sessionTimeout) {
 		this.users = users;
+		this.sessionTimeout = sessionTimeout;
 	}
 
 	@GetMapping
 	UserResponse get(@AuthenticationPrincipal AppUserDetails principal) {
-		return UserResponse.of(users.get(principal.id()));
+		return UserResponse.of(users.get(principal.id()), sessionTimeout.toSeconds());
 	}
 
 	/** Nur Anzeigename und Zeitzone sind änderbar; E-Mail, Rolle und Status nicht. */
 	@PutMapping
 	UserResponse update(@AuthenticationPrincipal AppUserDetails principal, @RequestBody UpdateProfileRequest request) {
-		return UserResponse.of(users.updateProfile(principal.id(), request.displayName(), request.timeZone()));
+		return UserResponse.of(users.updateProfile(principal.id(), request.displayName(), request.timeZone()),
+				sessionTimeout.toSeconds());
 	}
 
 	/** Danach sind alle Sitzungen ungültig; auch diese wird beendet und eine neue Anmeldung verlangt. */

@@ -7,10 +7,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** Übersetzt Ausnahmen in das einheitliche Fehlerformat. Keine Stacktraces oder Interna in Antworten. */
@@ -41,6 +44,28 @@ class GlobalExceptionHandler {
 	ResponseEntity<ApiError> unreadable(HttpMessageNotReadableException ex) {
 		return ResponseEntity.badRequest()
 			.body(ApiError.of(400, "MALFORMED_REQUEST", "Die Anfrage konnte nicht gelesen werden."));
+	}
+
+	/** Z. B. {@code ?page=abc}, {@code ?version=x} oder eine ungültige UUID im Pfad. */
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ResponseEntity<ApiError> typeMismatch(MethodArgumentTypeMismatchException ex) {
+		List<ApiError.FieldError> fields = List
+			.of(new ApiError.FieldError(ex.getName(), "INVALID", "Ungültiger Wert für " + ex.getName() + "."));
+		return ResponseEntity.badRequest().body(ApiError.of(400, "INVALID_PARAMETER", "Bitte prüfe deine Eingaben.", fields));
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	ResponseEntity<ApiError> missingParameter(MissingServletRequestParameterException ex) {
+		List<ApiError.FieldError> fields = List
+			.of(new ApiError.FieldError(ex.getParameterName(), "REQUIRED", "Dieser Parameter ist erforderlich."));
+		return ResponseEntity.badRequest().body(ApiError.of(400, "VALIDATION_FAILED", "Bitte prüfe deine Eingaben.", fields));
+	}
+
+	/** Sicherheitsnetz: fällt ein Versionskonflikt erst beim Commit außerhalb eines expliziten flush() auf. */
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	ResponseEntity<ApiError> optimisticLock(ObjectOptimisticLockingFailureException ex) {
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(
+				ApiError.of(409, "VERSION_CONFLICT", "Die Aufgabe wurde zwischenzeitlich geändert. Bitte lade sie neu."));
 	}
 
 	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
