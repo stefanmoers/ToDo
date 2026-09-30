@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Barrierefreiheit](ACCESSIBILITY.md) · [Sicherheit](SECURITY.md)
 
-**Status:** Vorgabe für die Implementierung. Umgesetzt und ausgeführt (Stand 30.09.2026, M0/M1a/M1b/US-023/M1c und der M2-Anteil US-060 bis US-062, US-070, US-071): Backend-Unit- und Testcontainers-Integrationstests (`mvnw verify`, 138 Tests: 30 Unit, 108 Integration), Frontend-Unit-/Komponententests (`npm run test:unit`, 103 Tests) sowie die vollständige Playwright-E2E-/axe-Suite gegen den echten Compose-Stack (`scripts/e2e.sh`, 50 Tests, alle grün). Noch nicht durchgeführt: die manuelle Accessibility-Prüfung (US-172) durch den Auftraggeber selbst.
+**Status:** Vorgabe für die Implementierung. Umgesetzt und ausgeführt (Stand 30.09.2026, M0/M1a/M1b/US-023/M1c und aus M2 US-060 bis US-062, US-070, US-071, US-080, US-081): Backend-Unit- und Testcontainers-Integrationstests (`mvnw verify`, 154 Tests: 30 Unit, 124 Integration), Frontend-Unit-/Komponententests (`npm run test:unit`, 107 Tests) sowie die vollständige Playwright-E2E-/axe-Suite gegen den echten Compose-Stack (`scripts/e2e.sh`, 53 Tests, alle grün). Noch nicht durchgeführt: die manuelle Accessibility-Prüfung (US-172) durch den Auftraggeber selbst.
 
 Ein Test belegt erwartetes Verhalten mit nachvollziehbaren Eingaben. Viele grüne Tests sind kein Ersatz für richtige Anforderungen. Wir prüfen besonders Rechte, Konflikte, Zeitregeln und Datenverlust, weil Fehler dort schwerer wiegen als eine falsch platzierte Schaltfläche.
 

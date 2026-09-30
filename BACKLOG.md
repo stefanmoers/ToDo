@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie aus M2 das Teilen von Projekten, Mitgliederverwaltung und Unteraufgaben (US-060, US-061, US-070, US-071) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. US-062 (Aufgabe zuweisen) ist funktional fertig und getestet, bleibt aber `IN ARBEIT`, weil ihr Akzeptanzkriterium „Änderung wird protokolliert“ erst mit der Aktivitätshistorie erfüllt ist. Die übrigen M2-Stories (Kommentare, Aktivitätshistorie, Passwort-Reset, Kontoverwaltung) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie M2 bis auf Konten (US-013, US-014) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare und die Aktivitätshistorie (US-060 bis US-062, US-070, US-071, US-080, US-081) sind vollständig, inklusive der zugehörigen M2-Teile von US-022/031/032/042/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Noch offen aus M2: US-013 (Passwort-Reset) und US-014 (Konten administrieren). Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -178,9 +178,9 @@ Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 - Eine Wiederverwendung des bisherigen Cookies erlaubt keinen Zugriff; erneute Anmeldung ist erforderlich.
 - Logout ist gegen CSRF geschützt; andere Benutzer oder private Daten erscheinen nach Logout nicht aus einem UI-Cache.
 
-### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · IN ARBEIT
+### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · ERLEDIGT
 
-> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version), auch für ein Konto mit Rolle `ADMIN` (`TaskApiIT`). M2-Teil (Projektmitgliedschaft) umgesetzt und getestet (`ProjectMembershipApiIT`, `TaskAssignmentApiIT`): „zugänglich“ schließt seit US-060 Eigentümer *und* Mitglieder ein (`ProjectRepository.ACCESSIBLE_CONDITION`); für eigentümerspezifische Aktionen (Mitglied aufnehmen/entfernen, Projekt löschen) liefert ein Mitglied ohne Eigentümerrechte bewusst `403` statt `404` (die Zugehörigkeit ist bekannt, nur die Handlung ist ihm nicht erlaubt), fremde Dritte weiterhin `404`. Offen: Berechtigungsprüfung für Unteraufgaben (US-070/071) und Kommentare (US-080), da diese Daten erst mit ihnen entstehen.
+> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version), auch für ein Konto mit Rolle `ADMIN` (`TaskApiIT`). M2-Teil (Projektmitgliedschaft) umgesetzt und getestet (`ProjectMembershipApiIT`, `TaskAssignmentApiIT`): „zugänglich“ schließt seit US-060 Eigentümer *und* Mitglieder ein (`ProjectRepository.ACCESSIBLE_CONDITION`); für eigentümerspezifische Aktionen (Mitglied aufnehmen/entfernen, Projekt löschen) liefert ein Mitglied ohne Eigentümerrechte bewusst `403` statt `404` (die Zugehörigkeit ist bekannt, nur die Handlung ist ihm nicht erlaubt), fremde Dritte weiterhin `404`. Unteraufgaben (US-070/071), Kommentare (US-080) und die Aktivitätshistorie (US-081) prüfen die Rechte einheitlich über dieselbe Hauptaufgaben-Prüfung (`TaskService.loadAccessible`) und sind ebenfalls getestet (`SubtaskApiIT`, `CommentApiIT`, `ActivityApiIT`: fremder Benutzer erhält überall `404`).
 
 Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
@@ -210,9 +210,9 @@ Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 - Backend setzt Ersteller und Zeitstempel; leere oder zu lange Titel und ungültige Fälligkeiten werden abgewiesen.
 - Speicherung ist dauerhaft; Fehler lassen den Formulareintrag erhalten und werden dem passenden Feld zugeordnet.
 
-### US-031 – Aufgabe ansehen · M1/M2 · IN ARBEIT
+### US-031 – Aufgabe ansehen · M1/M2 · ERLEDIGT
 
-> **Stand:** Umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller, Bearbeiter, Projekt, Tags und Zeitstempel; Ersteller- und Bearbeiter-Name werden serverseitig aufgelöst (`UserAccess.summarize`) statt roher IDs. Unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Unteraufgaben/Kommentare/Aktivitäten (M2).
+> **Stand:** Umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller, Bearbeiter, Projekt, Tags, Unteraufgaben, Kommentare, Aktivitätshistorie und Zeitstempel; Ersteller- und Bearbeiter-Name werden serverseitig aufgelöst (`UserAccess.summarize`) statt roher IDs. Unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten.
 
 Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 
@@ -220,7 +220,7 @@ Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 - Ab M2 gehören Bearbeiter, Unteraufgaben, Kommentare und Aktivitäten zur vollständigen Ansicht.
 - Nicht vorhandene und unzugängliche Aufgaben führen zu einer verständlichen Nicht-gefunden-Ansicht ohne fremde Daten.
 
-### US-032 – Aufgabe bearbeiten · M1/M2 · IN ARBEIT
+### US-032 – Aufgabe bearbeiten · M1/M2 · ERLEDIGT
 
 > **Stand:** M1-Teil umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel/Beschreibung/Priorität/Status/Fälligkeit änderbar, Version steigt nur bei tatsächlicher Änderung, veraltete Version liefert `409` mit erhaltenem Formularentwurf; die Oberfläche zeigt die abweichenden Felder und lässt bewusst zwischen „aktuelle Fassung“ und „eigene Eingabe“ wählen (US-120). M2-Teil umgesetzt und getestet (`TaskAssignmentApiIT`): Bearbeiter ist änderbar (nur Eigentümer/Mitglieder des aktuellen Projekts bzw. bei persönlichen Aufgaben nur der Ersteller selbst sind zuweisbar); ein Projektwechsel ist enger geregelt als die übrige Bearbeitung – nur Ersteller oder Eigentümer des *aktuellen* Projekts dürfen die Aufgabe einem anderen Projekt zuordnen, das Zielprojekt muss dem Handelnden zugänglich sein.
 
@@ -240,9 +240,9 @@ Als berechtigter Benutzer möchte ich überflüssige Aufgaben entfernen.
 - Löschen mit aktueller Version entfernt die Aufgabe und abhängige Daten in einer Transaktion; fremde oder veraltete Löschversuche scheitern.
 - Die Aufgabe verschwindet aus Listen; anschließendes Lesen liefert `404`.
 
-### US-034 – Aufgabe erledigen · M1 · IN ARBEIT
+### US-034 – Aufgabe erledigen · M1 · ERLEDIGT
 
-> **Stand:** M1-Teil umgesetzt und getestet: Status wechselt nach `DONE`, Abschlusszeit wird serverseitig gesetzt, überfällig ausgeschlossen; erneutes Abschließen (auch mit veralteter Version) ist wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Offen: Aktivität wird erst mit US-081 (M2) gespeichert, deshalb bleibt diese Story bis dahin nicht vollständig `ERLEDIGT`.
+> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `ActivityApiIT`): Status wechselt nach `DONE`, Abschlusszeit wird serverseitig gesetzt, überfällig ausgeschlossen; erneutes Abschließen (auch mit veralteter Version) ist wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Seit US-081 (M2) entsteht dabei ein eigener `COMPLETED`-Aktivitätseintrag (nicht die allgemeine Statusänderung), sichtbar im Verlauf der Aufgabe.
 
 Als Benutzer möchte ich erledigte Arbeit kennzeichnen.
 
@@ -250,9 +250,9 @@ Als Benutzer möchte ich erledigte Arbeit kennzeichnen.
 - Erledigte Aufgabe erscheint in der entsprechenden Ansicht und zählt nicht als überfällig.
 - Erneutes Abschließen verändert den Abschluss nicht und erzeugt ab M3 keinen doppelten Nachfolger.
 
-### US-035 – Aufgabe wieder öffnen · M1 · IN ARBEIT
+### US-035 – Aufgabe wieder öffnen · M1 · ERLEDIGT
 
-> **Stand:** M1-Teil umgesetzt und getestet: Status wechselt von `DONE` zurück nach `OPEN`, Abschlusszeit wird geleert, neue Version; auf einer nicht erledigten Aufgabe wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Offen: Aktivität erst mit US-081 (M2); Wiederholungsnachfolger erst M3.
+> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `ActivityApiIT`): Status wechselt von `DONE` zurück nach `OPEN`, Abschlusszeit wird geleert, neue Version; auf einer nicht erledigten Aufgabe wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Seit US-081 (M2) entsteht dabei ein eigener `REOPENED`-Aktivitätseintrag. Offen: Wiederholungsnachfolger erst M3.
 
 Als Benutzer möchte ich eine erledigte Aufgabe erneut bearbeiten.
 
@@ -386,9 +386,9 @@ Als Eigentümer möchte ich eine Freigabe beenden.
 - Historische Kommentare und Aktivitäten bleiben erhalten.
 - Eigentümer kann nicht über Mitgliederentfernung entfernt werden; parallele Zuweisung darf keine ungültige Referenz hinterlassen.
 
-### US-062 – Aufgabe zuweisen · M2 · IN ARBEIT
+### US-062 – Aufgabe zuweisen · M2 · ERLEDIGT
 
-> **Stand:** Umgesetzt und getestet (`TaskAssignmentApiIT`, `TaskPages.test.tsx`, `membership.spec.ts`): eine Aufgabe mit Projektbezug ist nur an den Projekteigentümer oder ein aktuelles Mitglied zuweisbar, eine persönliche Aufgabe (ohne Projekt) nur an den Ersteller selbst; ungültige Zuweisungen werden am Feld abgewiesen. Die Zuweisung ist über das Bearbeitungsformular entfernbar (leere Auswahl) und teilt sich die vorhandene Versionsprüfung von US-032/US-120 (kein separater Konfliktpfad). Die Aufgabenliste bietet einen Bearbeiter-Filter „Nur mir zugewiesene Aufgaben“ (US-051-Ergänzung). Offen: „Änderung wird protokolliert“ ist noch nicht erfüllt, da die Aktivitätshistorie erst mit US-081 entsteht; bis dahin bleibt diese Story trotz vollständiger Zuweisungsfunktion nicht `ERLEDIGT`.
+> **Stand:** Umgesetzt und getestet (`TaskAssignmentApiIT`, `ActivityApiIT`, `TaskPages.test.tsx`, `membership.spec.ts`): eine Aufgabe mit Projektbezug ist nur an den Projekteigentümer oder ein aktuelles Mitglied zuweisbar, eine persönliche Aufgabe (ohne Projekt) nur an den Ersteller selbst; ungültige Zuweisungen werden am Feld abgewiesen. Die Zuweisung ist über das Bearbeitungsformular entfernbar (leere Auswahl) und teilt sich die vorhandene Versionsprüfung von US-032/US-120 (kein separater Konfliktpfad). Die Aufgabenliste bietet einen Bearbeiter-Filter „Nur mir zugewiesene Aufgaben“ (US-051-Ergänzung). Seit US-081 erzeugt eine Zuweisungsänderung einen `ASSIGNEE_CHANGED`-Aktivitätseintrag mit dem Bearbeiternamen zum Zeitpunkt der Änderung — das zuvor fehlende Akzeptanzkriterium „Änderung wird protokolliert“ ist damit erfüllt.
 
 Als Projektmitglied möchte ich die Zuständigkeit sichtbar machen.
 
@@ -420,7 +420,9 @@ Als Benutzer möchte ich einzelne Schritte abhaken und den Fortschritt sehen.
 
 ## 13. EPIC-09 – Kommentare und Aktivitätshistorie
 
-### US-080 – Kommentieren · M2 · OFFEN
+### US-080 – Kommentieren · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`CommentApiIT`, `TaskPages.test.tsx`, `history.spec.ts`): Kommentare zeigen Autor und Zeitpunkt; leerer/reiner Leerzeichen-Text und Text über 5.000 Zeichen werden am Feld abgewiesen. Rechte prüft ausschließlich die Hauptaufgabe (`TaskService.loadAccessible`), keine eigene Berechtigungslogik; ein fremder Benutzer erhält `404`, wie bei der Aufgabe selbst. Inhalt wird unverändert als Text gespeichert und über React nie als HTML gerendert (kein `dangerouslySetInnerHTML`), auch mit `<script>`-artigem Inhalt geprüft. Kommentar und zugehörige `COMMENTED`-Aktivität entstehen in derselben Transaktion (`CommentService.create`). Bearbeiten/Löschen von Kommentaren ist bewusst nicht umgesetzt (nicht gefordert).
 
 Als berechtigter Benutzer möchte ich Informationen direkt an der Aufgabe ergänzen.
 
@@ -428,7 +430,9 @@ Als berechtigter Benutzer möchte ich Informationen direkt an der Aufgabe ergän
 - Nur berechtigte Benutzer lesen oder ergänzen Kommentare; HTML wird als Text dargestellt.
 - Kommentar und zugehörige Aktivität entstehen atomar. Bearbeiten/Löschen von Kommentaren ist zunächst nicht erforderlich.
 
-### US-081 – Änderungen nachvollziehen · M2 · OFFEN
+### US-081 – Änderungen nachvollziehen · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`ActivityApiIT`, `TaskPages.test.tsx`, `history.spec.ts`): die Historie zeigt Erstellen, Titel-, Status-, Prioritäts-, Zuweisungs-, Fälligkeits- und Projektänderung (jeweils als eigener Eintrag mit alter/neuer Angabe, `Task.update` liefert dazu die tatsächlich geänderten Felder statt nur eines Bool'schen Flags), Erledigen und Wiederöffnen (eigene Arten statt einer allgemeinen Statusänderung) sowie Kommentare, gemeinsam chronologisch sortiert (Frontend führt Aktivitäten und Kommentare zu einer Zeitleiste zusammen). Bearbeiter- und Projektname werden zum Zeitpunkt der Änderung aufgelöst und als Text gespeichert, damit die Historie auch nach einer späteren Umbenennung/Entfernung des referenzierten Datensatzes lesbar bleibt. Zugriff entspricht der Aufgabe (`ActivityQueryService` prüft über `TaskService.loadAccessible`); Einträge sind über die API nicht änderbar. Änderungen an der Beschreibung erzeugen bewusst keinen Eintrag (nicht im Akzeptanzkriterium genannt).
 
 Als Benutzer möchte ich wichtige Änderungen einer Aufgabe verstehen.
 
@@ -483,7 +487,7 @@ Als Benutzer möchte ich Änderungen anderer Personen nicht unbemerkt überschre
 
 ### US-121 – Zusammengehörige Änderungen gemeinsam speichern · M1–M3 · IN ARBEIT
 
-> **Stand:** M1-Teil (Aufgaben) umgesetzt und getestet: `TaskPersistenceIT` löst gezielt einen Fehler in derselben Transaktion aus und beweist den Rollback einer bereits geflushten Änderung. Aufgabe-und-Aktivität-Rollback ist erst mit US-081 (M2) prüfbar, da es noch keine Aktivitätstabelle gibt. Projektlöschung/Mitgliederentfernung (M2) und Wiederholungsnachfolger (M3) offen.
+> **Stand:** M1-Teil (Aufgaben) umgesetzt und getestet: `TaskPersistenceIT` löst gezielt einen Fehler in derselben Transaktion aus und beweist den Rollback einer bereits geflushten Änderung. Seit US-080/081 (M2) gibt es die Aktivitätstabelle; Aufgabe und Aktivität entstehen nachweislich gemeinsam (`ActivityApiIT`, `CommentApiIT.kommentarUndAktivitaetEntstehenAtomar`), allerdings bisher nur als Erfolgsfall geprüft, nicht durch einen gezielt ausgelösten Fehler wie bei `TaskPersistenceIT`. Projektlöschung/Mitgliederentfernung (M2) mit gezieltem Fehler und Wiederholungsnachfolger (M3) bleiben offen.
 
 Als Benutzer möchte ich keine halbfertigen Datenänderungen erhalten.
 
