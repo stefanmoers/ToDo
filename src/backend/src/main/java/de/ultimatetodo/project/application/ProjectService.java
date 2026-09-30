@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -188,6 +189,15 @@ public class ProjectService implements ProjectAccess {
 	@Transactional(readOnly = true)
 	public Set<UUID> accessibleProjectIds(UUID userId) {
 		return projects.findAccessibleIds(userId);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> nameOf(UUID projectId) {
+		if (projectId == null) {
+			return Optional.empty();
+		}
+		return projects.findById(projectId).map(Project::getName);
 	}
 
 	/** Eigentümer oder Mitglied; für Umbenennen/Löschen/Mitgliederverwaltung siehe {@link #loadOwned}. */

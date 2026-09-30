@@ -1,5 +1,6 @@
 package de.ultimatetodo.project.application;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,5 +18,8 @@ public interface ProjectAccess {
 
 	/** Alle Projekte, für die {@code userId} Eigentümer oder Mitglied ist. */
 	Set<UUID> accessibleProjectIds(UUID userId);
+
+	/** Aktueller Name, ungeprüft auf Zugriff (US-081: Momentaufnahme für die Aktivitätshistorie). */
+	Optional<String> nameOf(UUID projectId);
 
 }

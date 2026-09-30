@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -98,8 +99,8 @@ class TaskRulesTest {
 	@Test
 	void bearbeitenOhneAenderungLiefertFalseUndLaesstUpdatedAtUnveraendert() {
 		Task t = Task.create(UUID.randomUUID(), null, null, "X", "Beschreibung", TaskPriority.NORMAL, null, T0);
-		boolean changed = t.update(null, null, "X", "Beschreibung", TaskStatus.OPEN, TaskPriority.NORMAL, null, T1);
-		assertThat(changed).isFalse();
+		Set<TaskChangeKind> changes = t.update(null, null, "X", "Beschreibung", TaskStatus.OPEN, TaskPriority.NORMAL, null, T1);
+		assertThat(changes).isEmpty();
 		assertThat(t.getUpdatedAt()).isEqualTo(T0);
 	}
 

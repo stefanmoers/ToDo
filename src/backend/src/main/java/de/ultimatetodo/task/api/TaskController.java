@@ -4,6 +4,9 @@ import de.ultimatetodo.common.ApiError.FieldError;
 import de.ultimatetodo.common.ApiException;
 import de.ultimatetodo.common.PageResponse;
 import de.ultimatetodo.tag.application.TagSummary;
+import de.ultimatetodo.task.api.ActivityDtos.ActivityResponse;
+import de.ultimatetodo.task.api.CommentDtos.CommentResponse;
+import de.ultimatetodo.task.api.CommentDtos.CreateCommentRequest;
 import de.ultimatetodo.task.api.SubtaskDtos.CreateSubtaskRequest;
 import de.ultimatetodo.task.api.SubtaskDtos.MoveSubtaskRequest;
 import de.ultimatetodo.task.api.SubtaskDtos.RenameSubtaskRequest;
@@ -15,10 +18,14 @@ import de.ultimatetodo.task.api.TaskDtos.TaskSummaryResponse;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskRequest;
 import de.ultimatetodo.task.api.TaskDtos.UpdateTaskTagsRequest;
 import de.ultimatetodo.task.api.TaskDtos.VersionRequest;
+import de.ultimatetodo.task.application.ActivityQueryService;
+import de.ultimatetodo.task.application.CommentService;
 import de.ultimatetodo.task.application.SubtaskService;
 import de.ultimatetodo.task.application.TaskDraft;
 import de.ultimatetodo.task.application.TaskListQuery;
 import de.ultimatetodo.task.application.TaskService;
+import de.ultimatetodo.task.domain.Activity;
+import de.ultimatetodo.task.domain.Comment;
 import de.ultimatetodo.task.domain.Subtask;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.user.application.AppUserDetails;
@@ -37,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,12 +73,17 @@ class TaskController {
 
 	private final TaskService taskService;
 	private final SubtaskService subtaskService;
+	private final CommentService commentService;
+	private final ActivityQueryService activityQueryService;
 	private final UserAccess userAccess;
 	private final Clock clock;
 
-	TaskController(TaskService taskService, SubtaskService subtaskService, UserAccess userAccess, Clock clock) {
+	TaskController(TaskService taskService, SubtaskService subtaskService, CommentService commentService,
+			ActivityQueryService activityQueryService, UserAccess userAccess, Clock clock) {
 		this.taskService = taskService;
 		this.subtaskService = subtaskService;
+		this.commentService = commentService;
+		this.activityQueryService = activityQueryService;
 		this.userAccess = userAccess;
 		this.clock = clock;
 	}
@@ -222,6 +235,40 @@ class TaskController {
 
 	private static List<SubtaskResponse> toSubtaskResponses(List<Subtask> subtasks) {
 		return subtasks.stream().map(SubtaskResponse::of).toList();
+	}
+
+	@Operation(summary = "Kommentare auflisten (US-080)", description = "In chronologischer Reihenfolge.")
+	@GetMapping("/{id}/comments")
+	List<CommentResponse> listComments(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id) {
+		List<Comment> comments = commentService.list(principal.id(), id);
+		Map<UUID, UserSummary> authors = userAccess
+			.summarize(comments.stream().map(Comment::getAuthorId).collect(Collectors.toSet()));
+		return comments.stream().map(c -> CommentResponse.of(c, displayNameOf(authors, c.getAuthorId()))).toList();
+	}
+
+	@Operation(summary = "Kommentar anlegen (US-080)", description = "Kommentar und zugehörige Aktivität entstehen atomar.")
+	@PostMapping("/{id}/comments")
+	@ResponseStatus(HttpStatus.CREATED)
+	CommentResponse createComment(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
+			@RequestBody CreateCommentRequest request) {
+		Comment comment = commentService.create(principal.id(), id, request.content());
+		UserSummary author = userAccess.summarize(Set.of(principal.id())).get(principal.id());
+		return CommentResponse.of(comment, author == null ? null : author.displayName());
+	}
+
+	@Operation(summary = "Aktivitätshistorie auflisten (US-081)",
+			description = "Chronologisch; nicht durch Benutzer editierbar.")
+	@GetMapping("/{id}/activities")
+	List<ActivityResponse> listActivities(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id) {
+		List<Activity> activities = activityQueryService.list(principal.id(), id);
+		Map<UUID, UserSummary> actors = userAccess
+			.summarize(activities.stream().map(Activity::getActorId).collect(Collectors.toSet()));
+		return activities.stream().map(a -> ActivityResponse.of(a, displayNameOf(actors, a.getActorId()))).toList();
+	}
+
+	private static String displayNameOf(Map<UUID, UserSummary> users, UUID id) {
+		UserSummary u = users.get(id);
+		return u == null ? null : u.displayName();
 	}
 
 	// Rechte sind zu diesem Zeitpunkt bereits über taskService.xxx(principal.id(), ...) geprüft; die

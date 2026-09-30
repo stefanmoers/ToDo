@@ -12,7 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -101,42 +103,45 @@ public class Task {
 		return t;
 	}
 
-	/** Ersetzt alle bearbeitbaren Felder. Liefert {@code true}, wenn sich dadurch tatsächlich etwas geändert hat. */
-	public boolean update(UUID projectId, UUID assigneeId, String title, String description, TaskStatus status,
-			TaskPriority priority, DueDate due, Instant now) {
-		boolean changed = false;
+	/**
+	 * Ersetzt alle bearbeitbaren Felder. Liefert die tatsächlich geänderten Felder (US-081: Grundlage der
+	 * Aktivitätshistorie); ein leeres Ergebnis bedeutet, dass sich nichts geändert hat.
+	 */
+	public Set<TaskChangeKind> update(UUID projectId, UUID assigneeId, String title, String description,
+			TaskStatus status, TaskPriority priority, DueDate due, Instant now) {
+		Set<TaskChangeKind> changes = EnumSet.noneOf(TaskChangeKind.class);
 		if (!Objects.equals(this.projectId, projectId)) {
 			this.projectId = projectId;
-			changed = true;
+			changes.add(TaskChangeKind.PROJECT);
 		}
 		if (!Objects.equals(this.assigneeId, assigneeId)) {
 			this.assigneeId = assigneeId;
-			changed = true;
+			changes.add(TaskChangeKind.ASSIGNEE);
 		}
 		if (!this.title.equals(title)) {
 			this.title = title;
-			changed = true;
+			changes.add(TaskChangeKind.TITLE);
 		}
 		if (!Objects.equals(this.description, description)) {
 			this.description = description;
-			changed = true;
+			changes.add(TaskChangeKind.DESCRIPTION);
 		}
 		if (this.priority != priority) {
 			this.priority = priority;
-			changed = true;
+			changes.add(TaskChangeKind.PRIORITY);
 		}
 		if (!dueEquals(due)) {
 			applyDue(due);
-			changed = true;
+			changes.add(TaskChangeKind.DUE);
 		}
 		if (this.status != status) {
 			changeStatus(status, now);
-			changed = true;
+			changes.add(TaskChangeKind.STATUS);
 		}
-		if (changed) {
+		if (!changes.isEmpty()) {
 			this.updatedAt = now;
 		}
-		return changed;
+		return changes;
 	}
 
 	/** Idempotent: Ist die Aufgabe bereits erledigt, ändert sich nichts (Arbeitsannahme, docs/DOMAIN_MODEL.md). */

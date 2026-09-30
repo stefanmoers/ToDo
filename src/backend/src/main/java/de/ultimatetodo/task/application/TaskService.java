@@ -6,13 +6,18 @@ import de.ultimatetodo.common.Paging;
 import de.ultimatetodo.project.application.ProjectAccess;
 import de.ultimatetodo.tag.application.TagAccess;
 import de.ultimatetodo.tag.application.TagSummary;
+import de.ultimatetodo.task.domain.ActivityType;
+import de.ultimatetodo.task.domain.DueDate;
 import de.ultimatetodo.task.domain.Task;
+import de.ultimatetodo.task.domain.TaskChangeKind;
 import de.ultimatetodo.task.domain.TaskPriority;
 import de.ultimatetodo.task.domain.TaskStatus;
 import de.ultimatetodo.task.domain.TaskTag;
 import de.ultimatetodo.task.persistence.TaskRepository;
 import de.ultimatetodo.task.persistence.TaskSpecifications;
 import de.ultimatetodo.task.persistence.TaskTagRepository;
+import de.ultimatetodo.user.application.UserAccess;
+import de.ultimatetodo.user.application.UserSummary;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -54,16 +59,21 @@ public class TaskService {
 	private final TaskListQueryValidator listQueryValidator;
 	private final ProjectAccess projectAccess;
 	private final TagAccess tagAccess;
+	private final UserAccess userAccess;
+	private final ActivityRecorder activityRecorder;
 	private final Clock clock;
 
 	public TaskService(TaskRepository tasks, TaskTagRepository taskTags, TaskDraftValidator validator,
-			TaskListQueryValidator listQueryValidator, ProjectAccess projectAccess, TagAccess tagAccess, Clock clock) {
+			TaskListQueryValidator listQueryValidator, ProjectAccess projectAccess, TagAccess tagAccess,
+			UserAccess userAccess, ActivityRecorder activityRecorder, Clock clock) {
 		this.tasks = tasks;
 		this.taskTags = taskTags;
 		this.validator = validator;
 		this.listQueryValidator = listQueryValidator;
 		this.projectAccess = projectAccess;
 		this.tagAccess = tagAccess;
+		this.userAccess = userAccess;
+		this.activityRecorder = activityRecorder;
 		this.clock = clock;
 	}
 
@@ -72,9 +82,12 @@ public class TaskService {
 		ValidTaskValues v = validator.validate(draft, true);
 		requireAccessibleProjectIfSet(v.projectId(), userId);
 		requireValidAssignee(v.projectId(), v.assigneeId(), userId);
+		Instant now = now();
 		Task task = Task.create(userId, v.projectId(), v.assigneeId(), v.title(), v.description(), v.priority(), v.due(),
-				now());
-		return tasks.saveAndFlush(task);
+				now);
+		tasks.saveAndFlush(task);
+		activityRecorder.record(task.getId(), userId, ActivityType.CREATED, null, null, now);
+		return task;
 	}
 
 	@Transactional(readOnly = true)
@@ -150,11 +163,73 @@ public class TaskService {
 		requireCanChangeProject(task, userId, v.projectId());
 		requireAccessibleProjectIfSet(v.projectId(), userId);
 		requireValidAssignee(v.projectId(), v.assigneeId(), task.getCreatorId());
-		if (task.update(v.projectId(), v.assigneeId(), v.title(), v.description(), v.status(), v.priority(), v.due(),
-				now())) {
+		String oldTitle = task.getTitle();
+		TaskStatus oldStatus = task.getStatus();
+		TaskPriority oldPriority = task.getPriority();
+		UUID oldAssigneeId = task.getAssigneeId();
+		UUID oldProjectId = task.getProjectId();
+		DueDate oldDue = task.getDue();
+		Instant now = now();
+		Set<TaskChangeKind> changes = task.update(v.projectId(), v.assigneeId(), v.title(), v.description(), v.status(),
+				v.priority(), v.due(), now);
+		if (!changes.isEmpty()) {
 			flushOrConflict();
+			recordChangeActivities(task, userId, changes, oldTitle, oldStatus, oldPriority, oldAssigneeId, oldProjectId,
+					oldDue, now);
 		}
 		return task;
+	}
+
+	/**
+	 * US-081: für jedes AC-relevante geänderte Feld ein eigener, verständlicher Historien-Eintrag. Mehrere
+	 * Felder ändern sich in derselben Anfrage mit demselben {@code now}; ein wachsender Versatz von je einer
+	 * Mikrosekunde (der kleinsten von PostgreSQL gespeicherten Einheit, siehe {@code now()}) macht die
+	 * Reihenfolge dieser Einträge deterministisch (sonst entscheidet die zufällige ID über die Reihenfolge
+	 * bei gleichem Zeitstempel, siehe {@code ActivityRepository}-Sortierung).
+	 */
+	private void recordChangeActivities(Task task, UUID actorId, Set<TaskChangeKind> changes, String oldTitle,
+			TaskStatus oldStatus, TaskPriority oldPriority, UUID oldAssigneeId, UUID oldProjectId, DueDate oldDue,
+			Instant now) {
+		int seq = 0;
+		if (changes.contains(TaskChangeKind.TITLE)) {
+			activityRecorder.record(task.getId(), actorId, ActivityType.TITLE_CHANGED, oldTitle, task.getTitle(),
+					now.plusNanos(1000L * seq++));
+		}
+		if (changes.contains(TaskChangeKind.STATUS)) {
+			activityRecorder.record(task.getId(), actorId, ActivityType.STATUS_CHANGED, oldStatus.name(),
+					task.getStatus().name(), now.plusNanos(1000L * seq++));
+		}
+		if (changes.contains(TaskChangeKind.PRIORITY)) {
+			activityRecorder.record(task.getId(), actorId, ActivityType.PRIORITY_CHANGED, oldPriority.name(),
+					task.getPriority().name(), now.plusNanos(1000L * seq++));
+		}
+		if (changes.contains(TaskChangeKind.ASSIGNEE)) {
+			activityRecorder.record(task.getId(), actorId, ActivityType.ASSIGNEE_CHANGED, userNameOrNull(oldAssigneeId),
+					userNameOrNull(task.getAssigneeId()), now.plusNanos(1000L * seq++));
+		}
+		if (changes.contains(TaskChangeKind.DUE)) {
+			String oldValue = oldDue == null ? null : oldDue.date().toString();
+			DueDate newDue = task.getDue();
+			String newValue = newDue == null ? null : newDue.date().toString();
+			activityRecorder.record(task.getId(), actorId, ActivityType.DUE_CHANGED, oldValue, newValue,
+					now.plusNanos(1000L * seq++));
+		}
+		if (changes.contains(TaskChangeKind.PROJECT)) {
+			activityRecorder.record(task.getId(), actorId, ActivityType.PROJECT_CHANGED, projectNameOrNull(oldProjectId),
+					projectNameOrNull(task.getProjectId()), now.plusNanos(1000L * seq++));
+		}
+	}
+
+	private String userNameOrNull(UUID userId) {
+		if (userId == null) {
+			return null;
+		}
+		UserSummary summary = userAccess.summarize(Set.of(userId)).get(userId);
+		return summary == null ? null : summary.displayName();
+	}
+
+	private String projectNameOrNull(UUID projectId) {
+		return projectId == null ? null : projectAccess.nameOf(projectId).orElse(null);
 	}
 
 	/** Löscht endgültig. Abhängige Daten (Unteraufgaben, Kommentare, …) folgen ab M2 transaktional per CASCADE. */
@@ -177,8 +252,10 @@ public class TaskService {
 		Task task = loadAccessible(userId, taskId);
 		if (task.getStatus() != TaskStatus.DONE) {
 			checkVersion(task, expectedVersion);
-			if (task.complete(now())) {
+			Instant now = now();
+			if (task.complete(now)) {
 				flushOrConflict();
+				activityRecorder.record(task.getId(), userId, ActivityType.COMPLETED, null, null, now);
 			}
 		}
 		return task;
@@ -191,8 +268,10 @@ public class TaskService {
 		Task task = loadAccessible(userId, taskId);
 		if (task.getStatus() == TaskStatus.DONE) {
 			checkVersion(task, expectedVersion);
-			if (task.reopen(now())) {
+			Instant now = now();
+			if (task.reopen(now)) {
 				flushOrConflict();
+				activityRecorder.record(task.getId(), userId, ActivityType.REOPENED, null, null, now);
 			}
 		}
 		return task;

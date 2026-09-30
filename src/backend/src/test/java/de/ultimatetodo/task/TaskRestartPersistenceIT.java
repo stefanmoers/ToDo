@@ -83,7 +83,7 @@ class TaskRestartPersistenceIT {
 
 			JdbcTemplate jdbc = new JdbcTemplate(second.getBean(DataSource.class));
 			// Anzahl der Migrationsdateien unter db/migration; bei jeder neuen Migration hier mitpflegen.
-			int migrationCount = 7;
+			int migrationCount = 8;
 			assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success = true", Integer.class))
 				.as("keine erneute Migration, kein Datenverlust beim zweiten Start").isEqualTo(migrationCount);
 			assertThat(jdbc.queryForObject("select count(distinct version) from flyway_schema_history", Integer.class))
