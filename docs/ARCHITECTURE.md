@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entscheidungen](adr/README.md)
 
-**Status:** Verbindliches Zielbild; noch nicht implementiert.
+**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a) sowie `task` (seit M1b) sind umgesetzt; `project` und `notification` sind weiterhin Planung.
 
 ## Das System erklären
 

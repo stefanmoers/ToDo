@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. Alle Implementierungsstories sind offen.** Die Dokumentationsbasis ist erstellt; das bedeutet nicht, dass die beschriebenen Funktionen bereits existieren.
+**Stand: 30.09.2026. M0, M1a und der Aufgaben-Kern (M1b) sowie US-023 sind umgesetzt und automatisiert geprüft.** Projekte, Tags, Suche/Filter/Sortierung und Zusammenarbeit (M1c/M2) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -78,7 +78,9 @@ Als Betreiber möchte ich alle Dienste mit dokumentierten Schritten starten kön
 - Ein frischer Checkout lässt sich mit den dokumentierten Versionen bauen; Wrapper, Lockdatei, Konfigurationsbeispiel und feste Container-Versionen sind vorhanden.
 - Fehlende Pflichtkonfiguration und fehlgeschlagene Starts führen zu verständlichen, geheimnisfreien Fehlermeldungen.
 
-### US-002 – Daten dauerhaft speichern · M1 · OFFEN
+### US-002 – Daten dauerhaft speichern · M1 · IN ARBEIT
+
+> **Stand:** Konten und Aufgaben (inkl. Fälligkeit, Status, Version) nachgewiesen bestandsfest über einen Backend-Neustart (`TaskRestartPersistenceIT`: zwei unabhängige Spring-Kontexte gegen denselben Testcontainer, `flyway_schema_history` bleibt konsistent). Offen: Projekte (M1c).
 
 Als Benutzer möchte ich Konten, Projekte und Aufgaben nach einem Neustart wiederfinden.
 
@@ -178,7 +180,7 @@ Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 
 ### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · IN ARBEIT
 
-> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. Offen: Aufgabendaten ab M1b, Projektmitgliedschaft ab M2.
+> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version) (`TaskApiIT`). Offen: Projektmitgliedschaft ab M2; ein gezielter Test mit einem administrativen Konto steht noch aus.
 
 Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
@@ -186,9 +188,9 @@ Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 - Geänderte URLs, fremde IDs und manipulierte Request-Felder umgehen keine Rechte.
 - Tests mit zwei Benutzern und Admin decken persönliche Aufgaben ab M1 und entzogene Projektmitgliedschaft ab M2 ab.
 
-### US-023 – Sitzung bei Inaktivität beenden · M1 · Should · OFFEN
+### US-023 – Sitzung bei Inaktivität beenden · M1 · Should · IN ARBEIT
 
-> **Stand:** Noch nicht begonnen (nur der serverseitige Timeout von 30 Minuten ist konfiguriert).
+> **Stand:** Umgesetzt und mit gefälschter Uhr getestet (`SessionTimeoutWarning.test.tsx`): 2 Minuten vor Ablauf erscheint ein zugänglicher Dialog („Angemeldet bleiben“/„Jetzt abmelden“); „Angemeldet bleiben“ löst eine echte Anfrage aus (setzt auch den Server-Timer zurück, nicht nur lokal); ohne Reaktion erfolgt automatische Abmeldung mit Hinweis. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) und die axe-/Playwright-Prüfung mit echtem, verkürztem `SESSION_TIMEOUT`.
 
 Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuft.
 
@@ -198,7 +200,9 @@ Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuf
 
 ## 8. EPIC-04 – Aufgabenverwaltung
 
-### US-030 – Aufgabe anlegen · M1 · OFFEN
+### US-030 – Aufgabe anlegen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel Pflicht (1–200 Zeichen), Beschreibung/Priorität/Fälligkeit optional, Server setzt Ersteller/Status `OPEN`/Priorität `NORMAL`/Zeitstempel, fremde Felder (`status`, `creatorId`, `version`) werden ignoriert. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172).
 
 Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 
@@ -206,7 +210,9 @@ Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 - Backend setzt Ersteller und Zeitstempel; leere oder zu lange Titel und ungültige Fälligkeiten werden abgewiesen.
 - Speicherung ist dauerhaft; Fehler lassen den Formulareintrag erhalten und werden dem passenden Feld zugeordnet.
 
-### US-031 – Aufgabe ansehen · M1/M2 · OFFEN
+### US-031 – Aufgabe ansehen · M1/M2 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller und Zeitstempel; unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Projekt/Tags (M1c), Bearbeiter/Unteraufgaben/Kommentare/Aktivitäten (M2).
 
 Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 
@@ -214,7 +220,9 @@ Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 - Ab M2 gehören Bearbeiter, Unteraufgaben, Kommentare und Aktivitäten zur vollständigen Ansicht.
 - Nicht vorhandene und unzugängliche Aufgaben führen zu einer verständlichen Nicht-gefunden-Ansicht ohne fremde Daten.
 
-### US-032 – Aufgabe bearbeiten · M1/M2 · OFFEN
+### US-032 – Aufgabe bearbeiten · M1/M2 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel/Beschreibung/Priorität/Status/Fälligkeit änderbar, Version steigt nur bei tatsächlicher Änderung, veraltete Version liefert `409` mit erhaltenem Formularentwurf; die Oberfläche zeigt die abweichenden Felder und lässt bewusst zwischen „aktuelle Fassung“ und „eigene Eingabe“ wählen (US-120). Offen: Bearbeiter (M2), Projektwechsel-Regeln (M1c/M2).
 
 Als berechtigter Benutzer möchte ich Aufgabenangaben ändern.
 
@@ -222,7 +230,9 @@ Als berechtigter Benutzer möchte ich Aufgabenangaben ändern.
 - Änderungszeit und Version steigen bei einer tatsächlichen Änderung; Fachregeln gelten auch bei direktem API-Aufruf.
 - Veraltete Versionen erzeugen `409`; Entwurf bleibt erhalten. Projektwechsel beachtet die Rechte- und Bereinigungsregeln des Domänenmodells.
 
-### US-033 – Aufgabe löschen · M1 · OFFEN
+### US-033 – Aufgabe löschen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet: zugänglicher Bestätigungsdialog (WAI-ARIA-Dialogmuster, Fokus-Rückkehr, Escape) nennt die Aufgabe und die endgültige Wirkung; Löschen erfordert die aktuelle Version (`DELETE ?version=`), fehlende/veraltete Version liefert `400`/`409`; anschließendes Lesen liefert `404`. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172).
 
 Als berechtigter Benutzer möchte ich überflüssige Aufgaben entfernen.
 
@@ -230,7 +240,9 @@ Als berechtigter Benutzer möchte ich überflüssige Aufgaben entfernen.
 - Löschen mit aktueller Version entfernt die Aufgabe und abhängige Daten in einer Transaktion; fremde oder veraltete Löschversuche scheitern.
 - Die Aufgabe verschwindet aus Listen; anschließendes Lesen liefert `404`.
 
-### US-034 – Aufgabe erledigen · M1 · OFFEN
+### US-034 – Aufgabe erledigen · M1 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet: Status wechselt nach `DONE`, Abschlusszeit wird serverseitig gesetzt, überfällig ausgeschlossen; erneutes Abschließen (auch mit veralteter Version) ist wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Offen: Aktivität wird erst mit US-081 (M2) gespeichert, deshalb bleibt diese Story bis dahin nicht vollständig `ERLEDIGT`.
 
 Als Benutzer möchte ich erledigte Arbeit kennzeichnen.
 
@@ -238,7 +250,9 @@ Als Benutzer möchte ich erledigte Arbeit kennzeichnen.
 - Erledigte Aufgabe erscheint in der entsprechenden Ansicht und zählt nicht als überfällig.
 - Erneutes Abschließen verändert den Abschluss nicht und erzeugt ab M3 keinen doppelten Nachfolger.
 
-### US-035 – Aufgabe wieder öffnen · M1 · OFFEN
+### US-035 – Aufgabe wieder öffnen · M1 · IN ARBEIT
+
+> **Stand:** M1-Teil umgesetzt und getestet: Status wechselt von `DONE` zurück nach `OPEN`, Abschlusszeit wird geleert, neue Version; auf einer nicht erledigten Aufgabe wirkungslos statt eines Konflikts (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Offen: Aktivität erst mit US-081 (M2); Wiederholungsnachfolger erst M3.
 
 Als Benutzer möchte ich eine erledigte Aufgabe erneut bearbeiten.
 
@@ -246,7 +260,9 @@ Als Benutzer möchte ich eine erledigte Aufgabe erneut bearbeiten.
 - Änderung erhält Aktivität und neue Version.
 - Ab M3 bleiben bereits erzeugte Wiederholungsnachfolger bestehen; erneutes Abschließen dupliziert sie nicht.
 
-### US-036 – Priorität setzen · M1 · OFFEN
+### US-036 – Priorität setzen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet: `LOW`/`NORMAL`/`HIGH`/`URGENT` auswählbar und änderbar, fachliche Rangfolge (`TaskPriority.rank()`), Anzeige mit deutschem Text zusätzlich zur Farbe (WCAG 1.4.1), unbekannte Werte werden mit `400` abgewiesen. Sortierung nach Priorität ist erst mit US-052 (M1c) vorgesehen.
 
 Als Benutzer möchte ich wichtige Aufgaben unterscheiden.
 
@@ -254,7 +270,9 @@ Als Benutzer möchte ich wichtige Aufgaben unterscheiden.
 - Anzeige nutzt Text oder zugängliche Symbole zusätzlich zur Farbe.
 - Sortierung verwendet die fachliche Reihenfolge; unbekannte Werte werden abgewiesen.
 
-### US-037 – Fälligkeit setzen und entfernen · M1 · OFFEN
+### US-037 – Fälligkeit setzen und entfernen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`DueDateTest`, `TaskApiIT`, `dueTime.test.ts`): Datum optional, Uhrzeit nur mit Datum und (vom Client vorbelegter) IANA-Zeitzone; Entfernen des Datums entfernt Uhrzeit/Zone/Offset. Sommerzeit-Randfälle geprüft: eine nicht existierende lokale Uhrzeit (Frühjahrslücke) wird abgewiesen, eine doppelte lokale Uhrzeit (Herbstüberlappung) verlangt eine Offset-Auswahl. Überfälligkeit gilt ab genau dem Fälligkeitszeitpunkt und schließt erledigte Aufgaben aus (Arbeitsannahmen, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)). Anzeige in einer von der Aufgaben-Zeitzone abweichenden Kontozeitzone ist umgesetzt.
 
 Als Benutzer möchte ich Aufgaben mit oder ohne Termin verwalten.
 
@@ -425,7 +443,9 @@ Als Benutzer möchte ich offene Arbeit schnell überblicken.
 
 ## 17. EPIC-13 – Gleichzeitige Änderungen und Datenintegrität
 
-### US-120 – Konflikte erkennen · M1 · OFFEN
+### US-120 – Konflikte erkennen · M1 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet, für Bearbeiten und Löschen (`TaskApiIT`: sequenzieller und paralleler Konflikttest — bei gleichzeitigen Schreibversuchen genau ein Erfolg, alle anderen `409`; DB-seitiger Versionsschutz zusätzlich in `TaskPersistenceIT` nachgewiesen). Die Oberfläche zeigt die abweichenden Felder und bietet „aktuelle Fassung übernehmen“ oder „eigene Eingabe behalten“ statt automatischem Überschreiben (`tasks.spec.ts`). Projektänderungen sind erst ab M1c relevant.
 
 Als Benutzer möchte ich Änderungen anderer Personen nicht unbemerkt überschreiben.
 
@@ -433,7 +453,9 @@ Als Benutzer möchte ich Änderungen anderer Personen nicht unbemerkt überschre
 - Frontend erklärt den Konflikt, erhält den Entwurf und bietet aktuelles Neuladen an; kein automatisches stilles Überschreiben.
 - Gleiche Prüfung gilt für Löschen und betroffene Projektänderungen; Paralleltest prüft den tatsächlichen Datenbankzustand.
 
-### US-121 – Zusammengehörige Änderungen gemeinsam speichern · M1–M3 · OFFEN
+### US-121 – Zusammengehörige Änderungen gemeinsam speichern · M1–M3 · IN ARBEIT
+
+> **Stand:** M1-Teil (Aufgaben) umgesetzt und getestet: `TaskPersistenceIT` löst gezielt einen Fehler in derselben Transaktion aus und beweist den Rollback einer bereits geflushten Änderung. Aufgabe-und-Aktivität-Rollback ist erst mit US-081 (M2) prüfbar, da es noch keine Aktivitätstabelle gibt. Projektlöschung/Mitgliederentfernung (M2) und Wiederholungsnachfolger (M3) offen.
 
 Als Benutzer möchte ich keine halbfertigen Datenänderungen erhalten.
 
@@ -445,7 +467,7 @@ Als Benutzer möchte ich keine halbfertigen Datenänderungen erhalten.
 
 ### US-130 – Verständliche Logs erhalten · M0 · IN ARBEIT
 
-> **Stand:** Umgesetzt: Anfragekennung, einheitliches Fehlerformat, Test dass Passwörter/CSRF-Token nicht im Log stehen (`AuthApiIT`). Offen: gleiche Prüfung für Aufgabenbeschreibungen ab M1b.
+> **Stand:** Umgesetzt: Anfragekennung, einheitliches Fehlerformat, Test dass Passwörter/CSRF-Token nicht im Log stehen (`AuthApiIT`); gleiche Prüfung jetzt auch für Aufgabentitel/-beschreibung (`TaskApiIT`).
 
 Als Betreiber möchte ich Fehler eingrenzen können.
 

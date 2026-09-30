@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Backlog](../BACKLOG.md) · [Sicherheitsmodell](SECURITY.md)
 
-**Status:** Planungsmodell. Es gibt noch kein Datenbankschema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
+**Status:** `User` (V2) und `Task` (V3) sind als Datenbankschema umgesetzt (siehe Flyway-Migrationen unter `src/backend/src/main/resources/db/migration/`). `Project`, `Membership`, `Subtask`, `Comment`, `Tag`/`TaskTag`, `Activity`, `RecurrenceRule`, `Reminder` und `Notification` sind weiterhin reines Planungsmodell ohne Schema. Die Begriffe und Kernfunktionen stammen aus der gemeinsamen Planung. Die nachfolgend markierten Arbeitsannahmen konkretisieren bisher offene Details und gelten als Startvorgaben für die betroffenen Stories.
 
 ## Begriffe und Beziehungen
 
@@ -95,6 +95,13 @@ Arbeitsannahmen für US-037, US-053 und US-100:
 - „Heute“ und „Demnächst“ beziehen sich auf Kalendertage in der Kontozeitzone des Betrachters. Datumsaufgaben behalten ihr Datum; Zeitpunkte werden für die Anzeige umgerechnet. „Demnächst“ zeigt die nächsten sieben Tage ohne heute.
 - Nicht existierende lokale Uhrzeiten bei Sommerzeitwechsel werden abgewiesen. Bei einer doppelt vorkommenden Uhrzeit muss die Oberfläche den gewählten Offset sichtbar machen und eine eindeutige Auswahl ermöglichen.
 - Technische Zeitpunkte wie `createdAt` werden in UTC gespeichert und in ISO-8601-Form übertragen. Ein reines Fälligkeitsdatum bleibt ein Datum, kein erfundener Mitternachtszeitpunkt.
+
+**Umgesetzt in M1b (Task-Modul), bestätigte Arbeitsannahmen:**
+
+- **Überfällig ab genau dem Fälligkeitszeitpunkt.** Bei Uhrzeit gilt: überfällig, sobald der aktuelle Zeitpunkt den Fälligkeitszeitpunkt erreicht oder überschritten hat (nicht erst danach). Ohne Uhrzeit gilt Überfälligkeit ab dem Beginn des Folgetags in der gespeicherten Zeitzone.
+- **Die Zeitzone einer Fälligkeit ist ein Pflichtfeld des Clients**, sobald ein Datum gesetzt wird; das Frontend belegt sie mit der Kontozeitzone vor, sendet sie aber immer explizit mit. Das Backend-Modul `task` fragt dafür nicht beim Modul `user` nach (Modulgrenze, siehe [ARCHITECTURE.md](ARCHITECTURE.md)); fehlt die Zeitzone in der Anfrage, wird das als Validierungsfehler abgewiesen, nicht stillschweigend ergänzt.
+- **Erledigen ist idempotent.** Ist eine Aufgabe bereits `DONE`, wird ein erneuter „Erledigen“-Aufruf nicht anhand der Version geprüft; er ändert nichts und liefert unverändert die aktuelle Fassung zurück (kein `409` bei Doppelklick oder zwei geöffneten Tabs). Symmetrisch dazu ist „Wieder öffnen“ auf einer nicht erledigten Aufgabe wirkungslos, ebenfalls ohne Versionsprüfung.
+- Diese drei Punkte wurden vor der Umsetzung von M1b mit dem Auftraggeber bestätigt (30.09.2026).
 
 ## Wiederholungen und Erinnerungen
 
