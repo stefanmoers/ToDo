@@ -45,20 +45,22 @@ class TagController {
 	ResponseEntity<TagResponse> create(@AuthenticationPrincipal AppUserDetails principal,
 			@RequestBody CreateTagRequest request) {
 		Tag tag = tagService.create(principal.id(), new TagDraft(request.name(), request.projectId()));
-		return ResponseEntity.created(URI.create("/api/v1/tags/" + tag.getId())).body(TagResponse.of(tag));
+		return ResponseEntity.created(URI.create("/api/v1/tags/" + tag.getId())).body(TagResponse.of(tagService.describe(tag)));
 	}
 
-	@Operation(summary = "Eigene Tags auflisten", description = "Persönliche Tags und Tags eigener Projekte, ohne Paginierung.")
+	@Operation(summary = "Eigene Tags auflisten", description = "Persönliche Tags, Tags eigener Projekte und Tags von Projekten, in denen der Benutzer Mitglied ist, "
+				+ "ohne Paginierung. Projekt-Tags nennen Projekt und Eigentümer (US-181). Sortiert nach Name, dann persönlich "
+				+ "vor Projekt, dann nach Projektname.")
 	@GetMapping
 	List<TagResponse> list(@AuthenticationPrincipal AppUserDetails principal) {
-		return tagService.list(principal.id()).stream().map(TagResponse::of).toList();
+		return tagService.listWithOrigin(principal.id()).stream().map(TagResponse::of).toList();
 	}
 
 	@Operation(summary = "Tag umbenennen")
 	@PutMapping("/{id}")
 	TagResponse rename(@AuthenticationPrincipal AppUserDetails principal, @PathVariable UUID id,
 			@RequestBody UpdateTagRequest request) {
-		return TagResponse.of(tagService.rename(principal.id(), id, request.name()));
+		return TagResponse.of(tagService.describe(tagService.rename(principal.id(), id, request.name())));
 	}
 
 	@Operation(summary = "Tag löschen", description = "Entfernt nur den Tag; zugeordnete Aufgaben bleiben erhalten.")

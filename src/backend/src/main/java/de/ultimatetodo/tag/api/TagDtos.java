@@ -1,6 +1,6 @@
 package de.ultimatetodo.tag.api;
 
-import de.ultimatetodo.tag.domain.Tag;
+import de.ultimatetodo.tag.application.TagView;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
@@ -20,13 +20,19 @@ public final class TagDtos {
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 50) String name) {
 	}
 
-	@Schema(description = "Ein Tag; gehört entweder persönlich dem Benutzer oder einem eigenen Projekt.")
+	@Schema(description = "Ein Tag; gehört entweder persönlich dem Benutzer oder einem Projekt. Bei Projekt-Tags nennen "
+			+ "projectName und projectOwnerDisplayName die Herkunft, damit gleichnamige Tags unterscheidbar sind.")
 	public record TagResponse(UUID id, String name,
-			@Schema(allowableValues = { "PERSONAL", "PROJECT" }) String scope, UUID projectId, Instant createdAt) {
+			@Schema(allowableValues = { "PERSONAL", "PROJECT" }) String scope, UUID projectId,
+			@Schema(description = "Nur bei Projekt-Tags: aktueller Name des Projekts") String projectName,
+			@Schema(description = "Nur bei Projekt-Tags: Eigentümer des Projekts") UUID projectOwnerId,
+			@Schema(description = "Nur bei Projekt-Tags: Anzeigename des Projekteigentümers") String projectOwnerDisplayName,
+			Instant createdAt) {
 
-		public static TagResponse of(Tag t) {
+		public static TagResponse of(TagView v) {
+			var t = v.tag();
 			return new TagResponse(t.getId(), t.getName(), t.isPersonal() ? "PERSONAL" : "PROJECT", t.getProjectId(),
-					t.getCreatedAt());
+					v.projectName(), v.projectOwnerId(), v.projectOwnerDisplayName(), t.getCreatedAt());
 		}
 
 	}

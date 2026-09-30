@@ -3,14 +3,19 @@ package de.ultimatetodo.tag.application;
 import de.ultimatetodo.common.ApiError.FieldError;
 import de.ultimatetodo.common.ApiException;
 import de.ultimatetodo.project.application.ProjectAccess;
+import de.ultimatetodo.project.application.ProjectSummary;
 import de.ultimatetodo.tag.domain.Tag;
 import de.ultimatetodo.tag.persistence.TagRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.text.Collator;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -65,6 +70,43 @@ public class TagService implements TagAccess {
 	@Transactional(readOnly = true)
 	public List<Tag> list(UUID userId) {
 		return tags.findAccessible(userId, accessibleProjectIds(userId));
+	}
+
+	/**
+	 * US-181: Wie {@link #list}, aber mit Herkunft je Tag und stabiler Reihenfolge: nach Name, dann persönliche
+	 * vor Projekt-Tags, dann nach Projektname, Eigentümername und ID.
+	 */
+	@Transactional(readOnly = true)
+	public List<TagView> listWithOrigin(UUID userId) {
+		List<Tag> accessible = list(userId);
+		Map<UUID, ProjectSummary> projects = projectAccess.summarize(
+				accessible.stream().map(Tag::getProjectId).filter(id -> id != null).distinct().toList());
+		Collator collator = Collator.getInstance(Locale.GERMAN);
+		Comparator<String> text = Comparator.nullsFirst(collator::compare);
+		return accessible.stream()
+			.map(t -> toView(t, projects.get(t.getProjectId())))
+			.sorted(Comparator.comparing((TagView v) -> v.tag().getName(), text)
+				.thenComparing(v -> v.tag().isPersonal() ? 0 : 1)
+				.thenComparing(TagView::projectName, text)
+				.thenComparing(TagView::projectOwnerDisplayName, text)
+				.thenComparing(v -> v.tag().getId()))
+			.toList();
+	}
+
+	/** US-181: Herkunft eines einzelnen Tags, etwa für die Antwort auf Anlegen und Umbenennen. */
+	@Transactional(readOnly = true)
+	public TagView describe(Tag tag) {
+		if (tag.isPersonal()) {
+			return toView(tag, null);
+		}
+		return toView(tag, projectAccess.summarize(List.of(tag.getProjectId())).get(tag.getProjectId()));
+	}
+
+	private static TagView toView(Tag tag, ProjectSummary project) {
+		if (project == null) {
+			return new TagView(tag, null, null, null);
+		}
+		return new TagView(tag, project.name(), project.ownerId(), project.ownerDisplayName());
 	}
 
 	@Transactional

@@ -1,5 +1,7 @@
 package de.ultimatetodo.project.application;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -21,5 +23,11 @@ public interface ProjectAccess {
 
 	/** Aktueller Name, ungeprüft auf Zugriff (US-081: Momentaufnahme für die Aktivitätshistorie). */
 	Optional<String> nameOf(UUID projectId);
+
+	/**
+	 * Name und Eigentümer der genannten Projekte, ungeprüft auf Zugriff: Aufrufer übergeben nur IDs, die sie
+	 * bereits über eine Zugriffsprüfung erhalten haben (US-181). Unbekannte IDs fehlen im Ergebnis.
+	 */
+	Map<UUID, ProjectSummary> summarize(Collection<UUID> projectIds);
 
 }

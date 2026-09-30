@@ -13,6 +13,9 @@ import de.ultimatetodo.user.application.UserSummary;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -198,6 +201,23 @@ public class ProjectService implements ProjectAccess {
 			return Optional.empty();
 		}
 		return projects.findById(projectId).map(Project::getName);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Map<UUID, ProjectSummary> summarize(Collection<UUID> projectIds) {
+		if (projectIds == null || projectIds.isEmpty()) {
+			return Map.of();
+		}
+		List<Project> found = projects.findAllById(new HashSet<>(projectIds));
+		Map<UUID, UserSummary> owners = userAccess.summarize(found.stream().map(Project::getOwnerId).distinct().toList());
+		Map<UUID, ProjectSummary> result = new HashMap<>();
+		for (Project p : found) {
+			UserSummary owner = owners.get(p.getOwnerId());
+			result.put(p.getId(),
+					new ProjectSummary(p.getId(), p.getName(), p.getOwnerId(), owner == null ? null : owner.displayName()));
+		}
+		return result;
 	}
 
 	/** Eigentümer oder Mitglied; für Umbenennen/Löschen/Mitgliederverwaltung siehe {@link #loadOwned}. */
