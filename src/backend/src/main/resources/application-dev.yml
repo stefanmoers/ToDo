@@ -1,0 +1,6 @@
+# Lokales Entwicklungsprofil: Datenbank aus compose.dev.yaml (nur 127.0.0.1).
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${DEV_DB_PORT:5432}/${POSTGRES_DB:ultimatetodo}
+    username: ${POSTGRES_USER:ultimatetodo}
+    password: ${POSTGRES_PASSWORD}
