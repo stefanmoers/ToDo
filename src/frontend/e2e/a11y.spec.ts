@@ -62,7 +62,7 @@ test('axe: Aufgabenliste leer, gefüllt und mit Paginierung', async ({ page }) =
   })
   for (let i = 1; i <= 24; i++) await createTaskViaApi(page, { title: `Aufgabe ${i}` })
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: /^Aufgaben/ })).toBeVisible()
   await scan(page)
 })
 

@@ -13,7 +13,7 @@ test('vollständiger Lebenszyklus: anlegen, ansehen, bearbeiten, erledigen, wied
   await page.getByLabel('Uhrzeit').fill('18:00')
   await page.getByRole('button', { name: 'Änderungen speichern' }).click()
   await expect(page.getByText('Die Änderungen wurden gespeichert.')).toBeVisible()
-  await expect(page.getByText('Hoch')).toBeVisible()
+  await expect(page.getByText('Hoch', { exact: true })).toBeVisible()
   await expect(page.getByText(/24\. Dezember 2026/)).toBeVisible()
 
   // Persistenz nach Neuladen (US-002).
@@ -53,7 +53,7 @@ test('Fälligkeit lässt sich wieder entfernen', async ({ page }) => {
   await page.getByRole('link', { name: 'Bearbeiten' }).click()
   await page.getByRole('button', { name: 'Fälligkeit entfernen' }).click()
   await page.getByRole('button', { name: 'Änderungen speichern' }).click()
-  await expect(page.getByText('Keine Fälligkeit')).toBeVisible()
+  await expect(page.getByText('Keine Fälligkeit', { exact: true })).toBeVisible()
 })
 
 test('Validierung: leerer oder zu langer Titel wird an der Fehlerübersicht gemeldet', async ({ page }) => {
