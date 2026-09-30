@@ -32,7 +32,7 @@ Schreibende Anfragen benötigen einen gültigen CSRF-Token, auch Login und Logou
 
 Session-IDs oder Zugriffstokens gehören nicht in `localStorage`. CORS bleibt im vorgesehenen Betrieb unnötig; bei einer späteren Trennung der Origins nur explizit erlaubte Origins verwenden, niemals eine beliebige Origin mit Credentials spiegeln. `SameSite` ersetzt keinen CSRF-Schutz.
 
-Arbeitsannahme: 30 Minuten Inaktivität beenden die Sitzung (`SESSION_TIMEOUT`). **Umgesetzt (US-023):** Die Oberfläche warnt 2 Minuten vor Ablauf zugänglich (Dialog mit „Angemeldet bleiben“/„Jetzt abmelden“); „Angemeldet bleiben“ löst eine echte Anfrage aus, die auch den Server-Timer zurücksetzt. Sitzungsablauf wird nie als erfolgreiches Speichern dargestellt. Offene Lücke: Läuft die Sitzung während einer Bearbeitung tatsächlich ab (401 bei einer anderen Anfrage, nicht über die Warnung erkannt), geht der ungesendete Formularentwurf beim Sprung zur Anmeldeseite noch verloren; das Bewahren von Entwürfen über eine erneute Anmeldung hinweg ist noch nicht umgesetzt.
+Arbeitsannahme: 30 Minuten Inaktivität beenden die Sitzung (`SESSION_TIMEOUT`). **Umgesetzt (US-023):** Die Oberfläche warnt 2 Minuten vor Ablauf zugänglich (Dialog mit „Angemeldet bleiben“/„Jetzt abmelden“); „Angemeldet bleiben“ löst eine echte Anfrage aus, die auch den Server-Timer zurücksetzt. Läuft die Sitzung tatsächlich ab oder liefert eine andere geschützte Anfrage ein `401` (`SessionExpiredDialog`), bleibt die aktuelle Seite bestehen statt zu einer Anmeldeseite zu wechseln; ein zugänglicher Dialog verlangt die erneute Anmeldung „innerhalb der laufenden Seite“, ein ungesendeter Formularentwurf bleibt dabei erhalten. Sitzungsablauf wird nie als erfolgreiches Speichern dargestellt.
 
 ## Passwörter und Wiederherstellung
 

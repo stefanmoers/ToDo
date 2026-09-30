@@ -180,7 +180,7 @@ Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 
 ### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · IN ARBEIT
 
-> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version) (`TaskApiIT`). Offen: Projektmitgliedschaft ab M2; ein gezielter Test mit einem administrativen Konto steht noch aus.
+> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version), auch für ein Konto mit Rolle `ADMIN` (`TaskApiIT`). Offen: Projektmitgliedschaft ab M2.
 
 Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
@@ -190,7 +190,7 @@ Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
 ### US-023 – Sitzung bei Inaktivität beenden · M1 · Should · IN ARBEIT
 
-> **Stand:** Umgesetzt und mit gefälschter Uhr getestet (`SessionTimeoutWarning.test.tsx`): 2 Minuten vor Ablauf erscheint ein zugänglicher Dialog („Angemeldet bleiben“/„Jetzt abmelden“); „Angemeldet bleiben“ löst eine echte Anfrage aus (setzt auch den Server-Timer zurück, nicht nur lokal); ohne Reaktion erfolgt automatische Abmeldung mit Hinweis. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) und die axe-/Playwright-Prüfung mit echtem, verkürztem `SESSION_TIMEOUT`.
+> **Stand:** Umgesetzt und mit gefälschter Uhr getestet (`SessionTimeoutWarning.test.tsx`, `SessionExpiredDialog.test.tsx`): 2 Minuten vor Ablauf erscheint ein zugänglicher Dialog („Angemeldet bleiben“/„Jetzt abmelden“); „Angemeldet bleiben“ löst eine echte Anfrage aus (setzt auch den Server-Timer zurück, nicht nur lokal). Läuft die Sitzung tatsächlich ab oder liefert eine geschützte Anfrage `401`, bleibt die aktuelle Seite bestehen (kein Sprung zur Anmeldung) und ein Dialog verlangt die erneute Anmeldung; ein ungesendeter Formularentwurf bleibt dabei nachweislich erhalten. Offen: manuelle Tastatur-/Screenreader-Prüfung (US-172) und die axe-/Playwright-Prüfung mit echtem, verkürztem `SESSION_TIMEOUT`.
 
 Als Benutzer möchte ich rechtzeitig gewarnt werden, bevor meine Sitzung abläuft.
 
