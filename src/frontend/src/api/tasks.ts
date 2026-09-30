@@ -157,3 +157,48 @@ export const moveSubtask = (taskId: string, subtaskId: string, direction: 'UP' |
 
 export const deleteSubtask = (taskId: string, subtaskId: string) =>
   api<Subtask[]>('DELETE', `/api/v1/tasks/${encodeURIComponent(taskId)}/subtasks/${encodeURIComponent(subtaskId)}`)
+
+/** US-080: Kommentare. Bearbeiten/Löschen ist zunächst nicht vorgesehen (docs/DOMAIN_MODEL.md). */
+export interface Comment {
+  id: string
+  authorId: string
+  authorDisplayName?: string
+  content: string
+  createdAt: string
+}
+
+export const listComments = (taskId: string) =>
+  api<Comment[]>('GET', `/api/v1/tasks/${encodeURIComponent(taskId)}/comments`)
+
+export const createComment = (taskId: string, content: string) =>
+  api<Comment>('POST', `/api/v1/tasks/${encodeURIComponent(taskId)}/comments`, { content })
+
+/**
+ * US-081: Aktivitätshistorie, nicht durch Benutzer editierbar. fromValue/toValue sind bereits anzeigefertiger
+ * Text (z. B. Titel, Status-/Prioritätsname, Bearbeiter-/Projektname zum Zeitpunkt der Änderung) und fehlen
+ * bei Arten ohne Werte (z. B. Erledigen, Kommentar).
+ */
+export type ActivityType =
+  | 'CREATED'
+  | 'TITLE_CHANGED'
+  | 'STATUS_CHANGED'
+  | 'PRIORITY_CHANGED'
+  | 'ASSIGNEE_CHANGED'
+  | 'DUE_CHANGED'
+  | 'PROJECT_CHANGED'
+  | 'COMPLETED'
+  | 'REOPENED'
+  | 'COMMENTED'
+
+export interface Activity {
+  id: string
+  type: ActivityType
+  fromValue?: string
+  toValue?: string
+  actorId: string
+  actorDisplayName?: string
+  createdAt: string
+}
+
+export const listActivities = (taskId: string) =>
+  api<Activity[]>('GET', `/api/v1/tasks/${encodeURIComponent(taskId)}/activities`)

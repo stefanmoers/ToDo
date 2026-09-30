@@ -4,6 +4,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { useAllProjects } from '../features/projects/useProjectList'
 import { DeleteTaskDialog } from '../features/tasks/DeleteTaskDialog'
 import { formatDue, formatTimestamp } from '../features/tasks/format'
+import { HistorySection } from '../features/tasks/HistorySection'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../features/tasks/labels'
 import { StatusToggleButton } from '../features/tasks/StatusToggleButton'
 import { SubtasksSection } from '../features/tasks/SubtasksSection'
@@ -126,6 +127,10 @@ function TaskDetail({ taskId }: { taskId: string }) {
       </div>
       <TaskTagsEditor taskId={task.id} currentTags={task.tags} onChanged={(tags) => replace({ ...task, tags })} />
       <SubtasksSection taskId={task.id} />
+      {/* key=version: Titel-/Status-/Prioritäts-/Zuweisungs-/Fälligkeits-/Projektänderungen und Erledigen/
+          Wiederöffnen erhöhen die Version und erzeugen serverseitig einen neuen Historien-Eintrag (US-081);
+          ohne Neumontieren würde der zuletzt geladene Verlauf diesen Eintrag nicht zeigen. */}
+      <HistorySection key={task.version} taskId={task.id} />
       {dialogOpen && (
         <DeleteTaskDialog
           task={task}
