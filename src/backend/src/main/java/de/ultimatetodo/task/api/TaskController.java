@@ -111,13 +111,13 @@ class TaskController {
 	}
 
 	private static TaskDraft toDraft(CreateTaskRequest r) {
-		return new TaskDraft(r.title(), r.description(), null, r.priority(), r.dueDate(), r.dueTime(), r.dueTimeZone(),
-				r.dueOffset());
+		return new TaskDraft(r.projectId(), r.title(), r.description(), null, r.priority(), r.dueDate(), r.dueTime(),
+				r.dueTimeZone(), r.dueOffset());
 	}
 
 	private static TaskDraft toDraft(UpdateTaskRequest r) {
-		return new TaskDraft(r.title(), r.description(), r.status(), r.priority(), r.dueDate(), r.dueTime(),
-				r.dueTimeZone(), r.dueOffset());
+		return new TaskDraft(r.projectId(), r.title(), r.description(), r.status(), r.priority(), r.dueDate(),
+				r.dueTime(), r.dueTimeZone(), r.dueOffset());
 	}
 
 }

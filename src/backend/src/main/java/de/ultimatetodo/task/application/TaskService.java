@@ -2,6 +2,7 @@ package de.ultimatetodo.task.application;
 
 import de.ultimatetodo.common.ApiError.FieldError;
 import de.ultimatetodo.common.ApiException;
+import de.ultimatetodo.project.application.ProjectAccess;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.task.domain.TaskStatus;
 import de.ultimatetodo.task.persistence.TaskRepository;
@@ -9,6 +10,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,18 +27,21 @@ public class TaskService {
 
 	private final TaskRepository tasks;
 	private final TaskDraftValidator validator;
+	private final ProjectAccess projectAccess;
 	private final Clock clock;
 
-	public TaskService(TaskRepository tasks, TaskDraftValidator validator, Clock clock) {
+	public TaskService(TaskRepository tasks, TaskDraftValidator validator, ProjectAccess projectAccess, Clock clock) {
 		this.tasks = tasks;
 		this.validator = validator;
+		this.projectAccess = projectAccess;
 		this.clock = clock;
 	}
 
 	@Transactional
 	public Task create(UUID userId, TaskDraft draft) {
 		ValidTaskValues v = validator.validate(draft, true);
-		Task task = Task.create(userId, v.title(), v.description(), v.priority(), v.due(), now());
+		requireOwnedProjectIfSet(v.projectId(), userId);
+		Task task = Task.create(userId, v.projectId(), v.title(), v.description(), v.priority(), v.due(), now());
 		return tasks.saveAndFlush(task);
 	}
 
@@ -47,7 +52,7 @@ public class TaskService {
 
 	@Transactional(readOnly = true)
 	public Page<Task> list(UUID userId, Pageable pageable) {
-		return tasks.findAccessible(userId, pageable);
+		return tasks.findAccessible(userId, ownedProjectIds(userId), pageable);
 	}
 
 	/** Ersetzt die bearbeitbaren Felder. 409, wenn {@code expectedVersion} nicht mehr der aktuellen entspricht. */
@@ -55,9 +60,10 @@ public class TaskService {
 	public Task update(UUID userId, UUID taskId, TaskDraft draft, Long expectedVersion) {
 		requireVersion(expectedVersion);
 		ValidTaskValues v = validator.validate(draft, false);
+		requireOwnedProjectIfSet(v.projectId(), userId);
 		Task task = loadAccessible(userId, taskId);
 		checkVersion(task, expectedVersion);
-		if (task.update(v.title(), v.description(), v.status(), v.priority(), v.due(), now())) {
+		if (task.update(v.projectId(), v.title(), v.description(), v.status(), v.priority(), v.due(), now())) {
 			flushOrConflict();
 		}
 		return task;
@@ -105,8 +111,20 @@ public class TaskService {
 	}
 
 	private Task loadAccessible(UUID userId, UUID taskId) {
-		return tasks.findAccessibleById(taskId, userId)
+		return tasks.findAccessibleById(taskId, userId, ownedProjectIds(userId))
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "TASK_NOT_FOUND", "Die Aufgabe wurde nicht gefunden."));
+	}
+
+	private Set<UUID> ownedProjectIds(UUID userId) {
+		return projectAccess.ownedProjectIds(userId);
+	}
+
+	/** US-040ff: Eine Aufgabe darf nur einem Projekt zugeordnet werden, das der Handelnde selbst besitzt. */
+	private void requireOwnedProjectIfSet(UUID projectId, UUID userId) {
+		if (projectId != null && !projectAccess.isOwner(projectId, userId)) {
+			throw ApiException.validation(List
+				.of(new FieldError("projectId", "INVALID", "Dieses Projekt existiert nicht oder gehört dir nicht.")));
+		}
 	}
 
 	private void requireVersion(Long expectedVersion) {

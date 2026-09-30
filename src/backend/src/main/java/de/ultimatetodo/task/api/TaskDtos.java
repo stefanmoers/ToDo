@@ -18,6 +18,7 @@ public final class TaskDtos {
 	}
 
 	public record CreateTaskRequest(
+			@Schema(description = "Nur ein eigenes Projekt; ohne Angabe ist die Aufgabe persönlich") String projectId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 200,
 					example = "Steuererklärung abgeben") String title,
 			@Schema(maxLength = 10000) String description,
@@ -30,6 +31,7 @@ public final class TaskDtos {
 	}
 
 	public record UpdateTaskRequest(
+			@Schema(description = "Nur ein eigenes Projekt; null entfernt die Zuordnung") String projectId,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minLength = 1, maxLength = 200) String title,
 			@Schema(maxLength = 10000) String description,
 			@Schema(requiredMode = Schema.RequiredMode.REQUIRED,
@@ -47,9 +49,9 @@ public final class TaskDtos {
 	public record VersionRequest(@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0") Long version) {
 	}
 
-	@Schema(description = "Eine persönliche Aufgabe. Felder ohne Wert (z. B. keine Beschreibung, keine Fälligkeit) fehlen in der Antwort.")
-	public record TaskResponse(UUID id, String title, String description, String status, String priority,
-			String dueDate, String dueTime, String dueTimeZone, String dueOffset,
+	@Schema(description = "Eine Aufgabe. Felder ohne Wert (z. B. keine Beschreibung, keine Fälligkeit, kein Projekt) fehlen in der Antwort.")
+	public record TaskResponse(UUID id, UUID projectId, String title, String description, String status,
+			String priority, String dueDate, String dueTime, String dueTimeZone, String dueOffset,
 			@Schema(description = "Nur bei Uhrzeit: exakter Fälligkeitszeitpunkt in UTC") Instant dueAt,
 			@Schema(description = "true ab dem Fälligkeitszeitpunkt, solange die Aufgabe nicht erledigt ist") boolean overdue,
 			UUID creatorId, Instant createdAt, Instant updatedAt, Instant completedAt, long version) {
@@ -61,7 +63,7 @@ public final class TaskDtos {
 			String dueTimeZone = due == null ? null : due.zone().getId();
 			String dueOffset = due == null || due.time() == null ? null : formatOffset(due.offset());
 			Instant dueAt = due == null ? null : due.exactInstant();
-			return new TaskResponse(t.getId(), t.getTitle(), t.getDescription(), t.getStatus().name(),
+			return new TaskResponse(t.getId(), t.getProjectId(), t.getTitle(), t.getDescription(), t.getStatus().name(),
 					t.getPriority().name(), dueDate, dueTime, dueTimeZone, dueOffset, dueAt, t.isOverdue(now),
 					t.getCreatorId(), t.getCreatedAt(), t.getUpdatedAt(), t.getCompletedAt(), t.getVersion());
 		}

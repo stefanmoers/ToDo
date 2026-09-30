@@ -63,7 +63,7 @@ class TaskRestartPersistenceIT {
 					"a".repeat(20), "Europe/Berlin", "127.0.0.1");
 			userId = user.getId();
 			Task task = taskService.create(userId,
-					new TaskDraft("Überlebt Neustart", "Beschreibung bleibt erhalten", null, "HIGH", "2026-12-24",
+					new TaskDraft(null, "Überlebt Neustart", "Beschreibung bleibt erhalten", null, "HIGH", "2026-12-24",
 							"18:00", "Europe/Berlin", null));
 			taskId = task.getId();
 			taskService.complete(userId, taskId, task.getVersion());
@@ -82,10 +82,12 @@ class TaskRestartPersistenceIT {
 			assertThat(reloaded.getVersion()).isEqualTo(1L);
 
 			JdbcTemplate jdbc = new JdbcTemplate(second.getBean(DataSource.class));
+			// Anzahl der Migrationsdateien unter db/migration; bei jeder neuen Migration hier mitpflegen.
+			int migrationCount = 4;
 			assertThat(jdbc.queryForObject("select count(*) from flyway_schema_history where success = true", Integer.class))
-				.as("keine erneute Migration, kein Datenverlust beim zweiten Start").isEqualTo(3);
+				.as("keine erneute Migration, kein Datenverlust beim zweiten Start").isEqualTo(migrationCount);
 			assertThat(jdbc.queryForObject("select count(distinct version) from flyway_schema_history", Integer.class))
-				.isEqualTo(3);
+				.isEqualTo(migrationCount);
 		}
 	}
 

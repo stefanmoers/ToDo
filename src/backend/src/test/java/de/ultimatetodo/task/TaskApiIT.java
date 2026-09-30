@@ -185,6 +185,36 @@ class TaskApiIT {
 	}
 
 	@Test
+	void aufgabeMitFremdemOderNichtExistierendemProjektWirdAbgewiesen() throws Exception {
+		ApiTestClient a = loggedIn();
+		ApiTestClient b = loggedIn();
+		String othersProjectId = tree(b.post("/api/v1/projects", "{\"name\":\"Projekt von B\"}")).get("id").asString();
+
+		assertBadWithField(a.post("/api/v1/tasks", "{\"projectId\":\"%s\",\"title\":\"X\"}".formatted(othersProjectId)),
+				"projectId");
+		assertBadWithField(
+				a.post("/api/v1/tasks", "{\"projectId\":\"%s\",\"title\":\"X\"}".formatted(UUID.randomUUID())),
+				"projectId");
+		assertBadWithField(a.post("/api/v1/tasks", "{\"projectId\":\"keine-uuid\",\"title\":\"X\"}"), "projectId");
+	}
+
+	@Test
+	void aufgabeInEigenemProjektIstNurFuerDenProjekteigentuemerZugaenglich() throws Exception {
+		ApiTestClient a = loggedIn();
+		ApiTestClient b = loggedIn();
+		String projectId = tree(a.post("/api/v1/projects", "{\"name\":\"Mein Projekt\"}")).get("id").asString();
+
+		MvcResult created = a.post("/api/v1/tasks", "{\"projectId\":\"%s\",\"title\":\"Projektaufgabe\"}".formatted(projectId));
+		assertThat(created.getResponse().getStatus()).as(created.getResponse().getContentAsString()).isEqualTo(201);
+		String taskId = tree(created).get("id").asString();
+		assertThat(tree(created).get("projectId").asString()).isEqualTo(projectId);
+
+		assertThat(tree(a.get("/api/v1/tasks/" + taskId)).get("projectId").asString()).isEqualTo(projectId);
+		assertThat(b.get("/api/v1/tasks/" + taskId).getResponse().getStatus()).as("fremdes Projekt, keine Zuständigkeit")
+			.isEqualTo(404);
+	}
+
+	@Test
 	void adminRolleGewaehrtKeinenZugriffAufFremdeAufgaben() throws Exception {
 		ApiTestClient a = loggedIn();
 		String id = tree(a.post("/api/v1/tasks", createBody("Geheim A"))).get("id").asString();

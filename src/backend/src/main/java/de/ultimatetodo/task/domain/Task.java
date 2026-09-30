@@ -30,6 +30,9 @@ public class Task {
 	@Column(name = "creator_id", nullable = false, updatable = false)
 	private UUID creatorId;
 
+	@Column(name = "project_id")
+	private UUID projectId;
+
 	@Column(nullable = false)
 	private String title;
 
@@ -77,11 +80,12 @@ public class Task {
 	protected Task() {
 	}
 
-	public static Task create(UUID creatorId, String title, String description, TaskPriority priority, DueDate due,
-			Instant now) {
+	public static Task create(UUID creatorId, UUID projectId, String title, String description, TaskPriority priority,
+			DueDate due, Instant now) {
 		Task t = new Task();
 		t.id = UUID.randomUUID();
 		t.creatorId = creatorId;
+		t.projectId = projectId;
 		t.title = title;
 		t.description = description;
 		t.status = TaskStatus.OPEN;
@@ -93,9 +97,13 @@ public class Task {
 	}
 
 	/** Ersetzt alle bearbeitbaren Felder. Liefert {@code true}, wenn sich dadurch tatsächlich etwas geändert hat. */
-	public boolean update(String title, String description, TaskStatus status, TaskPriority priority, DueDate due,
-			Instant now) {
+	public boolean update(UUID projectId, String title, String description, TaskStatus status, TaskPriority priority,
+			DueDate due, Instant now) {
 		boolean changed = false;
+		if (!Objects.equals(this.projectId, projectId)) {
+			this.projectId = projectId;
+			changed = true;
+		}
 		if (!this.title.equals(title)) {
 			this.title = title;
 			changed = true;
@@ -197,6 +205,8 @@ public class Task {
 	public UUID getId() { return id; }
 
 	public UUID getCreatorId() { return creatorId; }
+
+	public UUID getProjectId() { return projectId; }
 
 	public String getTitle() { return title; }
 

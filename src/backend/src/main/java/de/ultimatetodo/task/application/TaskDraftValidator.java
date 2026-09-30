@@ -14,6 +14,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
@@ -26,6 +27,16 @@ public class TaskDraftValidator {
 
 	public ValidTaskValues validate(TaskDraft draft, boolean isCreate) {
 		List<FieldError> errors = new ArrayList<>();
+
+		UUID projectId = null;
+		if (draft.projectId() != null && !draft.projectId().isBlank()) {
+			try {
+				projectId = UUID.fromString(draft.projectId());
+			}
+			catch (IllegalArgumentException e) {
+				errors.add(new FieldError("projectId", "INVALID", "Dieses Projekt existiert nicht oder gehört dir nicht."));
+			}
+		}
 
 		String title = TaskInput.normalizeTitle(draft.title());
 		if (!TaskInput.isValidTitle(title)) {
@@ -75,7 +86,7 @@ public class TaskDraftValidator {
 		if (!errors.isEmpty()) {
 			throw ApiException.validation(errors);
 		}
-		return new ValidTaskValues(title, description, status, priority, due);
+		return new ValidTaskValues(projectId, title, description, status, priority, due);
 	}
 
 	private DueDate validateDue(TaskDraft draft, List<FieldError> errors) {
