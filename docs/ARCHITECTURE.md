@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entscheidungen](adr/README.md)
 
-**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c) sind umgesetzt. Aus M2 sind Mitgliedschaft/Zuweisung in `project`/`task` (US-060 bis US-062) sowie Unteraufgaben, Kommentare und Aktivitätshistorie in `task` (US-070, US-071, US-080, US-081) dazugekommen; `notification` ist weiterhin Planung. Offen aus M2 bleiben nur die Konten-Stories US-013/014 im Modul `user`.
+**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c) sind umgesetzt. Aus M2 sind Mitgliedschaft/Zuweisung in `project`/`task` (US-060 bis US-062), Unteraufgaben, Kommentare und Aktivitätshistorie in `task` (US-070, US-071, US-080, US-081) sowie die Kontenadministration in `user` (US-014; US-013 mit reduziertem Umfang, siehe BACKLOG.md) dazugekommen; `notification` ist weiterhin Planung. Damit ist M2 vollständig umgesetzt.
 
 ## Das System erklären
 
@@ -52,7 +52,7 @@ Diese Pfade entstehen erst bei Implementierung. `compose.yaml`, `compose.dev.yam
 
 | Modul | Verantwortung | Erlaubte Zusammenarbeit |
 |---|---|---|
-| `user` | Konto, Passwort, Anmeldung, Kontostatus | Kennt keine Aufgabeninhalte |
+| `user` | Konto, Passwort, Anmeldung, Kontostatus, Administration (US-014) | Kennt keine Aufgabeninhalte |
 | `project` | Projekte, Eigentümer, Mitgliedschaften | Nutzt öffentliche Benutzerabfragen |
 | `task` | Aufgaben, Tag-Zuordnung (`TaskTag`), Unteraufgaben, Kommentare, Aktivitäten, Wiederholungen | Nutzt Benutzer-, Projekt- und Tag-Berechtigungen |
 | `tag` | Tags (persönlich oder projektbezogen), Namensregeln je Geltungsbereich | Nutzt öffentliche Projektabfragen zur Eigentümerprüfung |

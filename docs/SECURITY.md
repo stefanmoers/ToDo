@@ -39,10 +39,10 @@ Arbeitsannahme: 30 Minuten Inaktivität beenden die Sitzung (`SESSION_TIMEOUT`).
 - Passwörter werden ausschließlich mit einem adaptiven, gesalzenen Passwort-Hash gespeichert. Spring Security `PasswordEncoder` mit Argon2id ist die Arbeitsannahme; die benötigte Bibliothek und Parameter werden passend zur Umgebung geprüft und dokumentiert.
 - Arbeitsannahme für dieses Projekt: 15–128 Unicode-Codepoints; Leerzeichen, Einfügen und Passwortmanager zulassen. Keine stillen Kürzungen, keine Pflichtmischung aus Zeichenklassen. Passwort weder trimmen noch normalisieren.
 - Passwort-Hashes, Klartextpasswörter und Reset-Tokens erscheinen nie in API-Antworten oder Logs. Implementiere keine eigene Kryptografie. [OWASP: Passwortspeicherung](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
-- Passwortänderung verlangt das bisherige Passwort. Nach Änderung oder Reset alle bestehenden Sitzungen entwerten und erneute Anmeldung verlangen.
-- Wiederherstellung liefert unabhängig von der Existenz einer Adresse dieselbe Meldung. Zufällige Reset-Tokens werden nur gehasht gespeichert, sind einmal nutzbar und verfallen nach 30 Minuten.
-- E-Mail-Versand darf im lokalen Lernprofil über einen nur lokal erreichbaren Mailfänger simuliert werden. Reset-Links nicht in allgemeine Logs schreiben. Vor netzwerköffentlichem Betrieb muss der reale Versandweg eingerichtet und geprüft sein.
-- Anmeldung und Wiederherstellung erhalten Ratenbegrenzung. Grenzwerte werden konfiguriert und getestet; keine dauerhafte Kontosperre, die Dritte beliebig auslösen können.
+- Passwortänderung verlangt das bisherige Passwort. Nach einer Änderung werden alle bestehenden Sitzungen entwertet und eine erneute Anmeldung verlangt.
+- Anmeldung erhält Ratenbegrenzung. Grenzwerte werden konfiguriert und getestet; keine dauerhafte Kontosperre, die Dritte beliebig auslösen können.
+
+**US-013 (Auftraggeber-Entscheidung):** Die Passwort-Wiederherstellung selbst (Reset-Token, Mailfänger, echter Versandweg) ist für dieses Demo-Projekt bewusst nicht umgesetzt. „Passwort vergessen?“ führt zu einer informierenden Seite statt einer echten Wiederherstellung; es entstehen keine Reset-Tokens und kein E-Mail-Versand. Die ursprünglich vorgesehenen Regeln (dieselbe Meldung unabhängig von der Kontoexistenz, gehashte einmalige Tokens mit 30 Minuten Frist, lokaler Mailfänger, kein Versand-/Token-Logging) bleiben als Vorgabe dokumentiert, falls diese Einschränkung später aufgehoben wird.
 
 Die Anmeldung meldet für unbekannte, inaktive und falsch authentifizierte Konten denselben allgemeinen Fehler. Bei Registrierung muss eine doppelte E-Mail verständlich abgewiesen werden; diese gezielte Rückmeldung ist zu unterscheiden von anonymer Kontosuche.
 
@@ -50,7 +50,7 @@ Die Anmeldung meldet für unbekannte, inaktive und falsch authentifizierte Konte
 
 Eine Deaktivierung verhindert neue Anmeldungen und beendet bestehende Sitzungen spätestens bei der nächsten geschützten Anfrage. Reaktivierung stellt alte Sitzungen nicht wieder her. Keine Selbstzuweisung von `ADMIN` durch Registrierungsdaten oder allgemeine Profilfelder.
 
-Ein erstmaliges Administratorkonto wird später durch einen lokal ausgeführten, dokumentierten Bootstrap-Vorgang eingerichtet; der konkrete Aufruf ist Teil von US-014. Kein voreingestelltes Administratorkennwort, kein allgemein erreichbarer Bootstrap-HTTP-Endpunkt. Das letzte aktive Administratorkonto darf sich nicht selbst deaktivieren.
+**Umgesetzt (US-014):** Ein bereits selbst registriertes Konto wird zum Administrator befördert, indem seine E-Mail-Adresse beim Start als `ADMIN_BOOTSTRAP_EMAIL` gesetzt ist (`.env`/Compose, siehe `.env.example` und [DEPLOYMENT.md](DEPLOYMENT.md)); `AdminBootstrapRunner` liest den Wert einmalig beim Anwendungsstart. Kein voreingestelltes Administratorkennwort (das Konto muss zuvor regulär registriert worden sein), kein allgemein erreichbarer Bootstrap-HTTP-Endpunkt. `/api/v1/admin/**` verlangt serverseitig die Rolle `ADMIN` (SecurityConfig); Administration gewährt keinen Zugriff auf Aufgaben- oder Projektinhalte. Das letzte aktive Administratorkonto kann nicht deaktiviert werden — unabhängig davon, ob es sich selbst oder ein anderes Administratorkonto deaktivieren möchte.
 
 ## Eingaben, Daten und Betrieb
 

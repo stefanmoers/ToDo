@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie M2 bis auf Konten (US-013, US-014) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare und die Aktivitätshistorie (US-060 bis US-062, US-070, US-071, US-080, US-081) sind vollständig, inklusive der zugehörigen M2-Teile von US-022/031/032/042/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Noch offen aus M2: US-013 (Passwort-Reset) und US-014 (Konten administrieren). Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) und M2 sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** M2 umfasst Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare, die Aktivitätshistorie und Kontenadministration (US-060 bis US-062, US-070, US-071, US-080, US-081, US-014), inklusive der zugehörigen M2-Teile von US-022/031/032/042/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. US-013 (Passwort-Reset) ist mit reduziertem Umfang erledigt: eine Auftraggeber-Entscheidung nimmt die echte Wiederherstellung aus diesem Demo-Projekt heraus (siehe die Story selbst). Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -140,15 +140,19 @@ Als Benutzer möchte ich mein Passwort ersetzen können.
 - Danach funktioniert nur das neue Passwort; alte Sitzungen werden entwertet und eine neue Anmeldung verlangt.
 - Falsches bisheriges Passwort verändert keine Daten; Passwörter erscheinen nie in Logs.
 
-### US-013 – Zugang wiederherstellen · M2 · OFFEN
+### US-013 – Zugang wiederherstellen · M2 · ERLEDIGT (reduzierter Umfang)
+
+> **Stand:** Auftraggeber-Entscheidung (30.09.2026): eine echte Passwort-Wiederherstellung (Reset-Token, Mailfänger, Versandweg) ist für dieses Demo-Projekt bewusst nicht umgesetzt — die ursprünglichen Akzeptanzkriterien unten gelten damit nicht mehr; siehe [SECURITY.md](docs/SECURITY.md) für die zurückgestellte Vorgabe, falls die Einschränkung später aufgehoben wird. Umgesetzt und getestet (`AuthPages.test.tsx`, `auth.spec.ts`, `a11y.spec.ts`) ist stattdessen: „Passwort vergessen?“ auf der Anmeldeseite führt zu einer eigenen Seite, die verständlich erklärt, dass die Wiederherstellung im Demo-Projekt nicht verfügbar ist, und zurück zur Anmeldung führt. Kein Reset-Token, kein E-Mail-Versand, keine neue Angriffsfläche.
 
 Als Benutzer möchte ich ein vergessenes Passwort zurücksetzen können.
 
-- Die Anforderung verrät nicht, ob ein Konto existiert; Anfragen sind begrenzt.
-- Reset-Tokens verfallen nach der festgelegten Frist, sind nur einmal verwendbar und werden nach Erfolg ungültig; alte Sitzungen enden.
-- Lokaler Mailfänger oder echter Versandweg sind dokumentiert; keine Reset-Links in normalen Anwendungslogs.
+- ~~Die Anforderung verrät nicht, ob ein Konto existiert; Anfragen sind begrenzt.~~
+- ~~Reset-Tokens verfallen nach der festgelegten Frist, sind nur einmal verwendbar und werden nach Erfolg ungültig; alte Sitzungen enden.~~
+- ~~Lokaler Mailfänger oder echter Versandweg sind dokumentiert; keine Reset-Links in normalen Anwendungslogs.~~
 
-### US-014 – Konten administrieren · M2 · OFFEN
+### US-014 – Konten administrieren · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`UserAdminApiIT`, `AdminBootstrapRunnerIT`, `UserRulesTest`, `AdminPages.test.tsx`, `App.test.tsx`): `/api/v1/admin/users` listet Konten mit E-Mail, Anzeigename, Rolle und Status, ohne Passwort und ohne Aufgaben-/Projektinhalte; nur die Rolle ADMIN erreicht diese Pfade (`SecurityConfig`, serverseitig erzwungen, unabhängig vom ausgeblendeten „Administration“-Link im Frontend). Deaktivieren beendet Sitzungen spätestens bei der nächsten Anfrage (bestehender `SessionEpochFilter`), Daten bleiben bestehen; Reaktivieren erlaubt erneute Anmeldung. Das letzte aktive Administratorkonto kann nicht deaktiviert werden (`409 LAST_ACTIVE_ADMIN`), unabhängig davon, wer die Aktion auslöst. Erstmalige Admin-Einrichtung: `ADMIN_BOOTSTRAP_EMAIL` befördert ein bereits selbst registriertes Konto beim Anwendungsstart (`AdminBootstrapRunner`) — kein Standardkennwort, kein öffentlicher Bootstrap-Endpunkt (siehe [SECURITY.md](docs/SECURITY.md), [DEPLOYMENT.md](docs/DEPLOYMENT.md)). Offen: kein automatisierter E2E-Test für den Admin-Handlungspfad selbst, da der Bootstrap-Vorgang nur beim Anwendungsstart läuft und ein zur Laufzeit von Playwright registriertes Konto diesen nicht nachträglich durchlaufen kann, ohne den Compose-Stack mitten im Testlauf neu zu starten; die Zugriffsbeschränkung für normale Benutzer ist per E2E geprüft (`admin.spec.ts`).
 
 Als Administrator möchte ich Konten auflisten, deaktivieren und reaktivieren.
 
@@ -629,7 +633,7 @@ Für das Referenzrelease kommen die geprüfte Frischinstallation, ein geprüfter
 |---|---|---|
 | M0 | Gepflegte kompatible Paketversionen, konkreter Webserver, OpenAPI-Integration, CI-Umgebung | Festgelegter Stack, Java 21, reproduzierbarer Build |
 | M1 | Zugängliche UI-Komponenten und genaue Gestaltung | WCAG 2.2 AA; keine Bibliothek allein nach Aussehen wählen |
-| M2 | Bootstrap-Aufruf für Admin und lokaler Mailfänger | Keine Standardkennwörter, kein öffentliches Reset-Token-Logging |
+| M2 | ~~Bootstrap-Aufruf für Admin und lokaler Mailfänger~~ — geklärt: `ADMIN_BOOTSTRAP_EMAIL` (US-014); Passwort-Wiederherstellung ohne Mailfänger für dieses Demo-Projekt bewusst nicht umgesetzt (US-013, Auftraggeber-Entscheidung) | Keine Standardkennwörter, kein öffentliches Reset-Token-Logging |
 | M3 | Beispiele für Zeit- und Wiederholungsregeln bestätigen | Markierte Arbeitsannahmen im Domänenmodell |
 | Vor öffentlichem Betrieb | Host, DNS/TLS, echter Versand, Secret- und Backup-Aufbewahrung | Lokales Referenzdeployment bleibt Standardumfang |
 

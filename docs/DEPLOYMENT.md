@@ -47,7 +47,7 @@ Die `.env` lokal bearbeiten und nicht in Git aufnehmen. Für Passwörter etwa ei
 
 ### Konfigurationsvertrag
 
-**Umgesetzt in M0:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (fehlt es, bricht `docker compose` mit einer verständlichen Meldung ab), `WEB_PORT`, `BACKEND_PORT`, `DEV_DB_PORT`. **Umgesetzt in M1a:** `SESSION_COOKIE_SECURE` (Standard `false`, nur für localhost; hinter HTTPS `true`), `SESSION_TIMEOUT` (Standard `30m`), optional `RATE_LIMIT_LOGIN_ATTEMPTS` und `RATE_LIMIT_REGISTER_ATTEMPTS` (Standard je 10 pro Zeitfenster; nur für Testläufe anheben). **Noch nicht umgesetzt** (kommt mit M2): `APP_BASE_URL`. Die Zurückweisung des Platzhalterpassworts aus `.env.example` ist noch offen (Teil von US-001).
+**Umgesetzt in M0:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (fehlt es, bricht `docker compose` mit einer verständlichen Meldung ab), `WEB_PORT`, `BACKEND_PORT`, `DEV_DB_PORT`. **Umgesetzt in M1a:** `SESSION_COOKIE_SECURE` (Standard `false`, nur für localhost; hinter HTTPS `true`), `SESSION_TIMEOUT` (Standard `30m`), optional `RATE_LIMIT_LOGIN_ATTEMPTS` und `RATE_LIMIT_REGISTER_ATTEMPTS` (Standard je 10 pro Zeitfenster; nur für Testläufe anheben). **Umgesetzt in M2 (US-014):** optional `ADMIN_BOOTSTRAP_EMAIL` zur erstmaligen Admin-Einrichtung. `APP_BASE_URL` ist entfallen: sein einziger vorgesehener Zweck (Reset-Links) fällt weg, da die Passwort-Wiederherstellung selbst laut Auftraggeber-Entscheidung nicht Teil dieses Demo-Projekts ist (siehe [SECURITY.md](SECURITY.md)). Die Zurückweisung des Platzhalterpassworts aus `.env.example` ist noch offen (Teil von US-001).
 
 | Variable | Beispiel/Standard | Bedeutung und Weitergabe |
 |---|---|---|
@@ -55,9 +55,9 @@ Die `.env` lokal bearbeiten und nicht in Git aufnehmen. Für Passwörter etwa ei
 | `POSTGRES_USER` | `ultimatetodo` | Lokales DB-Konto; an `db` und Backend-Benutzerkonfiguration |
 | `POSTGRES_PASSWORD` | `REPLACE_WITH_RANDOM_SECRET` | Pflichtsecret; an `db` und Backend-Passwortkonfiguration |
 | `WEB_PORT` | `8080` | Nur Host-Port des Webservers; Bindung an `127.0.0.1` |
-| `APP_BASE_URL` | `http://localhost:8080` | Sichtbare Basis-URL, besonders für spätere Reset-Links; bei Portänderung mitändern |
 | `SESSION_COOKIE_SECURE` | `false` nur für localhost | Zuordnung auf `server.servlet.session.cookie.secure`; bei HTTPS zwingend `true` |
 | `SESSION_TIMEOUT` | `30m` | Zuordnung auf `server.servlet.session.timeout` |
+| `ADMIN_BOOTSTRAP_EMAIL` | leer | Befördert dieses bereits registrierte Konto beim Start zum Administrator (US-014); danach wieder leeren |
 | `DEV_DB_PORT` | `5432` | Nur eigenständiges Entwicklungs-Compose und Backend-`dev`-Profil |
 | `BACKEND_PORT` | `8081` | Nur Backend auf dem Entwicklerhost; im Betriebscontainer intern 8081 |
 
