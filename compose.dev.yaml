@@ -1,0 +1,22 @@
+# Nur die Entwicklungsdatenbank, erreichbar ausschließlich über 127.0.0.1. Eigenes Volume, getrennt vom Deployment.
+name: ultimatetodo-dev
+
+services:
+  db:
+    image: postgres:17.11-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ultimatetodo}
+      POSTGRES_USER: ${POSTGRES_USER:-ultimatetodo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Bitte POSTGRES_PASSWORD in der Datei .env setzen (siehe .env.example)}
+    ports:
+      - "127.0.0.1:${DEV_DB_PORT:-5432}:5432"
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dev-db-data:

@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entwicklung](DEVELOPMENT.md) · [Sicherheit](SECURITY.md)
 
-**Stand: Planungsanleitung, noch nicht ausführbar.** Der heutige Commit enthält ausschließlich Dokumentation. Compose-Dateien, Images, Build-Dateien und Konfigurationsbeispiele entstehen in M0; ein fachlicher Funktionstest ist ab M1 möglich. Die folgenden Schritte definieren, was der implementierende Agent bereitstellen und auf einem frischen Rechner prüfen muss. Noch keine Installation wurde nach dieser Anleitung geprüft.
+**Stand: M0.** `compose.yaml`, Images und `.env.example` existieren; der Start von `web`, `backend` und `db` samt Healthchecks wurde über `scripts/e2e.sh` (isolierter Compose-Lauf) erfolgreich geprüft. Die Schritte zu Update, Backup und Restore (Abschnitte weiter unten) sind noch Planung und werden in M4 umgesetzt. Ein fachlicher Funktionstest ist ab M1 möglich. Eine Frischinstallation auf einem zweiten Rechner nach dieser Anleitung (US-160) steht noch aus. Noch keine Installation wurde nach dieser Anleitung geprüft.
 
 ## 1. Ziel und Voraussetzungen
 
@@ -24,7 +24,7 @@ docker version
 docker compose version
 ```
 
-`git log` funktioniert erst nach dem ersten erstellten Commit. Für eine Installation eine konkrete Release-Version verwenden und Commit-ID notieren. Ein uncommitteter Dokumentationsstand ist kein installierbarer Release.
+Für eine Installation eine konkrete Release-Version verwenden und Commit-ID notieren. Ein uncommitteter Dokumentationsstand ist kein installierbarer Release.
 
 Vor dem Start müssen vorhanden sein:
 
@@ -45,7 +45,9 @@ cp .env.example .env
 
 Die `.env` lokal bearbeiten und nicht in Git aufnehmen. Für Passwörter etwa einen Passwortmanager oder, falls vorhanden, `openssl rand -hex 32` verwenden. Keine Beispielwerte als echte Zugangsdaten übernehmen. Die spätere Startprüfung muss leere Pflichtwerte und erkennbare Passwort-Platzhalter zurückweisen.
 
-### Geplanter Konfigurationsvertrag
+### Konfigurationsvertrag
+
+**Umgesetzt in M0:** `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (fehlt es, bricht `docker compose` mit einer verständlichen Meldung ab), `WEB_PORT`, `BACKEND_PORT`, `DEV_DB_PORT`. **Noch nicht umgesetzt** (kommen mit M1a/M2): `APP_BASE_URL`, `SESSION_COOKIE_SECURE`, `SESSION_TIMEOUT`. Die Zurückweisung des Platzhalterpassworts aus `.env.example` ist noch offen (Teil von US-001).
 
 | Variable | Beispiel/Standard | Bedeutung und Weitergabe |
 |---|---|---|
@@ -57,7 +59,7 @@ Die `.env` lokal bearbeiten und nicht in Git aufnehmen. Für Passwörter etwa ei
 | `SESSION_COOKIE_SECURE` | `false` nur für localhost | Zuordnung auf `server.servlet.session.cookie.secure`; bei HTTPS zwingend `true` |
 | `SESSION_TIMEOUT` | `30m` | Zuordnung auf `server.servlet.session.timeout` |
 | `DEV_DB_PORT` | `5432` | Nur eigenständiges Entwicklungs-Compose und Backend-`dev`-Profil |
-| `BACKEND_PORT` | `8081` | Nur Backend auf dem Entwicklerhost; im Betriebscontainer intern 8080 |
+| `BACKEND_PORT` | `8081` | Nur Backend auf dem Entwicklerhost; im Betriebscontainer intern 8081 |
 
 Compose muss die Variablen **explizit** an die passenden Container bzw. Spring-Konfigurationen weitergeben. Eine `.env` ist keine automatische Spring-Konfiguration. Im Betriebscontainer lautet die Datenbankadresse `db:5432`, nicht `localhost`. Projektvariablen wie `APP_BASE_URL` benötigen eine implementierte Property-Zuordnung.
 

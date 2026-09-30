@@ -2,7 +2,7 @@
 
 UltimateTodo wird eine Webanwendung für persönliche und gemeinsame Aufgaben. Sie dient als Referenzprojekt für die Ausbildung und für die Arbeit mit Coding-Agenten. Azubis sollen die Architektur erklären, die Technologien einordnen und die Anwendung selbst installieren können.
 
-**Stand: 30.09.2026 – Dokumentationsbasis, noch keine lauffähige Anwendung.** Dieses Repository enthält Anforderungen und Architekturentscheidungen. Backend, Frontend, Build-Dateien, Container und Tests werden erst in den folgenden Meilensteinen umgesetzt. Die Anleitungen beschreiben dafür verbindliche Zielabläufe und behaupten keinen bereits erfolgreichen Start.
+**Stand: 30.09.2026 – M0 (Grundlage) umgesetzt.** Es gibt ein lauffähiges Grundgerüst: Backend mit Health-Endpunkten und Flyway, Frontend-Startseite, Docker Compose, Tests und CI. Fachfunktionen (Konten, Aufgaben, …) folgen ab M1; ihre Beschreibungen in den Fachdokumenten sind weiterhin Zielbild. Den Status je Story zeigt das [Backlog](BACKLOG.md).
 
 ## Was entsteht?
 
@@ -30,11 +30,11 @@ React und TypeScript bilden die Oberfläche im Browser. Das Frontend ruft eine R
 | Barrierefreiheit | WCAG 2.2 AA, axe-core, zusätzliche manuelle Prüfungen |
 | Lokaler Betrieb | Docker Compose, Spring Boot Actuator |
 
-Die [Technologieübersicht](docs/TECHNOLOGIES.md) erklärt jeweils **was**, **wofür** und **warum**. Außer Java 21 sind konkrete Paketversionen noch nicht festgeschrieben; die kompatible Kombination wird in M0 geprüft und anschließend versioniert.
+Die [Technologieübersicht](docs/TECHNOLOGIES.md) erklärt jeweils **was**, **wofür** und **warum**. Die tatsächlich getesteten Versionen stehen in der [Technologieübersicht](docs/TECHNOLOGIES.md#tatsächlich-verwendete-versionen-stand-m0-30092026).
 
 ## Orientierung und Start
 
-**Heute:** Die Dokumentation lesen; es gibt noch keinen Startbefehl für eine Anwendung.
+**Heute (M0):** Der komplette Stack startet mit `cp .env.example .env` (Passwort setzen) und `docker compose up -d --build --wait`; danach ist die Startseite unter <http://localhost:8080> erreichbar. Fachfunktionen gibt es noch nicht.
 
 **Nach Umsetzung von M0/M1:** Die [Entwicklungsanleitung](docs/DEVELOPMENT.md) beschreibt die Arbeit am Code. Die [Deployment-Anleitung](docs/DEPLOYMENT.md) führt durch Installation, Start, Prüfung, Update und Datensicherung. Die dort genannten künftigen Dateien und Befehle müssen vom umsetzenden Agenten tatsächlich bereitgestellt und überprüft werden.
 
@@ -60,6 +60,11 @@ ToDo/
 ├── BACKLOG.md
 ├── AGENTS.md
 ├── .gitignore
+├── .env.example             # Konfigurationsvorlage (nur Platzhalter)
+├── compose.yaml             # vollständiger Betrieb: web, backend, db
+├── compose.dev.yaml         # nur Entwicklungsdatenbank
+├── scripts/e2e.sh           # isolierter E2E-/axe-Lauf
+├── .github/workflows/ci.yml
 ├── docs/
 │   ├── ARCHITECTURE.md
 │   ├── TECHNOLOGIES.md
@@ -70,11 +75,13 @@ ToDo/
 │   ├── DEVELOPMENT.md
 │   ├── DEPLOYMENT.md
 │   └── adr/                 # Übersicht und fünf erste Entscheidungen
-└── src/                     # zunächst leer; nicht von Git gespeichert
+└── src/
+    ├── backend/             # Spring Boot (Maven Wrapper, Flyway-Migrationen, Tests)
+    └── frontend/            # React, TypeScript, Vite, Vitest, Playwright
 ```
 
-Die geplante Aufteilung in `src/backend/` und `src/frontend/` steht in der Architektur. Ein leerer Ordner erscheint nicht in einem Git-Clone; der erste Implementierungsschritt legt ihn bei Bedarf neu an.
+Die Modulaufteilung innerhalb von `src/backend/` und `src/frontend/` steht in der [Architektur](docs/ARCHITECTURE.md).
 
 ## Nächster Arbeitsschritt
 
-Den Coding-Agenten die [Arbeitsregeln](AGENTS.md) und alle Dokumente lesen lassen. Anschließend **M0** aus dem Backlog umsetzen, die geprüften Versionsstände dokumentieren und Ergebnisse einschließlich verbleibender Grenzen berichten. Die übrigen Meilensteine folgen schrittweise. Eine Story ist erst abgeschlossen, wenn ihre Akzeptanzkriterien und die Definition of Done erfüllt sind.
+**M1a** aus dem Backlog: Registrierung, Login/Logout, Session und CSRF, Profil, Passwort ändern. Der Coding-Agent liest vorher die [Arbeitsregeln](AGENTS.md) und die zur Story gehörenden Dokumente. Eine Story ist erst abgeschlossen, wenn ihre Akzeptanzkriterien und die Definition of Done erfüllt sind.

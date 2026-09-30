@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Tests](TESTING.md) · [Fertige Anwendung betreiben](DEPLOYMENT.md)
 
-**Aktueller Stand: nur Dokumentation.** Die folgenden Entwicklungsbefehle sind ein Zielvertrag für M0. `pom.xml`, Maven Wrapper, Frontend, Compose-Dateien und `.env.example` existieren noch nicht. Sie müssen zuerst angelegt werden; aktuell kann die Anwendung noch nicht gestartet werden.
+**Aktueller Stand: M0.** Die Befehle unten wurden am 30.09.2026 auf macOS (Docker 28.3.2, Compose v2.38.2, JDK 21.0.7, Node 24.21.0) ausgeführt: Dev-Datenbank, Backend im `dev`-Profil, Vite-Proxy, `mvnw verify`, Frontend-Prüfungen und `scripts/e2e.sh`. Windows/WSL2 und Linux sind ungeprüft.
 
 ## 1. Voraussetzungen
 
@@ -29,13 +29,13 @@ Lies zuerst README, Backlog, Architektur, Domänenmodell und die Querschnittsreg
 
 ## 3. Zielablauf ab M0: Datenbank starten
 
-Alle folgenden Schritte sind erst nach Bereitstellung des Grundgerüsts ausführbar. Im Repository-Stamm:
+Im Repository-Stamm:
 
 ```sh
 cp .env.example .env
 ```
 
-Nur beim ersten Einrichten kopieren; eine vorhandene `.env` nicht überschreiben. In der eigenen `.env` mindestens ein zufälliges `POSTGRES_PASSWORD` setzen. Das [Konfigurationsverzeichnis in der Deployment-Anleitung](DEPLOYMENT.md) beschreibt sämtliche Werte und ihre Zuordnung. Beispielkonfiguration bleibt ohne reale Geheimnisse.
+Nur beim ersten Einrichten kopieren; eine vorhandene `.env` nicht überschreiben. In der eigenen `.env` mindestens ein zufälliges `POSTGRES_PASSWORD` setzen. Ist Port 5432 bereits belegt (Fehler „port is already allocated“), `DEV_DB_PORT` auf einen freien Port, zum Beispiel `5433`, ändern. Das [Konfigurationsverzeichnis in der Deployment-Anleitung](DEPLOYMENT.md) beschreibt sämtliche Werte und ihre Zuordnung. Beispielkonfiguration bleibt ohne reale Geheimnisse.
 
 ```sh
 docker compose --project-name ultimatetodo-dev -f compose.dev.yaml up -d --wait db

@@ -68,7 +68,9 @@ Bereits in M1 werden Aktivitätsdaten zusammen mit Fachänderungen gespeichert; 
 
 ## 5. EPIC-01 – Anwendungsgrundlage und Dokumentation
 
-### US-001 – Anwendung reproduzierbar starten · M0 · OFFEN
+### US-001 – Anwendung reproduzierbar starten · M0 · IN ARBEIT
+
+> **Stand:** Umgesetzt und geprüft: Compose-Start von web/backend/db mit Healthchecks, feste Versionen, Wrapper und Lockdatei, `.env.example`, verständlicher Abbruch bei fehlendem `POSTGRES_PASSWORD`. Offen: Zurückweisen des Platzhalterpassworts, verständliche Backend-Meldung bei fehlender Konfiguration außerhalb von Compose.
 
 Als Betreiber möchte ich alle Dienste mit dokumentierten Schritten starten können.
 
@@ -84,7 +86,9 @@ Als Benutzer möchte ich Konten, Projekte und Aufgaben nach einem Neustart wiede
 - Flyway initialisiert ein leeres Schema und aktualisiert einen bestehenden Stand versioniert.
 - Ein Test liest zuvor angelegte Daten nach einem Anwendungsneustart wieder; keine automatische Löschung bei Start.
 
-### US-003 – Betriebszustand prüfen · M0 · OFFEN
+### US-003 – Betriebszustand prüfen · M0 · ERLEDIGT
+
+> **Stand:** Nachweis: `OperationsIT`, `DatabaseOutageIT` (Readiness DOWN/503 bei gestopptem PostgreSQL, Liveness bleibt UP, nur Gesamtzustand öffentlich), Stand M0 vom 30.09.2026.
 
 Als Betreiber möchte ich die Einsatzbereitschaft ohne UI feststellen.
 
@@ -92,7 +96,9 @@ Als Betreiber möchte ich die Einsatzbereitschaft ohne UI feststellen.
 - Liveness wird nicht allein durch einen vorübergehenden Datenbankausfall negativ.
 - Öffentlich sind keine internen Verbindungsdaten sichtbar; erfolgreiche und fehlerhafte Zustände sind getestet.
 
-### US-004 – Dokumentation als Einstieg nutzen · M0 · OFFEN
+### US-004 – Dokumentation als Einstieg nutzen · M0 · IN ARBEIT
+
+> **Stand:** README, Entwicklungs- und Deployment-Anleitung sowie Versionstabelle sind auf M0 abgestimmt; Dev-Ablauf (Dev-DB, `spring-boot:run`, Vite-Proxy) und Compose-Lauf wurden ausgeführt. Offen: Abgleich bei jeder weiteren Story.
 
 Als Entwickler möchte ich Anforderungen, Architektur und erste Befehle an einem Ort finden.
 
@@ -423,7 +429,9 @@ Als Benutzer möchte ich keine halbfertigen Datenänderungen erhalten.
 
 ## 18. EPIC-14 – Logging und Monitoring
 
-### US-130 – Verständliche Logs erhalten · M0 · OFFEN
+### US-130 – Verständliche Logs erhalten · M0 · IN ARBEIT
+
+> **Stand:** Umgesetzt: Anfragekennung (`X-Request-Id`, MDC im Logmuster), einheitliches Fehlerformat ohne Interna, Unit-Test des Filters. Offen: Nachweis, dass Logs keine Passwörter/Bodies enthalten, sobald es Eingaben gibt (ab M1a).
 
 Als Betreiber möchte ich Fehler eingrenzen können.
 
@@ -431,7 +439,9 @@ Als Betreiber möchte ich Fehler eingrenzen können.
 - Ein Fehler lässt sich einer Anfrage zuordnen, ohne Passwort, Cookie, Reset-Token oder Aufgabenbeschreibung zu protokollieren.
 - Erwartete Benutzerfehler und unerwartete Systemfehler sind unterscheidbar; keine ungefilterten Request-Bodies.
 
-### US-131 – Betriebsinformationen begrenzen · M0 · OFFEN
+### US-131 – Betriebsinformationen begrenzen · M0 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet: nur `/actuator/health` (nginx) bzw. Health-Gruppen (Backend) öffentlich, `env`/`configprops`/`heapdump`/`loggers`/`beans` liefern 401 bzw. 404, Compose wartet auf Datenbankbereitschaft. Offen: expliziter Test, dass eine fehlgeschlagene Migration die Bereitschaft verhindert; geschützte Detail-Ansicht für Administratoren (ab M2).
 
 Als Betreiber möchte ich Zustände sehen, ohne interne Daten offenzulegen.
 

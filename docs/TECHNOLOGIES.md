@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Architektur](ARCHITECTURE.md)
 
-**Status:** Stack festgelegt; konkrete kompatible Paketversionen werden in M0 überprüft und festgeschrieben.
+**Status:** Stack festgelegt; die in M0 verwendeten Versionen stehen unten und wurden am 30.09.2026 tatsächlich gebaut und getestet.
 
 | Technologie | Was ist das? | Wofür verwenden wir sie? | Warum hier? |
 |---|---|---|---|
@@ -45,7 +45,27 @@ Die frühere Planung nennt JUnit 5. Die genaue Spring-Boot-/JUnit-Kombination is
 | PostgreSQL und Webserver | Noch keine Image-Version | Feste Versionen, für Releases möglichst Image-Digests; gleiche PostgreSQL-Hauptversion in Tests und Betrieb |
 | Docker Compose | Compose v2 | Tatsächlich getestete Version in der Entwicklungs- und Deployment-Anleitung |
 
-M0 ergänzt hier eine Tabelle der **wirklich getesteten** Versionsnummern. Keine erfundenen „zuletzt getestet“-Angaben. Updates erfolgen gezielt mit Tests und Release-Hinweisen; eine neue Versionsnummer allein beweist keine Kompatibilität.
+### Tatsächlich verwendete Versionen (Stand M0, 30.09.2026)
+
+| Bestandteil | Version | Anmerkung |
+|---|---|---|
+| Java (Entwicklung, Container) | 21.0.7 (Temurin/Zulu) | Container: `eclipse-temurin:21.0.7_6-jdk` bzw. `-jre-alpine` |
+| Spring Boot | 4.1.1 | Boot 4: Test-Pakete heißen z. B. `org.springframework.boot.webmvc.test.autoconfigure` |
+| Maven (Wrapper) | 3.9.16 | `src/backend/.mvn/wrapper` |
+| Test-Stack Backend | JUnit Jupiter 6.0.3, Testcontainers 2.0.5 | von Spring Boot verwaltet (JUnit 6 statt 5 – Abweichung von der früheren Planung, kein Hindernis) |
+| Flyway | 12.4.0 | von Spring Boot verwaltet |
+| springdoc-openapi | 3.1.1 | `springdoc-openapi-starter-webmvc-api`, funktioniert mit Boot 4.1.1 (im Test-/Dev-Start geprüft) |
+| PostgreSQL | 17.11 (`postgres:17.11-alpine`) | identisch in Compose und Testcontainers |
+| Node.js / npm | 24.21.0 / 11.19.0 | `src/frontend/.nvmrc`, `engines` in `package.json` |
+| React / React Router | 19.3.0 / 7.18.4 | |
+| TypeScript / Vite | 6.0.3 / 8.3.1 | |
+| Vitest / Testing Library / jsdom | 5.0.2 / React 16.3.3 / 30.1.1 | |
+| ESLint | 9.39.5 mit `jsx-a11y` | ESLint 10 ist wegen `eslint-plugin-jsx-a11y` (Peer bis 9) noch nicht nutzbar |
+| Playwright / axe-core | 1.63.0 / @axe-core/playwright 4.13.0 | Browser: Chromium |
+| nginx | 1.30 (`nginx:1.30-alpine`) | Webserver im `web`-Container |
+| Docker / Compose | 28.3.2 / v2.38.2 | Entwicklungsrechner macOS |
+
+Noch nicht auf Image-Digests festgelegt; das folgt vor dem Referenzrelease (M4). Updates erfolgen gezielt mit Tests und Release-Hinweisen; eine neue Versionsnummer allein beweist keine Kompatibilität.
 
 ## Offizielle Einstiege
 
