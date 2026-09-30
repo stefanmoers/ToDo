@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { DeleteProjectDialog } from '../features/projects/DeleteProjectDialog'
+import { MembersSection } from '../features/projects/MembersSection'
 import { ProjectNotFound } from '../features/projects/ProjectNotFound'
 import { useProject } from '../features/projects/useProject'
 import { formatTimestamp } from '../features/tasks/format'
@@ -85,6 +86,7 @@ function ProjectDetail({ projectId }: { projectId: string }) {
         </button>
         <Link to="/projekte">Zurück zur Projektliste</Link>
       </div>
+      <MembersSection projectId={project.id} isOwner={project.ownerId === user!.id} />
       {dialogOpen && (
         <DeleteProjectDialog
           project={project}

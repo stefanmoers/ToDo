@@ -43,6 +43,7 @@ describe('toInput', () => {
     const input = toInput(draft)
     expect(input).toEqual({
       projectId: null,
+      assigneeId: null,
       title: 'Einkaufen',
       description: 'Milch, Brot',
       priority: 'HIGH',

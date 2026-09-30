@@ -26,6 +26,10 @@ export interface Task {
   /** Vom Server berechnet (Fachregel bleibt im Backend). */
   overdue: boolean
   creatorId: string
+  creatorDisplayName?: string
+  /** Ohne Projekt nur der Ersteller selbst; mit Projekt nur ein aktuelles Mitglied oder der Eigentümer (US-062). */
+  assigneeId?: string
+  assigneeDisplayName?: string
   createdAt: string
   updatedAt: string
   completedAt?: string
@@ -36,6 +40,7 @@ export interface Task {
 
 export interface TaskInput {
   projectId: string | null
+  assigneeId: string | null
   title: string
   description: string | null
   priority: TaskPriority
@@ -60,6 +65,7 @@ export interface TaskListFilters {
   priority?: TaskPriority[]
   projectId?: string
   tagId?: string
+  assigneeId?: string
   overdue?: boolean
   dueDateFrom?: string
   dueDateTo?: string
@@ -74,6 +80,7 @@ export const listTasks = (page: number, size = DEFAULT_PAGE_SIZE, filters: TaskL
   for (const p of filters.priority ?? []) params.append('priority', p)
   if (filters.projectId) params.set('projectId', filters.projectId)
   if (filters.tagId) params.set('tagId', filters.tagId)
+  if (filters.assigneeId) params.set('assigneeId', filters.assigneeId)
   if (filters.overdue) params.set('overdue', 'true')
   if (filters.dueDateFrom) params.set('dueDateFrom', filters.dueDateFrom)
   if (filters.dueDateTo) params.set('dueDateTo', filters.dueDateTo)

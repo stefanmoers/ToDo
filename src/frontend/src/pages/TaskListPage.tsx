@@ -48,6 +48,7 @@ export default function TaskListPage() {
   const priorities = searchParams.getAll('priority') as TaskPriority[]
   const projectId = searchParams.get('projectId') ?? undefined
   const tagId = searchParams.get('tag') ?? undefined
+  const assigneeId = searchParams.get('assigneeId') ?? undefined
   const overdue = searchParams.get('overdue') === 'true'
   const dueDateFrom = searchParams.get('dueDateFrom') ?? undefined
   const dueDateTo = searchParams.get('dueDateTo') ?? undefined
@@ -55,7 +56,8 @@ export default function TaskListPage() {
   const sortDirection = (searchParams.get('sortDirection') ?? undefined) as 'asc' | 'desc' | undefined
 
   const hasActiveFilters = Boolean(
-    q || statuses.length > 0 || priorities.length > 0 || projectId || tagId || overdue || dueDateFrom || dueDateTo,
+    q || statuses.length > 0 || priorities.length > 0 || projectId || tagId || assigneeId || overdue || dueDateFrom
+      || dueDateTo,
   )
 
   const filters: TaskListFilters = {
@@ -64,6 +66,7 @@ export default function TaskListPage() {
     priority: priorities.length > 0 ? priorities : undefined,
     projectId,
     tagId,
+    assigneeId,
     overdue: overdue || undefined,
     dueDateFrom,
     dueDateTo,
@@ -261,6 +264,15 @@ export default function TaskListPage() {
         <p className="radio-option">
           <input type="checkbox" id="filter-overdue" checked={overdue} onChange={(e) => onOverdueChange(e.target.checked)} />{' '}
           <label htmlFor="filter-overdue">Nur überfällige Aufgaben</label>
+        </p>
+        <p className="radio-option">
+          <input
+            type="checkbox"
+            id="filter-assignee-me"
+            checked={assigneeId === user!.id}
+            onChange={(e) => onSingleValueChange('assigneeId', e.target.checked ? user!.id : '')}
+          />{' '}
+          <label htmlFor="filter-assignee-me">Nur mir zugewiesene Aufgaben</label>
         </p>
         {hasActiveFilters && (
           <p>

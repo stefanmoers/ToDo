@@ -4,6 +4,8 @@ import type { Task, TaskInput, TaskPriority, TaskStatus } from '../../api/tasks'
 export interface TaskDraft {
   /** Leerer String = persönliche Aufgabe (kein Projekt). */
   projectId: string
+  /** Leerer String = keine Zuweisung (US-062). */
+  assigneeId: string
   title: string
   description: string
   priority: TaskPriority
@@ -19,6 +21,7 @@ export interface TaskDraft {
 export function emptyDraft(defaultTimeZone: string): TaskDraft {
   return {
     projectId: '',
+    assigneeId: '',
     title: '',
     description: '',
     priority: 'NORMAL',
@@ -34,6 +37,7 @@ export function emptyDraft(defaultTimeZone: string): TaskDraft {
 export function toDraft(task: Task, defaultTimeZone: string): TaskDraft {
   return {
     projectId: task.projectId ?? '',
+    assigneeId: task.assigneeId ?? '',
     title: task.title,
     description: task.description ?? '',
     priority: task.priority,
@@ -53,6 +57,7 @@ export function toInput(draft: TaskDraft): TaskInput {
   const hasTime = hasDate && draft.dueTime.trim().length > 0
   return {
     projectId: draft.projectId.trim().length === 0 ? null : draft.projectId,
+    assigneeId: draft.assigneeId.trim().length === 0 ? null : draft.assigneeId,
     title,
     description,
     priority: draft.priority,
@@ -65,6 +70,7 @@ export function toInput(draft: TaskDraft): TaskInput {
 
 const COMPARABLE_FIELDS: (keyof TaskDraft)[] = [
   'projectId',
+  'assigneeId',
   'title',
   'description',
   'priority',

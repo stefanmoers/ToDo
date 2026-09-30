@@ -6,6 +6,7 @@ export interface Project {
   name: string
   description?: string
   ownerId: string
+  ownerDisplayName?: string
   createdAt: string
   updatedAt: string
   version: number
@@ -32,3 +33,21 @@ export const updateProject = (id: string, update: ProjectUpdate) =>
 
 export const deleteProject = (id: string, version: number) =>
   api('DELETE', `/api/v1/projects/${encodeURIComponent(id)}?version=${version}`)
+
+export interface ProjectMember {
+  userId: string
+  displayName: string
+  addedAt: string
+}
+
+/** US-060: für Eigentümer und aktuelle Mitglieder gleichermaßen sichtbar. */
+export const listMembers = (projectId: string) =>
+  api<ProjectMember[]>('GET', `/api/v1/projects/${encodeURIComponent(projectId)}/members`)
+
+/** US-060: nur der Eigentümer, über die exakte Login-E-Mail eines aktiven Kontos. */
+export const addMember = (projectId: string, email: string) =>
+  api<ProjectMember>('POST', `/api/v1/projects/${encodeURIComponent(projectId)}/members`, { email })
+
+/** US-061: nur der Eigentümer; entfernt zugleich Zuweisungen dieses Mitglieds in diesem Projekt. */
+export const removeMember = (projectId: string, userId: string) =>
+  api('DELETE', `/api/v1/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}`)

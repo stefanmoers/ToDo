@@ -15,6 +15,7 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
 
 export const TASK_FIELD_LABELS: Record<string, string> = {
   projectId: 'Projekt',
+  assigneeId: 'Bearbeiter',
   title: 'Titel',
   description: 'Beschreibung',
   priority: 'Priorität',

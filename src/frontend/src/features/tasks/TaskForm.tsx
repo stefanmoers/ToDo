@@ -6,6 +6,7 @@ import { ErrorSummary, Field, type FormErrors } from '../../components/FormParts
 import { DueFields } from './DueFields'
 import type { TaskDraft } from './draft'
 import { PRIORITY_LABELS, STATUS_LABELS, TASK_FIELD_LABELS } from './labels'
+import { useAssignableUsers } from './useAssignableUsers'
 
 export function TaskForm({
   draft,
@@ -34,6 +35,8 @@ export function TaskForm({
   onSubmit: () => void
   cancelTo: string
 }) {
+  const assignableUsers = useAssignableUsers(draft.projectId)
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     onSubmit()
@@ -50,12 +53,36 @@ export function TaskForm({
                 {...p}
                 name="projectId"
                 value={draft.projectId}
-                onChange={(e) => onChange({ projectId: e.target.value })}
+                onChange={(e) => onChange({ projectId: e.target.value, assigneeId: '' })}
               >
                 <option value="">Keine (persönliche Aufgabe)</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
+        {assignableUsers.length > 0 && (
+          <Field
+            id="assigneeId"
+            label="Bearbeiter"
+            hint={draft.projectId ? 'Optional. Eigentümer oder ein Mitglied dieses Projekts.' : 'Optional. Ohne Projekt nur du selbst.'}
+            error={errors.assigneeId}
+          >
+            {(p) => (
+              <select
+                {...p}
+                name="assigneeId"
+                value={draft.assigneeId}
+                onChange={(e) => onChange({ assigneeId: e.target.value })}
+              >
+                <option value="">Keine Zuweisung</option>
+                {assignableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.displayName}
                   </option>
                 ))}
               </select>

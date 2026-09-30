@@ -86,12 +86,14 @@ function TaskDetail({ taskId }: { taskId: string }) {
           {task.dueDate ? formatDue(task, user!.timeZone) : 'Keine Fälligkeit'}
           {task.overdue && ' – Überfällig'}
         </dd>
+        <dt>Bearbeiter</dt>
+        <dd>{task.assigneeId ? (task.assigneeId === user!.id ? 'Du' : task.assigneeDisplayName ?? 'Unbekannt') : 'Keine Zuweisung'}</dd>
         <dt>Tags</dt>
         <dd>{task.tags.length > 0 ? task.tags.map((t) => t.name).join(', ') : 'Keine'}</dd>
         <dt>Beschreibung</dt>
         <dd className="description">{task.description ?? 'Keine Beschreibung'}</dd>
         <dt>Erstellt von</dt>
-        <dd>{task.creatorId === user!.id ? 'Du' : task.creatorId}</dd>
+        <dd>{task.creatorId === user!.id ? 'Du' : task.creatorDisplayName ?? 'Unbekannt'}</dd>
         <dt>Erstellt am</dt>
         <dd>{formatTimestamp(task.createdAt, user!.timeZone)}</dd>
         <dt>Zuletzt geändert</dt>
