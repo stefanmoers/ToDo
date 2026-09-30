@@ -11,6 +11,7 @@ Foliensatz (18 Folien, 16:9) für die Vorstellung des Projekts vor der Live-Demo
 | `src/frontend/src/features/presentation/slides.tsx` | Folien der In-App-Version als React-Komponenten, inklusive Sprechernotizen |
 | `src/frontend/src/features/presentation/presentation.css` | Gestaltung (eigene Klassen, keine Inline-Stile, wegen der Content-Security-Policy) |
 | `src/frontend/src/pages/PresentationPage.tsx` | Seite mit Navigation, Tastatur, Notizen und Vollbild; Route in `App.tsx` |
+| `UltimateTodo-Projektvorstellung.pptx` (dieser Ordner) | PowerPoint-Fassung mit Sprechernotizen, inhaltsgleich zu den Folien; bei Textänderungen von Hand nachziehen |
 | Dieser Ordner | Quellen für das Slides-Artefakt (siehe unten) |
 
 Inhaltliche Änderungen an den Folien gehören in `slides.tsx`; die Dateien in diesem Ordner sind der Stand für das Slides-Artefakt und müssen bei Textänderungen bewusst nachgezogen werden.
