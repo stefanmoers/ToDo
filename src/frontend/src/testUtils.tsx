@@ -2,6 +2,8 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi } from 'vitest'
 import App from './App'
+import type { Page } from './api/pagination'
+import type { Task } from './api/tasks'
 
 type Handler = (body: unknown, init?: RequestInit) => { status?: number; body?: unknown }
 
@@ -15,6 +17,7 @@ export const testUser = {
   timeZone: 'Europe/Berlin',
   role: 'USER',
   createdAt: '2026-09-30T05:00:00Z',
+  sessionTimeoutSeconds: 1800,
 }
 
 /** Ersetzt fetch durch eine Tabelle aus "METHODE /pfad" → Antwort. Unbekannte Aufrufe schlagen sichtbar fehl. */
@@ -32,6 +35,25 @@ export function mockApi(routes: Record<string, Handler>) {
     return jsonResponse(r.status ?? 200, r.body)
   })
   return { calls, spy }
+}
+
+export function testTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: '22222222-2222-2222-2222-222222222222',
+    title: 'Einkaufen',
+    status: 'OPEN',
+    priority: 'NORMAL',
+    overdue: false,
+    creatorId: testUser.id,
+    createdAt: '2026-09-30T05:00:00Z',
+    updatedAt: '2026-09-30T05:00:00Z',
+    version: 0,
+    ...overrides,
+  }
+}
+
+export function pageOf<T>(items: T[], overrides: Partial<Page<T>> = {}): Page<T> {
+  return { items, page: 0, size: 25, totalElements: items.length, totalPages: items.length === 0 ? 0 : 1, ...overrides }
 }
 
 export function renderAt(path: string) {

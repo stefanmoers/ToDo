@@ -13,11 +13,14 @@ describe('App', () => {
     expect(document.title).toBe('Anmelden – UltimateTodo')
   })
 
-  it('zeigt angemeldeten Benutzern die Startseite mit Systemstatus', async () => {
-    mockApi({ 'GET /api/v1/auth/me': () => ({ body: testUser }) })
-    vi.spyOn(globalThis, 'fetch')
+  it('zeigt angemeldeten Benutzern die Aufgabenliste', async () => {
+    mockApi({
+      'GET /api/v1/auth/me': () => ({ body: testUser }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: { items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 } }),
+    })
     renderAt('/')
     expect(await screen.findByText(/Hallo Max!/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Meine Aufgaben' })).toBeInTheDocument()
   })
 
   it('zeigt für unbekannte Adressen eine Nicht-gefunden-Seite', async () => {

@@ -7,6 +7,8 @@ export interface User {
   timeZone: string
   role: 'USER' | 'ADMIN'
   createdAt: string
+  /** US-023: Inaktivitäts-Timeout der Sitzung in Sekunden; Grundlage der Sitzungs-Timeout-Warnung. */
+  sessionTimeoutSeconds: number
 }
 
 export interface RegisterInput {

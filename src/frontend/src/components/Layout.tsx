@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
+import { SessionTimeoutWarning } from '../features/auth/SessionTimeoutWarning'
 
 /** Seitenrahmen: Sprunglink, Landmarken und Fokusführung bei Seitenwechsel (WCAG 2.4.1, 2.4.3). */
 export default function Layout() {
@@ -36,6 +37,11 @@ export default function Layout() {
           {user ? (
             <ul>
               <li>
+                <NavLink to="/" end>
+                  Meine Aufgaben
+                </NavLink>
+              </li>
+              <li>
                 <NavLink to="/profil">Mein Profil</NavLink>
               </li>
               <li>
@@ -60,8 +66,9 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer>
-        <p>Referenzprojekt – Entwicklungsstand M1a</p>
+        <p>Referenzprojekt – Entwicklungsstand M1b</p>
       </footer>
+      <SessionTimeoutWarning />
     </>
   )
 }

@@ -46,6 +46,7 @@ describe('Anmeldung', () => {
         loggedIn = true
         return { body: testUser }
       },
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: { items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 } }),
     })
     renderAt('/anmelden')
     await userEvent.type(await screen.findByLabelText('E-Mail-Adresse'), 'max@example.test')

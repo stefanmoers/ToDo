@@ -24,10 +24,16 @@ interface CsrfToken {
 
 let csrf: CsrfToken | null = null
 let onUnauthorized: (() => void) | null = null
+let onActivity: (() => void) | null = null
 
 /** Der Auth-Kontext registriert hier, was bei einer abgelaufenen Sitzung (401) geschehen soll. */
 export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler
+}
+
+/** US-023: Jede erfolgreiche Anfrage zählt als Aktivität und setzt die Sitzungs-Timeout-Warnung zurück. */
+export function setActivityHandler(handler: (() => void) | null) {
+  onActivity = handler
 }
 
 /** Nach Login/Logout wechselt die Sitzung; der Token muss dann neu geholt werden. */
@@ -90,6 +96,7 @@ export async function api<T = void>(
         body: body === undefined ? undefined : JSON.stringify(body),
       })
       if (response.ok) {
+        onActivity?.()
         return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
       }
       const error = await toApiError(response)
