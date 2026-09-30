@@ -54,3 +54,20 @@ export async function createTaskViaUi(page: Page, title: string) {
   await page.getByRole('button', { name: 'Aufgabe anlegen' }).click()
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible()
 }
+
+/** Legt ein Projekt direkt über die API an (schnell, für Testvorbereitung); teilt sich die Cookies mit `page`. */
+export async function createProjectViaApi(page: Page, name: string, description: string | null = null): Promise<string> {
+  const csrf = await page.request.get('/api/v1/auth/csrf')
+  const { headerName, token } = await csrf.json()
+  const response = await page.request.post('/api/v1/projects', { headers: { [headerName]: token }, data: { name, description } })
+  const body = await response.json()
+  return body.id as string
+}
+
+/** Legt ein Projekt über die Oberfläche an; danach ist die Detailseite des neuen Projekts geöffnet. */
+export async function createProjectViaUi(page: Page, name: string) {
+  await page.goto('/projekte/neu')
+  await page.getByLabel('Name').fill(name)
+  await page.getByRole('button', { name: 'Projekt anlegen' }).click()
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+}

@@ -10,6 +10,8 @@ export const TASK_STATUSES: TaskStatus[] = ['OPEN', 'IN_PROGRESS', 'DONE']
 
 export interface Task {
   id: string
+  /** Nur ein eigenes Projekt; ohne Angabe ist die Aufgabe persönlich (US-040ff). */
+  projectId?: string
   title: string
   description?: string
   status: TaskStatus
@@ -30,6 +32,7 @@ export interface Task {
 }
 
 export interface TaskInput {
+  projectId: string | null
   title: string
   description: string | null
   priority: TaskPriority

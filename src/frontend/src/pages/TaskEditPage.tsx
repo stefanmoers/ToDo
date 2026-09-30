@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getTask, updateTask, type Task } from '../api/tasks'
 import { useAuth } from '../features/auth/AuthContext'
+import { useAllProjects } from '../features/projects/useProjectList'
 import { ConflictNotice } from '../features/tasks/ConflictNotice'
 import { toDraft, toInput, type TaskDraft } from '../features/tasks/draft'
 import { isConflict, isNotFound, mapTaskApiError } from '../features/tasks/errors'
@@ -33,6 +34,7 @@ function TaskEdit({ taskId }: { taskId: string }) {
 
 function TaskEditForm({ initial, viewerTimeZone }: { initial: Task; viewerTimeZone: string }) {
   const navigate = useNavigate()
+  const projects = useAllProjects()
   const [base, setBase] = useState(initial)
   const [draft, setDraft] = useState<TaskDraft>(() => toDraft(initial, viewerTimeZone))
   const [errors, setErrors] = useState<FormErrors>({})
@@ -119,6 +121,7 @@ function TaskEditForm({ initial, viewerTimeZone }: { initial: Task; viewerTimeZo
         busyLabel="Änderungen werden gespeichert …"
         submitLabel="Änderungen speichern"
         showStatus
+        projects={projects}
         onSubmit={onSubmit}
         cancelTo={`/aufgaben/${base.id}`}
       />

@@ -92,6 +92,7 @@ describe('Aufgabe anlegen', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Aufgabe anlegen' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Neue Aufgabe' })).toBeInTheDocument()
     expect(calls.find((c) => c.key === 'POST /api/v1/tasks')?.body).toEqual({
+      projectId: null,
       title: 'Neue Aufgabe',
       description: null,
       priority: 'NORMAL',

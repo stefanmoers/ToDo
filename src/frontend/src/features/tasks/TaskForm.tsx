@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import type { Project } from '../../api/projects'
 import { TASK_PRIORITIES, TASK_STATUSES } from '../../api/tasks'
 import { ErrorSummary, Field, type FormErrors } from '../../components/FormParts'
 import { DueFields } from './DueFields'
@@ -16,6 +17,7 @@ export function TaskForm({
   busyLabel,
   submitLabel,
   showStatus,
+  projects,
   onSubmit,
   cancelTo,
 }: {
@@ -28,6 +30,7 @@ export function TaskForm({
   busyLabel: string
   submitLabel: string
   showStatus: boolean
+  projects: Project[]
   onSubmit: () => void
   cancelTo: string
 }) {
@@ -40,6 +43,25 @@ export function TaskForm({
     <>
       <ErrorSummary errors={errors} labels={TASK_FIELD_LABELS} general={general} focusToken={focusToken} />
       <form onSubmit={handleSubmit} noValidate>
+        {projects.length > 0 && (
+          <Field id="projectId" label="Projekt" hint="Optional. Ohne Auswahl ist die Aufgabe persönlich." error={errors.projectId}>
+            {(p) => (
+              <select
+                {...p}
+                name="projectId"
+                value={draft.projectId}
+                onChange={(e) => onChange({ projectId: e.target.value })}
+              >
+                <option value="">Keine (persönliche Aufgabe)</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
         <Field id="title" label="Titel" hint="Pflichtfeld, höchstens 200 Zeichen." error={errors.title}>
           {(p) => (
             <input {...p} type="text" name="title" value={draft.title} onChange={(e) => onChange({ title: e.target.value })} />

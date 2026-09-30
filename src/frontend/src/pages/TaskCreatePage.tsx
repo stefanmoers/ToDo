@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createTask } from '../api/tasks'
 import { useAuth } from '../features/auth/AuthContext'
+import { useAllProjects } from '../features/projects/useProjectList'
 import { emptyDraft, toInput, type TaskDraft } from '../features/tasks/draft'
 import { mapTaskApiError } from '../features/tasks/errors'
 import { TaskForm } from '../features/tasks/TaskForm'
@@ -13,6 +14,7 @@ export default function TaskCreatePage() {
   usePageTitle('Neue Aufgabe')
   const { user } = useAuth()
   const navigate = useNavigate()
+  const projects = useAllProjects()
   const [draft, setDraft] = useState<TaskDraft>(() => emptyDraft(user!.timeZone))
   const [errors, setErrors] = useState<FormErrors>({})
   const [general, setGeneral] = useState<string>()
@@ -60,6 +62,7 @@ export default function TaskCreatePage() {
         busyLabel="Aufgabe wird angelegt …"
         submitLabel="Aufgabe anlegen"
         showStatus={false}
+        projects={projects}
         onSubmit={onSubmit}
         cancelTo="/"
       />

@@ -5,6 +5,10 @@ import { AuthProvider } from './features/auth/AuthContext'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
+import ProjectCreatePage from './pages/ProjectCreatePage'
+import ProjectDetailPage from './pages/ProjectDetailPage'
+import ProjectEditPage from './pages/ProjectEditPage'
+import ProjectListPage from './pages/ProjectListPage'
 import RegisterPage from './pages/RegisterPage'
 import TaskCreatePage from './pages/TaskCreatePage'
 import TaskDetailPage from './pages/TaskDetailPage'
@@ -23,6 +27,10 @@ export default function App() {
             <Route path="aufgaben/neu" element={<TaskCreatePage />} />
             <Route path="aufgaben/:taskId" element={<TaskDetailPage />} />
             <Route path="aufgaben/:taskId/bearbeiten" element={<TaskEditPage />} />
+            <Route path="projekte" element={<ProjectListPage />} />
+            <Route path="projekte/neu" element={<ProjectCreatePage />} />
+            <Route path="projekte/:projectId" element={<ProjectDetailPage />} />
+            <Route path="projekte/:projectId/bearbeiten" element={<ProjectEditPage />} />
             <Route path="profil" element={<ProfilePage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />

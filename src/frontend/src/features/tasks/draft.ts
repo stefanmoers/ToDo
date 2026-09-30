@@ -2,6 +2,8 @@ import type { Task, TaskInput, TaskPriority, TaskStatus } from '../../api/tasks'
 
 /** Formularentwurf: alle Felder als Strings, damit die Eingabeelemente kontrolliert bleiben können. */
 export interface TaskDraft {
+  /** Leerer String = persönliche Aufgabe (kein Projekt). */
+  projectId: string
   title: string
   description: string
   priority: TaskPriority
@@ -16,6 +18,7 @@ export interface TaskDraft {
 
 export function emptyDraft(defaultTimeZone: string): TaskDraft {
   return {
+    projectId: '',
     title: '',
     description: '',
     priority: 'NORMAL',
@@ -30,6 +33,7 @@ export function emptyDraft(defaultTimeZone: string): TaskDraft {
 
 export function toDraft(task: Task, defaultTimeZone: string): TaskDraft {
   return {
+    projectId: task.projectId ?? '',
     title: task.title,
     description: task.description ?? '',
     priority: task.priority,
@@ -48,6 +52,7 @@ export function toInput(draft: TaskDraft): TaskInput {
   const hasDate = draft.dueDate.trim().length > 0
   const hasTime = hasDate && draft.dueTime.trim().length > 0
   return {
+    projectId: draft.projectId.trim().length === 0 ? null : draft.projectId,
     title,
     description,
     priority: draft.priority,
@@ -59,6 +64,7 @@ export function toInput(draft: TaskDraft): TaskInput {
 }
 
 const COMPARABLE_FIELDS: (keyof TaskDraft)[] = [
+  'projectId',
   'title',
   'description',
   'priority',

@@ -43,6 +43,9 @@ export default function Layout() {
                 </NavLink>
               </li>
               <li>
+                <NavLink to="/projekte">Projekte</NavLink>
+              </li>
+              <li>
                 <NavLink to="/profil">Mein Profil</NavLink>
               </li>
               <li>

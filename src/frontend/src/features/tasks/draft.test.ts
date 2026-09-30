@@ -41,6 +41,7 @@ describe('toInput', () => {
     const draft = toDraft(task, 'Europe/Berlin')
     const input = toInput(draft)
     expect(input).toEqual({
+      projectId: null,
       title: 'Einkaufen',
       description: 'Milch, Brot',
       priority: 'HIGH',

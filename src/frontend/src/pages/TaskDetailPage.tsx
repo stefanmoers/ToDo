@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
+import { useAllProjects } from '../features/projects/useProjectList'
 import { DeleteTaskDialog } from '../features/tasks/DeleteTaskDialog'
 import { formatDue, formatTimestamp } from '../features/tasks/format'
 import { PRIORITY_LABELS, STATUS_LABELS } from '../features/tasks/labels'
@@ -17,6 +18,7 @@ export default function TaskDetailPage() {
 function TaskDetail({ taskId }: { taskId: string }) {
   const { user } = useAuth()
   const { state, reload, replace } = useTask(taskId)
+  const projects = useAllProjects()
   const navigate = useNavigate()
   const location = useLocation()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -63,6 +65,17 @@ function TaskDetail({ taskId }: { taskId: string }) {
         </div>
       )}
       <dl className="facts">
+        {task.projectId && (
+          <>
+            <dt>Projekt</dt>
+            <dd>
+              {(() => {
+                const project = projects.find((p) => p.id === task.projectId)
+                return project ? <Link to={`/projekte/${project.id}`}>{project.name}</Link> : 'Wird geladen …'
+              })()}
+            </dd>
+          </>
+        )}
         <dt>Status</dt>
         <dd>{STATUS_LABELS[task.status]}</dd>
         <dt>Priorität</dt>
