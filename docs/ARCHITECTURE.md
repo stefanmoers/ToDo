@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entscheidungen](adr/README.md)
 
-**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c, `project` vorerst ohne Mitgliedschaft) sind umgesetzt; `notification` ist weiterhin Planung.
+**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b), `project` und `tag` (seit M1c) sowie die Mitgliedschaft/Zuweisung in `project`/`task` (seit M2, US-060 bis US-062) sind umgesetzt; `notification` ist weiterhin Planung.
 
 ## Das System erklären
 

@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023 und M1c (US-040 bis 043, US-050 bis 053, US-110) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der Bearbeiter-Anteil von US-051 sowie der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleiben offen; Zusammenarbeit (M2) ist weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) sowie aus M2 die Mitgliedschaft und Zuweisung (US-060 bis US-062) sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen; die übrigen M2-Stories (Unteraufgaben, Kommentare, Aktivitätshistorie, Passwort-Reset, Kontoverwaltung) sind weiterhin offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -180,7 +180,7 @@ Als Benutzer möchte ich eine Sitzung zuverlässig beenden.
 
 ### US-022 – Zugriff auf eigene und freigegebene Daten begrenzen · M1/M2 · IN ARBEIT
 
-> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version), auch für ein Konto mit Rolle `ADMIN` (`TaskApiIT`). Offen: Projektmitgliedschaft ab M2.
+> **Stand:** M1a-Teil (Konten, kein Fremdzugriff auf Profil, Deaktivierung wirkt bei nächster Anfrage) getestet. M1b-Teil (Aufgaben) umgesetzt und getestet: jede Aufgaben-Operation filtert serverseitig nach Ersteller (`TaskRepository.findAccessible*`), fremde und nicht existierende Aufgaben sind ununterscheidbar (`404`, kein `409` trotz korrekter Version), auch für ein Konto mit Rolle `ADMIN` (`TaskApiIT`). M2-Teil (Projektmitgliedschaft) umgesetzt und getestet (`ProjectMembershipApiIT`, `TaskAssignmentApiIT`): „zugänglich“ schließt seit US-060 Eigentümer *und* Mitglieder ein (`ProjectRepository.ACCESSIBLE_CONDITION`); für eigentümerspezifische Aktionen (Mitglied aufnehmen/entfernen, Projekt löschen) liefert ein Mitglied ohne Eigentümerrechte bewusst `403` statt `404` (die Zugehörigkeit ist bekannt, nur die Handlung ist ihm nicht erlaubt), fremde Dritte weiterhin `404`. Offen: Berechtigungsprüfung für Unteraufgaben (US-070/071) und Kommentare (US-080), da diese Daten erst mit ihnen entstehen.
 
 Als Benutzer möchte ich meine privaten Inhalte vor anderen schützen.
 
@@ -212,7 +212,7 @@ Als Benutzer möchte ich eine Aufgabe bereits mit einem Titel erstellen können.
 
 ### US-031 – Aufgabe ansehen · M1/M2 · IN ARBEIT
 
-> **Stand:** Umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller, Projekt, Tags und Zeitstempel; unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Bearbeiter/Unteraufgaben/Kommentare/Aktivitäten (M2).
+> **Stand:** Umgesetzt und getestet: Detailansicht und paginierte Liste (Standard 25/max. 100, stabile Sortierung `createdAt`/`id`) zeigen Titel, Beschreibung, Status, Priorität, Fälligkeit, Ersteller, Bearbeiter, Projekt, Tags und Zeitstempel; Ersteller- und Bearbeiter-Name werden serverseitig aufgelöst (`UserAccess.summarize`) statt roher IDs. Unzugängliche/nicht vorhandene Aufgaben liefern eine einheitliche Nicht-gefunden-Ansicht ohne fremde Daten. Offen: Unteraufgaben/Kommentare/Aktivitäten (M2).
 
 Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 
@@ -222,7 +222,7 @@ Als berechtigter Benutzer möchte ich alle Informationen einer Aufgabe sehen.
 
 ### US-032 – Aufgabe bearbeiten · M1/M2 · IN ARBEIT
 
-> **Stand:** M1-Teil umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel/Beschreibung/Priorität/Status/Fälligkeit änderbar, Version steigt nur bei tatsächlicher Änderung, veraltete Version liefert `409` mit erhaltenem Formularentwurf; die Oberfläche zeigt die abweichenden Felder und lässt bewusst zwischen „aktuelle Fassung“ und „eigene Eingabe“ wählen (US-120). Offen: Bearbeiter (M2), Projektwechsel-Regeln (M1c/M2).
+> **Stand:** M1-Teil umgesetzt und getestet (`TaskApiIT`, `TaskPages.test.tsx`, `tasks.spec.ts`): Titel/Beschreibung/Priorität/Status/Fälligkeit änderbar, Version steigt nur bei tatsächlicher Änderung, veraltete Version liefert `409` mit erhaltenem Formularentwurf; die Oberfläche zeigt die abweichenden Felder und lässt bewusst zwischen „aktuelle Fassung“ und „eigene Eingabe“ wählen (US-120). M2-Teil umgesetzt und getestet (`TaskAssignmentApiIT`): Bearbeiter ist änderbar (nur Eigentümer/Mitglieder des aktuellen Projekts bzw. bei persönlichen Aufgaben nur der Ersteller selbst sind zuweisbar); ein Projektwechsel ist enger geregelt als die übrige Bearbeitung – nur Ersteller oder Eigentümer des *aktuellen* Projekts dürfen die Aufgabe einem anderen Projekt zuordnen, das Zielprojekt muss dem Handelnden zugänglich sein.
 
 Als berechtigter Benutzer möchte ich Aufgabenangaben ändern.
 
@@ -284,7 +284,7 @@ Als Benutzer möchte ich Aufgaben mit oder ohne Termin verwalten.
 
 ### US-040 – Projekt anlegen · M1 · ERLEDIGT
 
-> **Stand:** Umgesetzt und getestet (`ProjectApiIT`, `ProjectPages.test.tsx`, `projects.spec.ts`): Name Pflicht (1–100 Zeichen), Beschreibung optional (≤10.000 Zeichen), Ersteller wird Eigentümer, neues Projekt ist für andere Benutzer nicht sichtbar. Mitgliedschaft/Teilen folgt erst mit US-060 (M2).
+> **Stand:** Umgesetzt und getestet (`ProjectApiIT`, `ProjectPages.test.tsx`, `projects.spec.ts`): Name Pflicht (1–100 Zeichen), Beschreibung optional (≤10.000 Zeichen), Ersteller wird Eigentümer, neues Projekt ist für andere Benutzer nicht sichtbar, bis der Eigentümer es über US-060 teilt.
 
 Als Benutzer möchte ich Aufgaben nach einem Thema bündeln.
 
@@ -304,7 +304,7 @@ Als Eigentümer möchte ich Name und Beschreibung ändern.
 
 ### US-042 – Projekt ohne Aufgabenverlust löschen · M1/M2 · IN ARBEIT
 
-> **Stand:** M1-Teil umgesetzt und getestet (`ProjectApiIT.loeschenOhneAufgabenverlustLoestAufgabenTransaktional`, `projects.spec.ts`): Löschen entfernt den Projektbezug transaktional (`task.project_id = null`), die Aufgabe bleibt erhalten und wird zur persönlichen Aufgabe ihres Erstellers; die Bestätigung nennt diese Wirkung. Offen: Bereinigung fremder Zuweisungen/Erinnerungen (erst ab M2 relevant, da es vor US-060 keine Zuweisungen gibt).
+> **Stand:** M1-Teil umgesetzt und getestet (`ProjectApiIT.loeschenOhneAufgabenverlustLoestAufgabenTransaktional`, `projects.spec.ts`): Löschen entfernt den Projektbezug transaktional (`task.project_id = null`), die Aufgabe bleibt erhalten und wird zur persönlichen Aufgabe ihres Erstellers; die Bestätigung nennt diese Wirkung. M2-Teil umgesetzt und getestet (`ProjectMembershipApiIT.mitgliedEntfernenBereinigtZuweisungAberNichtDieAufgabeSelbst`, `ProjectMembershipApiIT.projektMitProjektTagsLaesstSichJetztLoeschen`): Projektlöschung bereinigt zusätzlich alle Mitgliedschaften, projektbezogenen Tags und deren Zuordnungen sowie Zuweisungen an Projektaufgaben transaktional. Erinnerungen bleiben offen (erst M3/US-100).
 
 Als Eigentümer möchte ich ein Projekt auflösen, ohne Aufgaben zu verlieren.
 
@@ -336,7 +336,7 @@ Als Benutzer möchte ich Aufgaben anhand von Text finden.
 
 ### US-051 – Aufgaben filtern · M1/M2 · IN ARBEIT
 
-> **Stand:** M1-Teil umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): Filter für Status, Priorität, Projekt, Tag, Fälligkeitsbereich (`dueDateFrom`/`dueDateTo`, vergleicht das rohe Fälligkeitsdatum) und Überfälligkeit; unterschiedliche Filterarten werden mit UND verknüpft, mehrere Werte derselben Art (z. B. zwei Status) mit ODER. Aktive Filter sind über die Bedienelemente selbst sichtbar und über „Alle Filter zurücksetzen“ per Tastatur zurücksetzbar; die Seitengröße bleibt durch `Paging` begrenzt. Offen: Bearbeiter-Filter (erst ab M2/US-060, da es vor Zuweisungen keinen Bearbeiter gibt).
+> **Stand:** M1-Teil umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): Filter für Status, Priorität, Projekt, Tag, Fälligkeitsbereich (`dueDateFrom`/`dueDateTo`, vergleicht das rohe Fälligkeitsdatum) und Überfälligkeit; unterschiedliche Filterarten werden mit UND verknüpft, mehrere Werte derselben Art (z. B. zwei Status) mit ODER. Aktive Filter sind über die Bedienelemente selbst sichtbar und über „Alle Filter zurücksetzen“ per Tastatur zurücksetzbar; die Seitengröße bleibt durch `Paging` begrenzt. M2-Teil umgesetzt und getestet (`TaskAssignmentApiIT.bearbeiterFilterZeigtNurZugewieseneAufgaben`): Bearbeiter-Filter „Nur mir zugewiesene Aufgaben“ ergänzt die bestehenden Filter nach demselben UND/ODER-Muster.
 
 Als Benutzer möchte ich relevante Aufgaben eingrenzen.
 
@@ -366,7 +366,9 @@ Als Benutzer möchte ich häufige Ansichten direkt öffnen.
 
 ## 11. EPIC-07 – Zusammenarbeit
 
-### US-060 – Projekt teilen · M2 · OFFEN
+### US-060 – Projekt teilen · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`ProjectMembershipApiIT`, `ProjectPages.test.tsx`, `membership.spec.ts`): der Eigentümer nimmt über die genaue Login-E-Mail ein aktives Konto auf (`POST /api/v1/projects/{id}/members`); unbekannte oder deaktivierte E-Mails werden am Feld gemeldet, wiederholte Aufnahme desselben Kontos dupliziert nichts, der Eigentümer selbst kann nicht als Mitglied aufgenommen werden. Das Mitglied erhält direkten Zugriff ohne separate Einladungsannahme (Arbeitsannahme, siehe [DOMAIN_MODEL.md](docs/DOMAIN_MODEL.md)); die Oberfläche benennt diese Wirkung. Nur der Eigentümer sieht die Verwaltung; Mitglieder sehen die Mitgliederliste, aber keine Aufnehmen-/Entfernen-Bedienelemente.
 
 Als Eigentümer möchte ich registrierte Benutzer zur Zusammenarbeit aufnehmen.
 
@@ -374,7 +376,9 @@ Als Eigentümer möchte ich registrierte Benutzer zur Zusammenarbeit aufnehmen.
 - Mitgliedschaft ist eindeutig und dauerhaft; wiederholte Aufnahme dupliziert nichts.
 - Mitglied erhält Zugriff auf Projektaufgaben. Arbeitsannahme: direkte Aufnahme ohne separate Einladungsannahme; UI benennt diese Wirkung.
 
-### US-061 – Mitglied entfernen · M2 · OFFEN
+### US-061 – Mitglied entfernen · M2 · ERLEDIGT
+
+> **Stand:** Umgesetzt und getestet (`ProjectMembershipApiIT`, `ProjectPages.test.tsx`, `membership.spec.ts`): Entfernen (`DELETE /api/v1/projects/{id}/members/{userId}`) ist dem Eigentümer vorbehalten, hinter einem zugänglichen Bestätigungsdialog (WAI-ARIA-Dialogmuster, Fokus-Rückkehr, Escape). Der entfernte Benutzer verliert sofort den Zugriff (`404` statt `200`/`403` bei weiteren Aufrufen); seine Zuweisungen an Aufgaben dieses Projekts werden transaktional entfernt, die Aufgaben selbst bleiben erhalten. Der Eigentümer kann nicht über diesen Weg entfernt werden (`404`, da er kein Mitgliedschaftsdatensatz ist). Erinnerungen sind noch nicht betroffen (erst M3/US-100).
 
 Als Eigentümer möchte ich eine Freigabe beenden.
 
@@ -382,7 +386,9 @@ Als Eigentümer möchte ich eine Freigabe beenden.
 - Historische Kommentare und Aktivitäten bleiben erhalten.
 - Eigentümer kann nicht über Mitgliederentfernung entfernt werden; parallele Zuweisung darf keine ungültige Referenz hinterlassen.
 
-### US-062 – Aufgabe zuweisen · M2 · OFFEN
+### US-062 – Aufgabe zuweisen · M2 · IN ARBEIT
+
+> **Stand:** Umgesetzt und getestet (`TaskAssignmentApiIT`, `TaskPages.test.tsx`, `membership.spec.ts`): eine Aufgabe mit Projektbezug ist nur an den Projekteigentümer oder ein aktuelles Mitglied zuweisbar, eine persönliche Aufgabe (ohne Projekt) nur an den Ersteller selbst; ungültige Zuweisungen werden am Feld abgewiesen. Die Zuweisung ist über das Bearbeitungsformular entfernbar (leere Auswahl) und teilt sich die vorhandene Versionsprüfung von US-032/US-120 (kein separater Konfliktpfad). Die Aufgabenliste bietet einen Bearbeiter-Filter „Nur mir zugewiesene Aufgaben“ (US-051-Ergänzung). Offen: „Änderung wird protokolliert“ ist noch nicht erfüllt, da die Aktivitätshistorie erst mit US-081 entsteht; bis dahin bleibt diese Story trotz vollständiger Zuweisungsfunktion nicht `ERLEDIGT`.
 
 Als Projektmitglied möchte ich die Zuständigkeit sichtbar machen.
 
