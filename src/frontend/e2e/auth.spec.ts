@@ -23,6 +23,15 @@ test('Registrieren, Neuladen, Abmelden und erneut Anmelden', async ({ page }) =>
   await expect(page.getByText('Hallo E2E Person!')).toBeVisible()
 })
 
+test('„Passwort vergessen?“ führt zu einem Hinweis statt einer echten Wiederherstellung (US-013)', async ({ page }) => {
+  await page.goto('/anmelden')
+  await page.getByRole('link', { name: 'Passwort vergessen?' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Passwort vergessen' })).toBeVisible()
+  await expect(page.getByText('Die Passwort-Wiederherstellung ist in diesem Demo-Projekt nicht verfügbar.')).toBeVisible()
+  await page.getByRole('link', { name: 'Zurück zur Anmeldung' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Anmelden' })).toBeVisible()
+})
+
 test('Falsche Zugangsdaten zeigen eine allgemeine Meldung und behalten die E-Mail', async ({ page }) => {
   await page.goto('/anmelden')
   await page.getByLabel('E-Mail-Adresse').fill('unbekannt@example.test')

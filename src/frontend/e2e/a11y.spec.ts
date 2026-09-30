@@ -18,6 +18,13 @@ test('axe: Anmeldung normal und mit Fehlern', async ({ page }) => {
   await scan(page)
 })
 
+test('axe: Passwort vergessen zeigt einen Hinweis statt einer echten Wiederherstellung (US-013)', async ({ page }) => {
+  await page.goto('/anmelden')
+  await page.getByRole('link', { name: 'Passwort vergessen?' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Passwort vergessen' })).toBeVisible()
+  await scan(page)
+})
+
 test('axe: Registrierung normal und mit Fehlern', async ({ page }) => {
   await page.goto('/registrieren')
   await expect(page.getByRole('heading', { level: 1, name: 'Registrieren' })).toBeVisible()
