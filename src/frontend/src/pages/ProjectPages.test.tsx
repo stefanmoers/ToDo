@@ -131,3 +131,77 @@ describe('Projekt löschen', () => {
     expect(await screen.findByText(/wurde gelöscht/)).toBeInTheDocument()
   })
 })
+
+describe('Mitglieder', () => {
+  it('Eigentümer nimmt ein Mitglied per E-Mail auf', async () => {
+    const project = testProject()
+    let members: { userId: string; displayName: string; addedAt: string }[] = []
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/projects/${PROJECT_ID}`]: () => ({ body: project }),
+      [`GET /api/v1/projects/${PROJECT_ID}/members`]: () => ({ body: members }),
+      [`POST /api/v1/projects/${PROJECT_ID}/members`]: () => {
+        const member = { userId: 'mem-1', displayName: 'Bruno Bearbeiter', addedAt: '2026-09-30T05:00:00Z' }
+        members = [member]
+        return { status: 201, body: member }
+      },
+    })
+    renderAt(`/projekte/${PROJECT_ID}`)
+    expect(await screen.findByText('Noch keine Mitglieder außer dir.')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('Mitglied per E-Mail aufnehmen'), 'bruno@example.test')
+    await userEvent.click(screen.getByRole('button', { name: 'Aufnehmen' }))
+    expect(await screen.findByText('„Bruno Bearbeiter“ wurde aufgenommen.')).toBeInTheDocument()
+    expect(screen.getByText('Bruno Bearbeiter')).toBeInTheDocument()
+  })
+
+  it('zeigt einen Feldfehler bei unbekannter E-Mail', async () => {
+    const project = testProject()
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/projects/${PROJECT_ID}`]: () => ({ body: project }),
+      [`GET /api/v1/projects/${PROJECT_ID}/members`]: () => ({ body: [] }),
+      [`POST /api/v1/projects/${PROJECT_ID}/members`]: () => ({
+        status: 400,
+        body: { code: 'VALIDATION_FAILED', message: 'x', fieldErrors: [{ field: 'email', code: 'NOT_FOUND', message: 'Kein Konto mit dieser E-Mail-Adresse gefunden.' }] },
+      }),
+    })
+    renderAt(`/projekte/${PROJECT_ID}`)
+    await userEvent.type(await screen.findByLabelText('Mitglied per E-Mail aufnehmen'), 'unbekannt@example.test')
+    await userEvent.click(screen.getByRole('button', { name: 'Aufnehmen' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Kein Konto mit dieser E-Mail-Adresse gefunden.')
+  })
+
+  it('Nicht-Eigentümer sieht Mitglieder, aber keine Verwaltung', async () => {
+    const project = testProject({ ownerId: 'anderer-eigentuemer' })
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/projects/${PROJECT_ID}`]: () => ({ body: project }),
+      [`GET /api/v1/projects/${PROJECT_ID}/members`]: () => ({
+        body: [{ userId: testUser.id, displayName: 'Test Person', addedAt: '2026-09-30T05:00:00Z' }],
+      }),
+    })
+    renderAt(`/projekte/${PROJECT_ID}`)
+    expect(await screen.findByText('Test Person')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Entfernen/ })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Mitglied per E-Mail aufnehmen')).not.toBeInTheDocument()
+  })
+
+  it('Eigentümer entfernt ein Mitglied über den Bestätigungsdialog', async () => {
+    const project = testProject()
+    let members = [{ userId: 'mem-1', displayName: 'Bruno Bearbeiter', addedAt: '2026-09-30T05:00:00Z' }]
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/projects/${PROJECT_ID}`]: () => ({ body: project }),
+      [`GET /api/v1/projects/${PROJECT_ID}/members`]: () => ({ body: members }),
+      [`DELETE /api/v1/projects/${PROJECT_ID}/members/mem-1`]: () => {
+        members = []
+        return { status: 204 }
+      },
+    })
+    renderAt(`/projekte/${PROJECT_ID}`)
+    await userEvent.click(await screen.findByRole('button', { name: /^Entfernen/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Endgültig entfernen' }))
+    expect(await screen.findByText('„Bruno Bearbeiter“ wurde entfernt.')).toBeInTheDocument()
+    expect(await screen.findByText('Noch keine Mitglieder außer dir.')).toBeInTheDocument()
+  })
+})

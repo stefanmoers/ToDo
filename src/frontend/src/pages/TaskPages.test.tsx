@@ -125,6 +125,22 @@ describe('Aufgabenliste', () => {
     expect(await screen.findByRole('link', { name: 'Steuererklärung' })).toBeInTheDocument()
   })
 
+  it('filtert über „Nur mir zugewiesene Aufgaben“ (US-062)', async () => {
+    const assignedToMe = testTask({ assigneeId: testUser.id, assigneeDisplayName: testUser.displayName })
+    mockApi({
+      ...loggedIn,
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: pageOf([testTask()], { totalElements: 1 }) }),
+      [`GET /api/v1/tasks?page=0&size=25&assigneeId=${testUser.id}`]: () => ({
+        body: pageOf([assignedToMe], { totalElements: 1 }),
+      }),
+    })
+    renderAt('/')
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    await userEvent.click(screen.getByLabelText('Nur mir zugewiesene Aufgaben'))
+    await screen.findByRole('link', { name: 'Einkaufen' })
+    expect(screen.getByLabelText('Nur mir zugewiesene Aufgaben')).toBeChecked()
+  })
+
   it('filtert über eine Status-Checkbox', async () => {
     const done = testTask({ status: 'DONE' })
     mockApi({
@@ -212,9 +228,64 @@ describe('Aufgabe anlegen', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Es ist ein Fehler passiert.')
     expect(screen.getByLabelText('Titel')).toHaveValue('X')
   })
+
+  it('bietet nach Projektauswahl den Eigentümer und Mitglieder als Bearbeiter an (US-062)', async () => {
+    const project = {
+      id: 'proj-1',
+      name: 'Team-Projekt',
+      ownerId: 'owner-1',
+      ownerDisplayName: 'Frau Eigentümer',
+      createdAt: '2026-09-30T05:00:00Z',
+      updatedAt: '2026-09-30T05:00:00Z',
+      version: 0,
+    }
+    const created = testTask({ id: '999', title: 'Team-Aufgabe', projectId: project.id })
+    const { calls } = mockApi({
+      ...loggedIn,
+      'GET /api/v1/projects?page=0&size=100': () => ({ body: pageOf([project], { totalElements: 1 }) }),
+      [`GET /api/v1/projects/${project.id}`]: () => ({ body: project }),
+      [`GET /api/v1/projects/${project.id}/members`]: () => ({
+        body: [{ userId: 'mem-1', displayName: 'Herr Mitglied', addedAt: '2026-09-30T05:00:00Z' }],
+      }),
+      'POST /api/v1/tasks': () => ({ status: 201, body: created }),
+      'GET /api/v1/tasks/999': () => ({ body: created }),
+    })
+    renderAt('/aufgaben/neu')
+    await userEvent.selectOptions(await screen.findByLabelText('Projekt'), 'Team-Projekt')
+    await screen.findByRole('option', { name: 'Frau Eigentümer' })
+    expect(screen.getByRole('option', { name: 'Herr Mitglied' })).toBeInTheDocument()
+    await userEvent.selectOptions(screen.getByLabelText('Bearbeiter'), 'Herr Mitglied')
+    await userEvent.type(screen.getByLabelText('Titel'), 'Team-Aufgabe')
+    await userEvent.click(screen.getByRole('button', { name: 'Aufgabe anlegen' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Team-Aufgabe' })).toBeInTheDocument()
+    expect(calls.find((c) => c.key === 'POST /api/v1/tasks')?.body).toMatchObject({
+      projectId: project.id,
+      assigneeId: 'mem-1',
+    })
+  })
 })
 
 describe('Aufgabe ansehen', () => {
+  it('zeigt den zugewiesenen Bearbeiter mit Namen (US-062)', async () => {
+    const task = testTask({ assigneeId: 'mem-1', assigneeDisplayName: 'Herr Mitglied' })
+    mockApi({
+      ...loggedIn,
+      [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }),
+      'GET /api/v1/tags': () => ({ body: [] }),
+    })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+    expect(screen.getByText('Herr Mitglied')).toBeInTheDocument()
+  })
+
+  it('zeigt „Keine Zuweisung“ ohne Bearbeiter', async () => {
+    const task = testTask()
+    mockApi({ ...loggedIn, [`GET /api/v1/tasks/${TASK_ID}`]: () => ({ body: task }), 'GET /api/v1/tags': () => ({ body: [] }) })
+    renderAt(`/aufgaben/${TASK_ID}`)
+    await screen.findByRole('heading', { level: 1, name: 'Einkaufen' })
+    expect(screen.getByText('Keine Zuweisung')).toBeInTheDocument()
+  })
+
   it('zeigt „Aufgabe nicht gefunden" bei 404', async () => {
     mockApi({
       ...loggedIn,
