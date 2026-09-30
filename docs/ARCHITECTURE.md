@@ -2,7 +2,7 @@
 
 [Zur Übersicht](../README.md) · [Entscheidungen](adr/README.md)
 
-**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c) sind umgesetzt. Aus M2 sind Mitgliedschaft/Zuweisung in `project`/`task` (US-060 bis US-062), Unteraufgaben, Kommentare und Aktivitätshistorie in `task` (US-070, US-071, US-080, US-081) sowie die Kontenadministration in `user` (US-014; US-013 mit reduziertem Umfang, siehe BACKLOG.md) dazugekommen; `notification` ist weiterhin Planung. Damit ist M2 vollständig umgesetzt.
+**Status:** Verbindliches Zielbild. Die Module `common` und `user` (seit M0/M1a), `task` (seit M1b) sowie `project` und `tag` (seit M1c) sind umgesetzt. Aus M2 sind Mitgliedschaft/Zuweisung in `project`/`task` (US-060 bis US-062), Unteraufgaben, Kommentare und Aktivitätshistorie in `task` (US-070, US-071, US-080, US-081) sowie die Kontenadministration in `user` (US-014; US-013 mit reduziertem Umfang, siehe BACKLOG.md) dazugekommen; `notification` ist weiterhin Planung. Damit ist M2 bis auf einen offenen Testfall in US-042 (Löschtest mit mehreren Erstellern einschließlich eines deaktivierten Kontos) umgesetzt.
 
 ## Das System erklären
 

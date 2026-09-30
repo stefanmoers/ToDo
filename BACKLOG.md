@@ -1,6 +1,6 @@
 # UltimateTodo – Produkt- und Umsetzungsbacklog
 
-**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) und M2 sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** M2 umfasst Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare, die Aktivitätshistorie und Kontenadministration (US-060 bis US-062, US-070, US-071, US-080, US-081, US-014), inklusive der zugehörigen M2-Teile von US-022/031/032/042/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. US-013 (Passwort-Reset) ist mit reduziertem Umfang erledigt: eine Auftraggeber-Entscheidung nimmt die echte Wiederherstellung aus diesem Demo-Projekt heraus (siehe die Story selbst). Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
+**Stand: 30.09.2026. M0, M1a, der Aufgaben-Kern (M1b), US-023, M1c (US-040 bis 043, US-050 bis 053, US-110) und M2 bis auf einen offenen Testfall sind umgesetzt und automatisiert geprüft; die Frischinstallations-Probe (US-160) ist für ihren M1-Anteil durchgeführt.** M2 umfasst Mitgliedschaft, Zuweisung, Unteraufgaben, Kommentare, die Aktivitätshistorie und Kontenadministration (US-060 bis US-062, US-070, US-071, US-080, US-081, US-014), inklusive der zugehörigen M2-Teile von US-022/031/032/051 sowie der zuvor an US-081 hängenden Aktivitäts-Anteile von US-034/035/121. US-042 bleibt `IN ARBEIT`: ihr eigenes Akzeptanzkriterium verlangt einen Löschtest mit mehreren Erstellern einschließlich eines deaktivierten Kontos, den es bisher nicht gibt. US-013 (Passwort-Reset) ist mit reduziertem Umfang erledigt: eine Auftraggeber-Entscheidung nimmt die echte Wiederherstellung aus diesem Demo-Projekt heraus (siehe die Story selbst). Der M4-Anteil von US-160 (Update, Sicherung, Wiederherstellung) bleibt offen. Den genauen Stand je Story zeigen die `> **Stand:**`-Vermerke unter der jeweiligen Story.
 
 [Einstieg](README.md) · [Fachregeln](docs/DOMAIN_MODEL.md) · [Architektur](docs/ARCHITECTURE.md)
 
@@ -338,7 +338,7 @@ Als Benutzer möchte ich Aufgaben anhand von Text finden.
 - Nur zugängliche Aufgaben zählen als Treffer; Seitenzahlen verraten keine fremden Treffer.
 - Leerer Suchtext zeigt die erlaubte Liste; leere Trefferliste erklärt das Ergebnis.
 
-### US-051 – Aufgaben filtern · M1/M2 · IN ARBEIT
+### US-051 – Aufgaben filtern · M1/M2 · ERLEDIGT
 
 > **Stand:** M1-Teil umgesetzt und getestet (`TaskListQueryApiIT`, `TaskPages.test.tsx`, `tasklist-query.spec.ts`): Filter für Status, Priorität, Projekt, Tag, Fälligkeitsbereich (`dueDateFrom`/`dueDateTo`, vergleicht das rohe Fälligkeitsdatum) und Überfälligkeit; unterschiedliche Filterarten werden mit UND verknüpft, mehrere Werte derselben Art (z. B. zwei Status) mit ODER. Aktive Filter sind über die Bedienelemente selbst sichtbar und über „Alle Filter zurücksetzen“ per Tastatur zurücksetzbar; die Seitengröße bleibt durch `Paging` begrenzt. M2-Teil umgesetzt und getestet (`TaskAssignmentApiIT.bearbeiterFilterZeigtNurZugewieseneAufgaben`): Bearbeiter-Filter „Nur mir zugewiesene Aufgaben“ ergänzt die bestehenden Filter nach demselben UND/ODER-Muster.
 
