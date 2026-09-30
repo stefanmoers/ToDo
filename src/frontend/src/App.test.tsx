@@ -28,4 +28,24 @@ describe('App', () => {
     renderAt('/gibt-es-nicht')
     expect(await screen.findByRole('heading', { level: 1, name: 'Seite nicht gefunden' })).toBeInTheDocument()
   })
+
+  it('zeigt den Administration-Link nur Konten mit Rolle ADMIN (US-014)', async () => {
+    mockApi({
+      'GET /api/v1/auth/me': () => ({ body: testUser }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: { items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 } }),
+    })
+    renderAt('/')
+    await screen.findByText(/Hallo Max!/)
+    expect(screen.queryByRole('link', { name: 'Administration' })).not.toBeInTheDocument()
+  })
+
+  it('zeigt den Administration-Link für Konten mit Rolle ADMIN', async () => {
+    mockApi({
+      'GET /api/v1/auth/me': () => ({ body: { ...testUser, role: 'ADMIN' } }),
+      'GET /api/v1/tasks?page=0&size=25': () => ({ body: { items: [], page: 0, size: 25, totalElements: 0, totalPages: 0 } }),
+    })
+    renderAt('/')
+    await screen.findByText(/Hallo Max!/)
+    expect(screen.getByRole('link', { name: 'Administration' })).toBeInTheDocument()
+  })
 })

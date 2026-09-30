@@ -2,9 +2,11 @@ import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './features/auth/AuthContext'
+import AdminUsersPage from './pages/AdminUsersPage'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import PasswordResetUnavailablePage from './pages/PasswordResetUnavailablePage'
 import ProfilePage from './pages/ProfilePage'
 import ProjectCreatePage from './pages/ProjectCreatePage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
@@ -24,6 +26,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="anmelden" element={<LoginPage />} />
           <Route path="registrieren" element={<RegisterPage />} />
+          <Route path="passwort-vergessen" element={<PasswordResetUnavailablePage />} />
           <Route element={<RequireAuth />}>
             <Route index element={<TaskListPage />} />
             <Route path="uebersicht" element={<DashboardPage />} />
@@ -36,6 +39,7 @@ export default function App() {
             <Route path="projekte/:projectId/bearbeiten" element={<ProjectEditPage />} />
             <Route path="tags" element={<TagsPage />} />
             <Route path="profil" element={<ProfilePage />} />
+            <Route path="administration" element={<AdminUsersPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Route>

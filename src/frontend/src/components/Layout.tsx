@@ -54,6 +54,11 @@ export default function Layout() {
               <li>
                 <NavLink to="/profil">Mein Profil</NavLink>
               </li>
+              {user.role === 'ADMIN' && (
+                <li>
+                  <NavLink to="/administration">Administration</NavLink>
+                </li>
+              )}
               <li>
                 <button type="button" className="link-button" onClick={onLogout}>
                   Abmelden ({user.displayName})
@@ -76,7 +81,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer>
-        <p>Referenzprojekt – Entwicklungsstand M1c</p>
+        <p>Referenzprojekt – Entwicklungsstand M2</p>
       </footer>
       <SessionTimeoutWarning />
       <SessionExpiredDialog />

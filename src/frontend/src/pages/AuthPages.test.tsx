@@ -58,6 +58,16 @@ describe('Anmeldung', () => {
       password: 'ein langes passwort',
     })
   })
+
+  it('„Passwort vergessen?“ führt zu einem Hinweis statt einer echten Wiederherstellung (US-013)', async () => {
+    mockApi({ 'GET /api/v1/auth/me': () => unauth })
+    renderAt('/anmelden')
+    await userEvent.click(await screen.findByRole('link', { name: 'Passwort vergessen?' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Passwort vergessen' })).toBeInTheDocument()
+    expect(screen.getByText('Die Passwort-Wiederherstellung ist in diesem Demo-Projekt nicht verfügbar.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: 'Zurück zur Anmeldung' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Anmelden' })).toBeInTheDocument()
+  })
 })
 
 describe('Registrierung', () => {
