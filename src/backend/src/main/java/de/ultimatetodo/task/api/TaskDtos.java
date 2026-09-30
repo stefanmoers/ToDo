@@ -1,10 +1,12 @@
 package de.ultimatetodo.task.api;
 
+import de.ultimatetodo.tag.application.TagSummary;
 import de.ultimatetodo.task.domain.DueDate;
 import de.ultimatetodo.task.domain.Task;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -49,14 +51,19 @@ public final class TaskDtos {
 	public record VersionRequest(@Schema(requiredMode = Schema.RequiredMode.REQUIRED, minimum = "0") Long version) {
 	}
 
+	@Schema(description = "Die vollständige gewünschte Tag-Zuordnung einer Aufgabe (US-043); ersetzt die bisherige.")
+	public record UpdateTaskTagsRequest(List<String> tagIds) {
+	}
+
 	@Schema(description = "Eine Aufgabe. Felder ohne Wert (z. B. keine Beschreibung, keine Fälligkeit, kein Projekt) fehlen in der Antwort.")
 	public record TaskResponse(UUID id, UUID projectId, String title, String description, String status,
 			String priority, String dueDate, String dueTime, String dueTimeZone, String dueOffset,
 			@Schema(description = "Nur bei Uhrzeit: exakter Fälligkeitszeitpunkt in UTC") Instant dueAt,
 			@Schema(description = "true ab dem Fälligkeitszeitpunkt, solange die Aufgabe nicht erledigt ist") boolean overdue,
-			UUID creatorId, Instant createdAt, Instant updatedAt, Instant completedAt, long version) {
+			UUID creatorId, Instant createdAt, Instant updatedAt, Instant completedAt, long version,
+			List<TagSummary> tags) {
 
-		public static TaskResponse of(Task t, Instant now) {
+		public static TaskResponse of(Task t, Instant now, List<TagSummary> tags) {
 			DueDate due = t.getDue();
 			String dueDate = due == null ? null : due.date().toString();
 			String dueTime = due == null || due.time() == null ? null : due.time().toString();
@@ -65,7 +72,7 @@ public final class TaskDtos {
 			Instant dueAt = due == null ? null : due.exactInstant();
 			return new TaskResponse(t.getId(), t.getProjectId(), t.getTitle(), t.getDescription(), t.getStatus().name(),
 					t.getPriority().name(), dueDate, dueTime, dueTimeZone, dueOffset, dueAt, t.isOverdue(now),
-					t.getCreatorId(), t.getCreatedAt(), t.getUpdatedAt(), t.getCompletedAt(), t.getVersion());
+					t.getCreatorId(), t.getCreatedAt(), t.getUpdatedAt(), t.getCompletedAt(), t.getVersion(), tags);
 		}
 
 		private static String formatOffset(ZoneOffset offset) {

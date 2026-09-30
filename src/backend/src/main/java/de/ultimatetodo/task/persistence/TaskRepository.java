@@ -28,6 +28,14 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
 	Page<Task> findAccessible(@Param("userId") UUID userId, @Param("ownedProjectIds") Set<UUID> ownedProjectIds,
 			Pageable pageable);
 
+	/** US-043: „Tags sind filterbar“ — dieselbe Zugriffsprüfung, zusätzlich auf eine Tag-Zuordnung eingeschränkt. */
+	@Query(value = "select t from Task t where (t.creatorId = :userId or t.projectId in :ownedProjectIds) "
+			+ "and t.id in (select tt.taskId from TaskTag tt where tt.tagId = :tagId)",
+			countQuery = "select count(t) from Task t where (t.creatorId = :userId or t.projectId in :ownedProjectIds) "
+					+ "and t.id in (select tt.taskId from TaskTag tt where tt.tagId = :tagId)")
+	Page<Task> findAccessibleByTag(@Param("userId") UUID userId, @Param("ownedProjectIds") Set<UUID> ownedProjectIds,
+			@Param("tagId") UUID tagId, Pageable pageable);
+
 	/** Für US-042: löst Aufgaben von einem gelöschten Projekt (sie bleiben erhalten, werden aber wieder persönlich). */
 	@Modifying
 	@Query("update Task t set t.projectId = null where t.projectId = :projectId")

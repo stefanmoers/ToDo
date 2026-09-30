@@ -3,15 +3,25 @@ package de.ultimatetodo.task.application;
 import de.ultimatetodo.common.ApiError.FieldError;
 import de.ultimatetodo.common.ApiException;
 import de.ultimatetodo.project.application.ProjectAccess;
+import de.ultimatetodo.tag.application.TagAccess;
+import de.ultimatetodo.tag.application.TagSummary;
 import de.ultimatetodo.task.domain.Task;
 import de.ultimatetodo.task.domain.TaskStatus;
+import de.ultimatetodo.task.domain.TaskTag;
 import de.ultimatetodo.task.persistence.TaskRepository;
+import de.ultimatetodo.task.persistence.TaskTagRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -19,21 +29,27 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-120, US-121 M1-Teil). */
+/** Anwendungsfälle des Aufgabenmoduls (US-030 bis US-037, US-043, US-120, US-121 M1-Teil). */
 @Service
 public class TaskService {
 
 	private static final String CONFLICT_MESSAGE = "Die Aufgabe wurde zwischenzeitlich geändert. Bitte lade sie neu.";
+	private static final String TAGS_INVALID_MESSAGE = "Diese Tags existieren nicht oder gehören dir nicht.";
 
 	private final TaskRepository tasks;
+	private final TaskTagRepository taskTags;
 	private final TaskDraftValidator validator;
 	private final ProjectAccess projectAccess;
+	private final TagAccess tagAccess;
 	private final Clock clock;
 
-	public TaskService(TaskRepository tasks, TaskDraftValidator validator, ProjectAccess projectAccess, Clock clock) {
+	public TaskService(TaskRepository tasks, TaskTagRepository taskTags, TaskDraftValidator validator,
+			ProjectAccess projectAccess, TagAccess tagAccess, Clock clock) {
 		this.tasks = tasks;
+		this.taskTags = taskTags;
 		this.validator = validator;
 		this.projectAccess = projectAccess;
+		this.tagAccess = tagAccess;
 		this.clock = clock;
 	}
 
@@ -53,6 +69,12 @@ public class TaskService {
 	@Transactional(readOnly = true)
 	public Page<Task> list(UUID userId, Pageable pageable) {
 		return tasks.findAccessible(userId, ownedProjectIds(userId), pageable);
+	}
+
+	/** US-043: „Tags sind filterbar“. */
+	@Transactional(readOnly = true)
+	public Page<Task> listByTag(UUID userId, UUID tagId, Pageable pageable) {
+		return tasks.findAccessibleByTag(userId, ownedProjectIds(userId), tagId, pageable);
 	}
 
 	/** Ersetzt die bearbeitbaren Felder. 409, wenn {@code expectedVersion} nicht mehr der aktuellen entspricht. */
@@ -108,6 +130,51 @@ public class TaskService {
 			}
 		}
 		return task;
+	}
+
+	/** Liefert die Tags mehrerer Aufgaben in zwei Abfragen statt einer je Aufgabe (Liste, US-043). */
+	@Transactional(readOnly = true)
+	public Map<UUID, List<TagSummary>> tagsFor(Collection<UUID> taskIds) {
+		if (taskIds.isEmpty()) {
+			return Map.of();
+		}
+		List<TaskTag> links = taskTags.findByTaskIdIn(taskIds);
+		if (links.isEmpty()) {
+			return Map.of();
+		}
+		Set<UUID> allTagIds = links.stream().map(TaskTag::getTagId).collect(Collectors.toSet());
+		Map<UUID, TagSummary> byTagId = tagAccess.summarize(allTagIds).stream()
+			.collect(Collectors.toMap(TagSummary::id, s -> s));
+		Map<UUID, List<TagSummary>> result = new HashMap<>();
+		for (TaskTag link : links) {
+			TagSummary summary = byTagId.get(link.getTagId());
+			if (summary != null) {
+				result.computeIfAbsent(link.getTaskId(), k -> new ArrayList<>()).add(summary);
+			}
+		}
+		return result;
+	}
+
+	/** Ersetzt die Tag-Zuordnung vollständig (US-043); ändert weder Version noch `updatedAt` der Aufgabe. */
+	@Transactional
+	public List<TagSummary> setTags(UUID userId, UUID taskId, List<String> rawTagIds) {
+		Task task = loadAccessible(userId, taskId);
+		Set<UUID> tagIds = new HashSet<>();
+		for (String raw : rawTagIds) {
+			try {
+				tagIds.add(UUID.fromString(raw));
+			}
+			catch (IllegalArgumentException e) {
+				throw ApiException.validation(List.of(new FieldError("tagIds", "INVALID", TAGS_INVALID_MESSAGE)));
+			}
+		}
+		if (!tagAccess.areAccessible(tagIds, userId)) {
+			throw ApiException.validation(List.of(new FieldError("tagIds", "INVALID", TAGS_INVALID_MESSAGE)));
+		}
+		taskTags.deleteByTaskId(task.getId());
+		Instant now = now();
+		taskTags.saveAll(tagIds.stream().map(tagId -> TaskTag.of(task.getId(), tagId, now)).toList());
+		return tagAccess.summarize(tagIds);
 	}
 
 	private Task loadAccessible(UUID userId, UUID taskId) {

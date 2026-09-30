@@ -199,6 +199,66 @@ class TaskApiIT {
 	}
 
 	@Test
+	void tagsKoennenZugeordnetWerdenOhneDieVersionZuAendern() throws Exception {
+		ApiTestClient a = loggedIn();
+		String taskId = tree(a.post("/api/v1/tasks", createBody("X"))).get("id").asString();
+		String tag1 = tree(a.post("/api/v1/tags", "{\"name\":\"Eilig\"}")).get("id").asString();
+		String tag2 = tree(a.post("/api/v1/tags", "{\"name\":\"Zuhause\"}")).get("id").asString();
+
+		MvcResult set = a.put("/api/v1/tasks/" + taskId + "/tags", "{\"tagIds\":[\"%s\",\"%s\"]}".formatted(tag1, tag2));
+		assertThat(set.getResponse().getStatus()).as(set.getResponse().getContentAsString()).isEqualTo(200);
+		assertThat(tree(set).toString()).contains("Eilig").contains("Zuhause");
+
+		MvcResult reloaded = a.get("/api/v1/tasks/" + taskId);
+		assertThat(tree(reloaded).get("tags").toString()).contains("Eilig").contains("Zuhause");
+		assertThat(tree(reloaded).get("version").asLong()).as("Tag-Zuordnung ändert die Version nicht").isZero();
+
+		// Ersetzt die Zuordnung vollständig statt zu ergänzen.
+		a.put("/api/v1/tasks/" + taskId + "/tags", "{\"tagIds\":[\"%s\"]}".formatted(tag1));
+		JsonNode afterReplace = tree(a.get("/api/v1/tasks/" + taskId));
+		assertThat(afterReplace.get("tags").toString()).contains("Eilig").doesNotContain("Zuhause");
+	}
+
+	@Test
+	void fremderOderNichtExistierenderTagWirdBeimZuordnenAbgewiesen() throws Exception {
+		ApiTestClient a = loggedIn();
+		ApiTestClient b = loggedIn();
+		String taskId = tree(a.post("/api/v1/tasks", createBody("X"))).get("id").asString();
+		String othersTagId = tree(b.post("/api/v1/tags", "{\"name\":\"Fremd\"}")).get("id").asString();
+
+		assertBadWithField(a.put("/api/v1/tasks/" + taskId + "/tags", "{\"tagIds\":[\"%s\"]}".formatted(othersTagId)),
+				"tagIds");
+		assertBadWithField(a.put("/api/v1/tasks/" + taskId + "/tags", "{\"tagIds\":[\"keine-uuid\"]}"), "tagIds");
+	}
+
+	@Test
+	void loeschenEinesTagsEntferntNurDieZuordnungNichtDieAufgabe() throws Exception {
+		ApiTestClient a = loggedIn();
+		String taskId = tree(a.post("/api/v1/tasks", createBody("X"))).get("id").asString();
+		String tagId = tree(a.post("/api/v1/tags", "{\"name\":\"Bald weg\"}")).get("id").asString();
+		a.put("/api/v1/tasks/" + taskId + "/tags", "{\"tagIds\":[\"%s\"]}".formatted(tagId));
+
+		assertThat(a.delete("/api/v1/tags/" + tagId).getResponse().getStatus()).isEqualTo(204);
+
+		MvcResult task = a.get("/api/v1/tasks/" + taskId);
+		assertThat(task.getResponse().getStatus()).isEqualTo(200);
+		assertThat(tree(task).get("tags").toString()).isEqualTo("[]");
+	}
+
+	@Test
+	void aufgabenlisteKannNachTagGefiltertWerden() throws Exception {
+		ApiTestClient a = loggedIn();
+		String tagId = tree(a.post("/api/v1/tags", "{\"name\":\"Gefiltert\"}")).get("id").asString();
+		String taggedId = tree(a.post("/api/v1/tasks", createBody("Mit Tag"))).get("id").asString();
+		a.post("/api/v1/tasks", createBody("Ohne Tag"));
+		a.put("/api/v1/tasks/" + taggedId + "/tags", "{\"tagIds\":[\"%s\"]}".formatted(tagId));
+
+		JsonNode filtered = tree(a.get("/api/v1/tasks?tagId=" + tagId));
+		assertThat(filtered.get("totalElements").asLong()).isEqualTo(1);
+		assertThat(filtered.get("items").get(0).get("id").asString()).isEqualTo(taggedId);
+	}
+
+	@Test
 	void aufgabeInEigenemProjektIstNurFuerDenProjekteigentuemerZugaenglich() throws Exception {
 		ApiTestClient a = loggedIn();
 		ApiTestClient b = loggedIn();
