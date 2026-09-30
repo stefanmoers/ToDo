@@ -147,7 +147,7 @@ test('Paginierung: 26 Aufgaben werden auf zwei Seiten aufgeteilt', async ({ page
   await expect(page.locator('.task-list li')).toHaveCount(25)
   await page.getByRole('link', { name: 'Nächste Seite' }).click()
   await expect(page).toHaveURL(/seite=2/)
-  await expect(page.getByRole('heading', { level: 2 })).toBeFocused()
+  await expect(page.getByRole('heading', { level: 2, name: /^Aufgaben/ })).toBeFocused()
   await page.getByRole('link', { name: 'Vorherige Seite' }).click()
   await expect(page).toHaveURL(/seite=1/)
 })

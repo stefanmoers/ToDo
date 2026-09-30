@@ -47,6 +47,13 @@ export async function createTaskViaApi(page: Page, input: TaskInputForTest): Pro
   return body.id as string
 }
 
+/** Markiert eine Aufgabe direkt über die API als erledigt (schnell, für Testvorbereitung). */
+export async function completeTaskViaApi(page: Page, taskId: string, version = 0) {
+  const csrf = await page.request.get('/api/v1/auth/csrf')
+  const { headerName, token } = await csrf.json()
+  await page.request.post(`/api/v1/tasks/${taskId}/complete`, { headers: { [headerName]: token }, data: { version } })
+}
+
 /** Legt eine Aufgabe über die Oberfläche an; danach ist die Detailseite der neuen Aufgabe geöffnet. */
 export async function createTaskViaUi(page: Page, title: string) {
   await page.getByRole('link', { name: 'Neue Aufgabe anlegen' }).click()
